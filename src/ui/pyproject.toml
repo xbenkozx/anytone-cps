@@ -1,0 +1,5 @@
+[project]
+name = "Anytone CPS"
+
+[tool.pyside6-project]
+files = ["aes_encryption_code_dialog.ui", "alert_settings_dialog.ui", "aprs_settings_dialog.ui", "auto_repeater_edit_dialog.ui", "basic_dialog.ui", "channel_settings.ui", "comport_dialog.ui", "contact_selection_dialog.ui", "device_information_dialog.ui", "dtmf_settings_dialog.ui", "dtmf_special_call_dialog.ui", "expert_options_dialog.ui", "fm_edit_dialog.ui", "gps_roaming_edit_dialog.ui", "hotkey_settings_dialog.ui", "image_dialog.ui", "import_export_dialog.ui", "loading_dialog.ui", "local_information_dialog.ui", "main_window.ui", "master_id_dialog.ui", "optional_settings_edit_dialog.ui", "prefabricated_sms_edit_dialog.ui", "radio_id_edit_dialog.ui", "read_write_options_dialog.ui", "retry_connection_dialog.ui", "roaming_channel_edit_dialog.ui", "roaming_zone_edit_dialog.ui", "scan_edit_dialog.ui", "talk_alias_settings_dialog.ui", "talkgroup_edit_dialog.ui", "tone2_settings_dialog.ui", "tone5_settings_dialog.ui", "zone_edit_dialog.ui"]
