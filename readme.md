@@ -2,7 +2,7 @@
   <img src="icons/d878_icon.png" />
 </p>
 
-# anytone-878uvii-cps
+# Anytone CPS
 An open-source, cross-platform Customer Programming Software (CPS) for the AnyTone 878UVII series radios, written in c++.
 
 This project aims to provide a modern, scriptable, and community-maintained alternative to the stock AnyTone CPS, while keeping the workflow familiar for existing users.
