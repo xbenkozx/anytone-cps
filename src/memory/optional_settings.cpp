@@ -515,5 +515,558 @@ void Anytone::OptionalSettings::encode(QByteArray &data_2500000, QByteArray &dat
     data_2501400[0x6f] = data_250146f;
 }
 
+void Anytone::OptionalSettings::save(QDataStream &ds){
+    ds << poweron_interface;
+    ds << poweron_password;
+    ds << default_startup_channel;
+    ds << startup_zone_a;
+    ds << startup_channel_a;
+    ds << startup_zone_b;
+    ds << startup_channel_b;
+    ds << startup_gps_test;
+    ds << startup_reset;
 
+    // Power Save
+    ds << auto_shutdown;
+    ds << power_save;
+    ds << auto_shutdown_type;
+
+    // Display
+    ds << brightness;
+    ds << auto_backlight_duration;
+    ds << backlight_tx_delay;
+    ds << menu_exit_time;
+    ds << time_display;
+    ds << last_caller;
+    ds << call_display_mode;
+    ds << callsign_display_color;
+    ds << call_end_prompt_box;
+    ds << display_channel_number;
+    ds << display_current_contact;
+    ds << standby_char_color;
+    ds << standby_bk_picture;
+    ds << show_last_call_on_launch;
+    ds << separate_display;
+    ds << ch_switching_keeps_caller;
+    ds << backlight_rx_delay;
+    ds << channel_name_color_a;
+    ds << channel_name_color_b;
+    ds << zone_name_color_a;
+    ds << zone_name_color_b;
+    ds << display_channel_type;
+    ds << display_time_slot;
+    ds << display_color_code;
+    ds << date_display_format;
+    ds << volume_bar;
+
+    // Work Mode
+    ds << display_mode;
+    ds << vf_mr_a;
+    ds << vf_mr_b;
+    ds << mem_zone_a;
+    ds << mem_zone_b;
+    ds << main_channel_set;
+    ds << sub_channel_mode;
+    ds << working_mode;
+
+    // Vox/BT
+    ds << vox_level;
+    ds << vox_delay;
+    ds << vox_detection;
+    ds << bt_on_off;
+    ds << bt_int_mic;
+    ds << bt_int_spk;
+    ds << bt_mic_gain;
+    ds << bt_spk_gain;
+    ds << bt_hold_time;
+    ds << bt_rx_delay;
+    ds << bt_ptt_hold;
+    ds << bt_ptt_sleep_time;
+
+    // STE
+    ds << ste_type_of_ctcss;
+    ds << ste_when_no_signal;
+    ds << ste_time;
+
+    // FM
+    fm_vfo_mem;
+    fm_work_channel;
+    fm_monitor;
+
+    // Key Function
+    ds << key_lock;
+    ds << pf1_short_key;
+    ds << pf2_short_key;
+    ds << pf3_short_key;
+    ds << p1_short_key;
+    ds << p2_short_key;
+    ds << pf1_long_key;
+    ds << pf2_long_key;
+    ds << pf3_long_key;
+    ds << p1_long_key;
+    ds << p2_long_key;
+    ds << long_key_time;
+    ds << knob_lock;
+    ds << keyboard_lock;
+    ds << side_key_lock;
+    ds << forced_key_lock;
+
+    // Other
+    ds << address_book_sent_with_code;
+    ds << tot;
+    ds << language;
+    ds << frequency_step;
+    ds << sql_level_a;
+    ds << sql_level_b;
+    ds << tbst;
+    ds << analog_call_hold_time;
+    ds << call_channel_maintained;
+    ds << priority_zone_a;
+    ds << priority_zone_b;
+    ds << mute_timing;
+    ds << encryption_type;
+    ds << tot_predict;
+    ds << tx_power_agc;
+
+    // Digital Func
+    ds << group_call_hold_time;
+    ds << private_call_hold_time;
+    ds << manual_dial_group_call_hold_time;
+    ds << manual_dial_private_call_hold_time;
+    ds << voice_header_repetitions;
+    ds << tx_preamble_duration;
+    ds << filter_own_id;
+    ds << digital_remote_kill;
+    ds << digital_monitor;
+    ds << digital_monitor_cc;
+    ds << digital_monitor_id;
+    ds << monitor_slot_hold;
+    ds << remote_monitor;
+    ds << sms_format;
+
+    // Alert Tone
+    ds << sms_alert;
+    ds << call_alert;
+    ds << digi_call_reset_tone;
+    ds << talk_permit;
+    ds << key_tone;
+    ds << digi_idle_channel_tone;
+    ds << startup_sound;
+    ds << tone_key_sound_adjustable;
+    ds << analog_idle_channel_tone;
+    ds << plugin_recording_tone;
+    ds << call_permit_first_tone_freq;
+    ds << call_permit_first_tone_period;
+    ds << call_permit_second_tone_freq;
+    ds << call_permit_second_tone_period;
+    ds << call_permit_third_tone_freq;
+    ds << call_permit_third_tone_period;
+    ds << call_permit_fourth_tone_freq;
+    ds << call_permit_fourth_tone_period;
+    ds << call_permit_fifth_tone_freq;
+    ds << call_permit_fifth_tone_period;
+    ds << idle_channel_first_tone_freq;
+    ds << idle_channel_first_tone_period;
+    ds << idle_channel_second_tone_freq;
+    ds << idle_channel_second_tone_period;
+    ds << idle_channel_third_tone_freq;
+    ds << idle_channel_third_tone_period;
+    ds << idle_channel_fourth_tone_freq;
+    ds << idle_channel_fourth_tone_period;
+    ds << idle_channel_fifth_tone_freq;
+    ds << idle_channel_fifth_tone_period;
+    ds << call_reset_first_tone_freq;
+    ds << call_reset_first_tone_period;
+    ds << call_reset_second_tone_freq;
+    ds << call_reset_second_tone_period;
+    ds << call_reset_third_tone_freq;
+    ds << call_reset_third_tone_period;
+    ds << call_reset_fourth_tone_freq;
+    ds << call_reset_fourth_tone_period;
+    ds << call_reset_fifth_tone_freq;
+    ds << call_reset_fifth_tone_period;
+
+    // Alert Tone 1
+    ds << call_end_first_tone_freq;
+    ds << call_end_first_tone_period;
+    ds << call_end_second_tone_freq;
+    ds << call_end_second_tone_period;
+    ds << call_end_third_tone_freq;
+    ds << call_end_third_tone_period;
+    ds << call_end_fourth_tone_freq;
+    ds << call_end_fourth_tone_period;
+    ds << call_end_fifth_tone_freq;
+    ds << call_end_fifth_tone_period;
+    ds << call_all_first_tone_freq;
+    ds << call_all_first_tone_period;
+    ds << call_all_second_tone_freq;
+    ds << call_all_second_tone_period;
+    ds << call_all_third_tone_freq;
+    ds << call_all_third_tone_period;
+    ds << call_all_fourth_tone_freq;
+    ds << call_all_fourth_tone_period;
+    ds << call_all_fifth_tone_freq;
+    ds << call_all_fifth_tone_period;
+
+    // GPS/Ranging
+    ds << gps_power;
+    ds << gps_positioning;
+    ds << time_zone;
+    ds << ranging_interval;
+    ds << distance_unit;
+    ds << gps_template_information;
+    ds << gps_mode;
+    ds << gps_roaming;
+
+    // VFO Scan
+    ds << vfo_scan_type;
+    ds << vfo_scan_start_freq_uhf;
+    ds << vfo_scan_end_freq_uhf;
+    ds << vfo_scan_start_freq_vhf;
+    ds << vfo_scan_end_freq_vhf;
+
+    // Auto Repeater
+    ds << auto_repeater_a;
+    ds << auto_repeater_b;
+    ds << auto_repeater_1_uhf;
+    ds << auto_repeater_1_vhf;
+    ds << auto_repeater_2_uhf;
+    ds << auto_repeater_2_vhf;
+    ds << repeater_check;
+    ds << repeater_check_interval;
+    ds << repeater_check_reconnections;
+    ds << repeater_out_of_range_notify;
+    ds << out_of_range_notify;
+    ds << auto_roaming;
+    ds << auto_roaming_start_condition;
+    ds << auto_roaming_fixed_time;
+    ds << roaming_effect_wait_time;
+    ds << roaming_zone;
+    ds << auto_repeater_1_min_freq_vhf;
+    ds << auto_repeater_1_max_freq_vhf;
+    ds << auto_repeater_1_min_freq_uhf;
+    ds << auto_repeater_1_max_freq_uhf;
+    ds << auto_repeater_2_min_freq_vhf;
+    ds << auto_repeater_2_max_freq_vhf;
+    ds << auto_repeater_2_min_freq_uhf;
+    ds << auto_repeater_2_max_freq_uhf;
+
+    // Record
+    ds << record_function;
+
+    // Volume/Audio
+    ds << max_volume;
+    ds << max_headphone_volume;
+    ds << digi_mic_gain;
+    ds << enhanced_sound_quality;
+    ds << analog_mic_gain;
+
+    // Unknown
+    ds << data_250146f;
+
+
+    // Strings
+    uint8_t poweron_display_1_len = poweron_display_1.size();
+    ds << poweron_display_1_len;
+    for(char c : poweron_display_1.toStdString()){
+        ds << c;
+    }
+
+    uint8_t poweron_display_2_len = poweron_display_2.size();
+    ds << poweron_display_2_len;
+    for(char c : poweron_display_2.toStdString()){
+        ds << c;
+    }
+
+    uint8_t poweron_password_char_len = poweron_password_char.size();
+    ds << poweron_password_char_len;
+    for(char c : poweron_password_char.toStdString()){
+        ds << c;
+    }
+
+    uint8_t gps_information_char_len = gps_information_char.size();
+    ds << gps_information_char_len;;
+    for(char c : gps_information_char.toStdString()){
+        ds << c;
+    }
+}
+void Anytone::OptionalSettings::load(QDataStream &ds){
+    ds >> poweron_interface;
+    ds >> poweron_password;
+    ds >> default_startup_channel;
+    ds >> startup_zone_a;
+    ds >> startup_channel_a;
+    ds >> startup_zone_b;
+    ds >> startup_channel_b;
+    ds >> startup_gps_test;
+    ds >> startup_reset;
+
+    // Power Save
+    ds >> auto_shutdown;
+    ds >> power_save;
+    ds >> auto_shutdown_type;
+
+    // Display
+    ds >> brightness;
+    ds >> auto_backlight_duration;
+    ds >> backlight_tx_delay;
+    ds >> menu_exit_time;
+    ds >> time_display;
+    ds >> last_caller;
+    ds >> call_display_mode;
+    ds >> callsign_display_color;
+    ds >> call_end_prompt_box;
+    ds >> display_channel_number;
+    ds >> display_current_contact;
+    ds >> standby_char_color;
+    ds >> standby_bk_picture;
+    ds >> show_last_call_on_launch;
+    ds >> separate_display;
+    ds >> ch_switching_keeps_caller;
+    ds >> backlight_rx_delay;
+    ds >> channel_name_color_a;
+    ds >> channel_name_color_b;
+    ds >> zone_name_color_a;
+    ds >> zone_name_color_b;
+    ds >> display_channel_type;
+    ds >> display_time_slot;
+    ds >> display_color_code;
+    ds >> date_display_format;
+    ds >> volume_bar;
+
+    // Work Mode
+    ds >> display_mode;
+    ds >> vf_mr_a;
+    ds >> vf_mr_b;
+    ds >> mem_zone_a;
+    ds >> mem_zone_b;
+    ds >> main_channel_set;
+    ds >> sub_channel_mode;
+    ds >> working_mode;
+
+    // Vox/BT
+    ds >> vox_level;
+    ds >> vox_delay;
+    ds >> vox_detection;
+    ds >> bt_on_off;
+    ds >> bt_int_mic;
+    ds >> bt_int_spk;
+    ds >> bt_mic_gain;
+    ds >> bt_spk_gain;
+    ds >> bt_hold_time;
+    ds >> bt_rx_delay;
+    ds >> bt_ptt_hold;
+    ds >> bt_ptt_sleep_time;
+
+    // STE
+    ds >> ste_type_of_ctcss;
+    ds >> ste_when_no_signal;
+    ds >> ste_time;
+
+    // FM
+    fm_vfo_mem;
+    fm_work_channel;
+    fm_monitor;
+
+    // Key Function
+    ds >> key_lock;
+    ds >> pf1_short_key;
+    ds >> pf2_short_key;
+    ds >> pf3_short_key;
+    ds >> p1_short_key;
+    ds >> p2_short_key;
+    ds >> pf1_long_key;
+    ds >> pf2_long_key;
+    ds >> pf3_long_key;
+    ds >> p1_long_key;
+    ds >> p2_long_key;
+    ds >> long_key_time;
+    ds >> knob_lock;
+    ds >> keyboard_lock;
+    ds >> side_key_lock;
+    ds >> forced_key_lock;
+
+    // Other
+    ds >> address_book_sent_with_code;
+    ds >> tot;
+    ds >> language;
+    ds >> frequency_step;
+    ds >> sql_level_a;
+    ds >> sql_level_b;
+    ds >> tbst;
+    ds >> analog_call_hold_time;
+    ds >> call_channel_maintained;
+    ds >> priority_zone_a;
+    ds >> priority_zone_b;
+    ds >> mute_timing;
+    ds >> encryption_type;
+    ds >> tot_predict;
+    ds >> tx_power_agc;
+
+    // Digital Func
+    ds >> group_call_hold_time;
+    ds >> private_call_hold_time;
+    ds >> manual_dial_group_call_hold_time;
+    ds >> manual_dial_private_call_hold_time;
+    ds >> voice_header_repetitions;
+    ds >> tx_preamble_duration;
+    ds >> filter_own_id;
+    ds >> digital_remote_kill;
+    ds >> digital_monitor;
+    ds >> digital_monitor_cc;
+    ds >> digital_monitor_id;
+    ds >> monitor_slot_hold;
+    ds >> remote_monitor;
+    ds >> sms_format;
+
+    // Alert Tone
+    ds >> sms_alert;
+    ds >> call_alert;
+    ds >> digi_call_reset_tone;
+    ds >> talk_permit;
+    ds >> key_tone;
+    ds >> digi_idle_channel_tone;
+    ds >> startup_sound;
+    ds >> tone_key_sound_adjustable;
+    ds >> analog_idle_channel_tone;
+    ds >> plugin_recording_tone;
+    ds >> call_permit_first_tone_freq;
+    ds >> call_permit_first_tone_period;
+    ds >> call_permit_second_tone_freq;
+    ds >> call_permit_second_tone_period;
+    ds >> call_permit_third_tone_freq;
+    ds >> call_permit_third_tone_period;
+    ds >> call_permit_fourth_tone_freq;
+    ds >> call_permit_fourth_tone_period;
+    ds >> call_permit_fifth_tone_freq;
+    ds >> call_permit_fifth_tone_period;
+    ds >> idle_channel_first_tone_freq;
+    ds >> idle_channel_first_tone_period;
+    ds >> idle_channel_second_tone_freq;
+    ds >> idle_channel_second_tone_period;
+    ds >> idle_channel_third_tone_freq;
+    ds >> idle_channel_third_tone_period;
+    ds >> idle_channel_fourth_tone_freq;
+    ds >> idle_channel_fourth_tone_period;
+    ds >> idle_channel_fifth_tone_freq;
+    ds >> idle_channel_fifth_tone_period;
+    ds >> call_reset_first_tone_freq;
+    ds >> call_reset_first_tone_period;
+    ds >> call_reset_second_tone_freq;
+    ds >> call_reset_second_tone_period;
+    ds >> call_reset_third_tone_freq;
+    ds >> call_reset_third_tone_period;
+    ds >> call_reset_fourth_tone_freq;
+    ds >> call_reset_fourth_tone_period;
+    ds >> call_reset_fifth_tone_freq;
+    ds >> call_reset_fifth_tone_period;
+
+    // Alert Tone 1
+    ds >> call_end_first_tone_freq;
+    ds >> call_end_first_tone_period;
+    ds >> call_end_second_tone_freq;
+    ds >> call_end_second_tone_period;
+    ds >> call_end_third_tone_freq;
+    ds >> call_end_third_tone_period;
+    ds >> call_end_fourth_tone_freq;
+    ds >> call_end_fourth_tone_period;
+    ds >> call_end_fifth_tone_freq;
+    ds >> call_end_fifth_tone_period;
+    ds >> call_all_first_tone_freq;
+    ds >> call_all_first_tone_period;
+    ds >> call_all_second_tone_freq;
+    ds >> call_all_second_tone_period;
+    ds >> call_all_third_tone_freq;
+    ds >> call_all_third_tone_period;
+    ds >> call_all_fourth_tone_freq;
+    ds >> call_all_fourth_tone_period;
+    ds >> call_all_fifth_tone_freq;
+    ds >> call_all_fifth_tone_period;
+
+    // GPS/Ranging
+    ds >> gps_power;
+    ds >> gps_positioning;
+    ds >> time_zone;
+    ds >> ranging_interval;
+    ds >> distance_unit;
+    ds >> gps_template_information;
+    ds >> gps_mode;
+    ds >> gps_roaming;
+
+    // VFO Scan
+    ds >> vfo_scan_type;
+    ds >> vfo_scan_start_freq_uhf;
+    ds >> vfo_scan_end_freq_uhf;
+    ds >> vfo_scan_start_freq_vhf;
+    ds >> vfo_scan_end_freq_vhf;
+
+    // Auto Repeater
+    ds >> auto_repeater_a;
+    ds >> auto_repeater_b;
+    ds >> auto_repeater_1_uhf;
+    ds >> auto_repeater_1_vhf;
+    ds >> auto_repeater_2_uhf;
+    ds >> auto_repeater_2_vhf;
+    ds >> repeater_check;
+    ds >> repeater_check_interval;
+    ds >> repeater_check_reconnections;
+    ds >> repeater_out_of_range_notify;
+    ds >> out_of_range_notify;
+    ds >> auto_roaming;
+    ds >> auto_roaming_start_condition;
+    ds >> auto_roaming_fixed_time;
+    ds >> roaming_effect_wait_time;
+    ds >> roaming_zone;
+    ds >> auto_repeater_1_min_freq_vhf;
+    ds >> auto_repeater_1_max_freq_vhf;
+    ds >> auto_repeater_1_min_freq_uhf;
+    ds >> auto_repeater_1_max_freq_uhf;
+    ds >> auto_repeater_2_min_freq_vhf;
+    ds >> auto_repeater_2_max_freq_vhf;
+    ds >> auto_repeater_2_min_freq_uhf;
+    ds >> auto_repeater_2_max_freq_uhf;
+
+    // Record
+    ds >> record_function;
+
+    // Volume/Audio
+    ds >> max_volume;
+    ds >> max_headphone_volume;
+    ds >> digi_mic_gain;
+    ds >> enhanced_sound_quality;
+    ds >> analog_mic_gain;
+
+    // Unknown
+    ds >> data_250146f;
+
+    // Strings
+    uint8_t str_size;
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        poweron_display_1.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        poweron_display_2.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        poweron_password_char.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        gps_information_char.append(c);
+    }
+}
 

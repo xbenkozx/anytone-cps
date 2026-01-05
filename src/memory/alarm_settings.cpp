@@ -27,7 +27,6 @@ void Anytone::AlarmSettings::decode(QByteArray data_0000, QByteArray data_1400, 
 
     digital_tg_dmr_id = QString(data_1440.mid(0x23, 0x4).toHex()).toInt();
 }
-
 void Anytone::AlarmSettings::encode(QByteArray &data_2500000, QByteArray &data_24c1400, QByteArray &data_24c1440){
     data_24c1400[0x00] = analog_emergency_alarm;
     data_24c1400[0x01] = analog_eni_type;
@@ -55,4 +54,57 @@ void Anytone::AlarmSettings::encode(QByteArray &data_2500000, QByteArray &data_2
     data_24c1400[0x15] = receive_alarm;
     data_2500000[0x24] = man_down;
     data_2500000[0x4f] = man_down_delay;
+}
+
+void Anytone::AlarmSettings::save(QDataStream &ds){
+    ds << analog_emergency_alarm;
+    ds << analog_eni_type;
+    ds << analog_emergency_id;
+    ds << analog_alarm_time;
+    ds << analog_tx_duration;
+    ds << analog_rx_duration;
+    ds << analog_eni_send;
+    ds << analog_emergency_channel;
+    ds << analog_emergency_cycle;
+    ds << work_mode_voice_switch;
+    ds << work_mode_area_switch;
+    ds << work_mode_mic_switch;
+    ds << digital_emergency_alarm;
+    ds << digital_alarm_time;
+    ds << digital_tx_duration;
+    ds << digital_rx_duration;
+    ds << digital_eni_send;
+    ds << digital_emergency_channel;
+    ds << digital_emergency_cycle;
+    ds << digital_tg_dmr_id;
+    ds << digital_call_type;
+    ds << receive_alarm;
+    ds << man_down;
+    ds << man_down_delay;
+}
+void Anytone::AlarmSettings::load(QDataStream &ds){
+    ds >> analog_emergency_alarm;
+    ds >> analog_eni_type;
+    ds >> analog_emergency_id;
+    ds >> analog_alarm_time;
+    ds >> analog_tx_duration;
+    ds >> analog_rx_duration;
+    ds >> analog_eni_send;
+    ds >> analog_emergency_channel;
+    ds >> analog_emergency_cycle;
+    ds >> work_mode_voice_switch;
+    ds >> work_mode_area_switch;
+    ds >> work_mode_mic_switch;
+    ds >> digital_emergency_alarm;
+    ds >> digital_alarm_time;
+    ds >> digital_tx_duration;
+    ds >> digital_rx_duration;
+    ds >> digital_eni_send;
+    ds >> digital_emergency_channel;
+    ds >> digital_emergency_cycle;
+    ds >> digital_tg_dmr_id;
+    ds >> digital_call_type;
+    ds >> receive_alarm;
+    ds >> man_down;
+    ds >> man_down_delay;
 }

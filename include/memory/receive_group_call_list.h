@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QDebug>
+#include <QDataStream>
 #include "talkgroup.h"
 
 namespace Anytone {
@@ -12,15 +13,17 @@ namespace Anytone {
         ReceiveGroup(){}
         ~ReceiveGroup(){}
 
-        void decode(QByteArray data){
+        void decode(QByteArray data);
+        QByteArray encode();
 
-        }
+        void save(QDataStream &ds);
+        void load(QDataStream &ds);
 
-        int id = 0;
+        uint8_t id = 0;
         QString name = "";
         std::vector<Talkgroup*> talkgroups = {};
 
-        std::vector<uint16_t> tg_idxs = {};
+        QVector<uint16_t> tg_idxs = {};
     };
 }
 

@@ -21,6 +21,7 @@
 #include "read_write_options_dialog.h"
 #include "basic_dialog.h"
 #include "retry_connection_dialog.h"
+#include "channel.h"
 
 
 class Ui_MainWindow;
@@ -34,11 +35,14 @@ public:
 
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void showEvent(QShowEvent *event) override;
     void setupUI();
     void setupTreeView();
-    void saveFile();
-    void openFile();
+    void saveFile(bool save_as = false);
+    void saveFileAs();
+    void openFile(QString filepath = "");
     void updateRadioModel();
+    void showAlphaWarningMessage();
     void setRadioModel_D878UVII();
     void setRadioModel_D890UV();
 
@@ -56,7 +60,10 @@ public:
     void showReadOptionsDialog();
     void showWriteOptionsDialog();
     void showAesEncryptionDialog(int index);
+    void showArc4EncryptionDialog(int index);
+    void showEncryptionDialog(int index);
     void showAlertSettingsDialog();
+    void showAnalogAddressEditDialog(int index);
     void showAprsSettingsDialog();
     void showAutoRepeaterEditDialog(int index);
     void showChannelEditDialog(int index);
@@ -98,6 +105,9 @@ public:
     void listPrefabricatedSms(bool goto_top = true);
     void listReceiveGroupCall(bool goto_top = true);
     void listAesEncryptionKeys(bool goto_top = true);
+    void listArc4EncryptionKeys(bool goto_top = true);
+    void listEncryptionKeys(bool goto_top = true);
+    void listAnalogAddresses(bool goto_top = true);
 
     // Serial
     void readFromRadio();
@@ -108,6 +118,7 @@ public:
     
 
     int read_write_options = 0;
+    bool debug = false;
 
     // UI
 
@@ -118,8 +129,12 @@ private slots:
     void onTreeItemClicked(QTreeWidgetItem* item, int column);
     void onMainTableDblClicked(QModelIndex index);
     void showMainTableContextMenu(QPoint pos);
+    void saveBtnClicked();
+    void openBtnClicked();
+    void newBtnClicked();
 
 private:
+    void updateWindowTitle();
     QString selected_table_view = "";
     std::unique_ptr<Ui_MainWindow> ui;
     QThreadPool *threadpool;

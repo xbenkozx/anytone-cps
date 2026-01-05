@@ -5,6 +5,9 @@
 #include "constants.h"
 #include "utils.h"
 #include "contact_selection_dialog.h"
+#include "arc4_encryption_code.h"
+#include "aes_encryption_code.h"
+#include "encryption_code.h"
 #include <QStringList>
 
 
@@ -48,6 +51,8 @@ ChannelEditDialog::ChannelEditDialog(MainWindow *parent, int index) :
 
     if(index == 0) ui->prevBtn->setDisabled(true);
     if(index == Anytone::Memory::channels.size() - 1) ui->nextBtn->setDisabled(true);
+
+    resize(790, 400);
 
     loadData();
 }
@@ -105,14 +110,26 @@ void ChannelEditDialog::setupUI(){
         receive_group_call_list.push_back(rgl);
     }
 
-    ui->digitalEncryptionCmbx->addItem("Off");
-    ui->digitalEncryptionCmbx->setDisabled(true); // TODO enable for codeplug encryption type
+    
     ui->extendEncryptionCmbx->addItems(QStringList{"AES", "ARC4"});
+
+    ui->digitalEncryptionCmbx->addItem("Off");
+    for(Anytone::EncryptionCode *key : Anytone::Memory::encryption_keys){
+        ui->digitalEncryptionCmbx->addItem(QString::number(key->index));
+    }
     ui->arc4CodeCmbx->addItem("Off");
+    for(Anytone::Arc4EncryptionCode *key : Anytone::Memory::arc4_encryption_keys){
+        if(key->id > 0) ui->arc4CodeCmbx->addItem(QString::number(key->id));
+    }
     ui->aesCodeCmbx->addItem("Off");
+    for(Anytone::AesEncryptionCode *key : Anytone::Memory::aes_encryption_keys){
+        if(key->id > 0) ui->aesCodeCmbx->addItem(QString::number(key->id));
+    }
     ui->multiKeyCmbx->addItems(Constants::OFF_ON);
     ui->randomKeyCmbx->addItems(Constants::OFF_ON);
     ui->smsForbidCmbx->addItems(Constants::OFF_ON);
+
+    
 
     // Show/Hide Radio Specfic Items
     switch(Anytone::Memory::radio_model){
@@ -167,8 +184,6 @@ void ChannelEditDialog::loadData(){
     ui->txPowerCmbx->setCurrentIndex(channel->tx_power);
     ui->bandWidthCmbx->setCurrentIndex(channel->band_width);
     ui->busyLockCmbx->setCurrentIndex(channel->busy_lock);
-    
-    ui->scanListCmbx->setCurrentIndex(scanlist_list.indexOf(channel->scanlist) + 1);
 
     ui->aprsReportTypeCmbx->setCurrentIndex(channel->aprs_report_type);
     ui->analogAprsPttModeCmbx->setCurrentIndex(channel->analog_aprs_ptt_mode);
@@ -201,7 +216,6 @@ void ChannelEditDialog::loadData(){
     ui->tone5EotCmbx->setCurrentIndex(channel->r5tone_eot);
 
     // DIGITAL
-    ui->digitalContactBtn->setText(channel->contact->name);
     ui->rxColorCodeCmbx->setCurrentIndex(channel->rx_color_code_idx);
     ui->txColorCodeCmbx->setCurrentIndex(channel->tx_color_code_idx);
     ui->slotCmbx->setCurrentIndex(channel->time_slot);
@@ -217,12 +231,22 @@ void ChannelEditDialog::loadData(){
     ui->slotSuitChbx->setChecked(channel->slot_suit);
     ui->smsConfirmationChbx->setChecked(channel->sms_confirmation);
 
-    int rid_idx = radio_id_list.indexOf(channel->radioid);
-    if(rid_idx != -1) ui->radioIdCmbx->setCurrentIndex(rid_idx);
 
-    ui->rxGroupListCmbx->setCurrentIndex(receive_group_call_list.indexOf(channel->receive_group_list) + 1);
+    if(channel->contact)
+        ui->digitalContactBtn->setText(channel->contact->name);
+    
+    if(channel->scanlist)
+        ui->scanListCmbx->setCurrentIndex(scanlist_list.indexOf(channel->scanlist) + 1);
 
-    // updateCtcssDcsCodes()
+    if(channel->radioid){
+        int rid_idx = radio_id_list.indexOf(channel->radioid);
+        if(rid_idx != -1) ui->radioIdCmbx->setCurrentIndex(rid_idx);
+    }
+
+    if(channel->receive_group_list)
+        ui->rxGroupListCmbx->setCurrentIndex(receive_group_call_list.indexOf(channel->receive_group_list) + 1);
+
+    // updateCtcssDcsCodes();
     setModeFormVisibility();
 }
 
@@ -286,12 +310,28 @@ void ChannelEditDialog::setModeFormVisibility(){
             break;
     }
 
-    if(ui->extendEncryptionCmbx->currentIndex() == 0){
-        ui->arc4CodeCmbx->setDisabled(true);
-        ui->aesCodeCmbx->setDisabled(false);
-    }else{
-        ui->arc4CodeCmbx->setDisabled(false);
+
+    if(Anytone::Memory::optional_settings->encryption_type == 0){
+        ui->digitalEncryptionCmbx->setDisabled(false);
+        ui->extendEncryptionCmbx->setDisabled(true);
         ui->aesCodeCmbx->setDisabled(true);
+        ui->arc4CodeCmbx->setDisabled(true);
+        ui->multiKeyCmbx->setDisabled(true);
+        ui->randomKeyCmbx->setDisabled(true);
+    }else{
+        ui->digitalEncryptionCmbx->setDisabled(true);
+        ui->extendEncryptionCmbx->setDisabled(false);
+        if(ui->extendEncryptionCmbx->currentIndex() == 0){ //AES
+            ui->arc4CodeCmbx->setDisabled(true);
+            ui->aesCodeCmbx->setDisabled(false);
+            ui->multiKeyCmbx->setDisabled(false);
+            ui->randomKeyCmbx->setDisabled(false);
+        }else{ // ARC4
+            ui->arc4CodeCmbx->setDisabled(false);
+            ui->aesCodeCmbx->setDisabled(true);
+            ui->multiKeyCmbx->setDisabled(true);
+            ui->randomKeyCmbx->setDisabled(true);
+        }
     }
 
     updateToneCarrierType();
@@ -487,8 +527,8 @@ void ChannelEditDialog::save(){
     channel->time_slot = ui->slotCmbx->currentIndex();
     channel->digital_encryption = ui->digitalEncryptionCmbx->currentIndex();
     channel->extend_encryption = ui->extendEncryptionCmbx->currentIndex();
-    channel->arc4_encryption_key_idx = ui->arc4CodeCmbx->currentIndex();
-    channel->aes_encryption_idx = ui->aesCodeCmbx->currentIndex();
+    
+    
     channel->aes_multiple_key = ui->multiKeyCmbx->currentIndex();
     channel->aes_random_key = ui->randomKeyCmbx->currentIndex();
     channel->sms_forbid = ui->smsForbidCmbx->currentIndex();
@@ -496,6 +536,24 @@ void ChannelEditDialog::save(){
     channel->call_confirmation = ui->callConfirmationChbx->isChecked();
     channel->slot_suit = ui->slotSuitChbx->isChecked();
     channel->sms_confirmation = ui->smsConfirmationChbx->isChecked();
+
+    uint8_t arc4_idx = 0;
+    if(ui->arc4CodeCmbx->currentText() != "Off"){
+        arc4_idx = ui->arc4CodeCmbx->currentText().toInt();
+    }
+    channel->arc4_encryption_key_idx = arc4_idx;
+
+    uint8_t aes_idx = 0;
+    if(ui->aesCodeCmbx->currentText() != "Off"){
+        aes_idx = ui->aesCodeCmbx->currentText().toInt();
+    }
+    channel->aes_encryption_idx = aes_idx;
+
+    uint8_t enc_idx = 0;
+    if(ui->digitalEncryptionCmbx->currentText() != "Off"){
+        enc_idx = ui->digitalEncryptionCmbx->currentText().toInt();
+    }
+    channel->digital_encryption = enc_idx;
 
     // Radio ID
     if(channel->contact) ui->digitalContactBtn->setText(channel->contact->name);

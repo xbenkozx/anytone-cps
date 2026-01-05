@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QDebug>
+#include <QDataStream>
 
 namespace Anytone {
     class DTMFSettings {
@@ -16,6 +17,8 @@ namespace Anytone {
 
         void decode(QByteArray data_24c1000, QByteArray data_2500500);
         void encode(QByteArray &data_24c1000, QByteArray &data_2500500);
+        void save(QDataStream &ds);
+        void load(QDataStream &ds);
 
         uint8_t tx_time = 0;
         QString self_id = "";

@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QDebug>
+#include <QDataStream>
 
 #include "zone.h"
 
@@ -16,7 +17,10 @@ namespace Anytone {
         void decode(QByteArray data);
         QByteArray encode();
 
-        int id = 0;
+        void save(QDataStream &ds);
+        void load(QDataStream &ds);
+
+        uint8_t id = 0;
         uint8_t enabled = 0;
         uint8_t zone_idx = 0xff;
         uint8_t lat_degree = 0;

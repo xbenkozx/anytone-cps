@@ -28,3 +28,29 @@ QByteArray Talkgroup::encode(){
     );
     return data;
 }
+
+void Talkgroup::save(QDataStream &ds){
+    ds << id;
+    ds << dmr_id;
+    ds << call_alert;
+    ds << call_type;
+    uint8_t name_len = name.size();
+    ds << name_len;
+    for(char c : name.toStdString()){
+        ds << c;
+    }
+}
+void Talkgroup::load(QDataStream &ds){
+    name.clear();
+    
+    ds >> dmr_id;
+    ds >> call_alert;
+    ds >> call_type;
+    uint8_t name_size;
+    ds >> name_size;
+    for(int i = 0; i < name_size; i++){
+        char c;
+        ds >> c;
+        name.append(c);
+    }
+}

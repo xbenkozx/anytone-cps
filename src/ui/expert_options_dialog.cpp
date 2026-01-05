@@ -13,7 +13,7 @@ ExpertOptionsDialog::ExpertOptionsDialog(MainWindow *parent) :
     ui->setupUi(this);
     setWindowModality(Qt::WindowModal);
 
-    // ui->writeBtn->setDisabled(true);
+    ui->writeBtn->setDisabled(true);
 
     eo.decode(QByteArray(0x100, 0));
 

@@ -474,3 +474,7 @@ const QStringList Constants::TALKALIAS_DISPLAY_PRIORITY_878 = {"Off", "Contact A
 const QStringList Constants::TALKALIAS_DISPLAY_PRIORITY_890 = {"Off", "Contact Alias", "Air Alias DMR/NX"};
 const QStringList Constants::TALKALIAS_DATA_FORMAT = {"ISO 8", "IOS 7", "Unicode"};
 
+const QStringList Constants::HOTKEY_MENU = {
+    "Off", "SMS", "New SMS", "Hot Text", "Received SMS", "Send SMS", "Contact List", "Manual Dial",
+    "Call Log", "Dialed Call", "Received Call", "Missed Call", "Zone", "Radio Set", "Channel Set"
+};

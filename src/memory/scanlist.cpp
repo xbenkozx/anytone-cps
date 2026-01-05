@@ -18,7 +18,6 @@ void ScanList::decode(QByteArray data){
     }
 
 }
-
 QByteArray ScanList::encode(){
     QByteArray data(0x1f, 0);
     QByteArray channel_data(0x65, 0xff);
@@ -61,4 +60,42 @@ QByteArray ScanList::encode(){
     data.append(channel_data);
 
     return data;
+}
+
+void ScanList::save(QDataStream &ds){
+    ds << id;
+    ds << scan_mode;
+    ds << priority_channel_select;
+    ds << priority_channel_1;
+    ds << priority_channel_2;
+    ds << revert_channel;
+    ds << lookback_time_a;
+    ds << lookback_time_b;
+    ds << dropout_delay_time;
+    ds << dwell_time;
+
+    uint8_t name_len = name.size();
+    ds << name_len;
+    for(char c : name.toStdString()){
+        ds << c;
+    }
+}
+void ScanList::load(QDataStream &ds){
+    ds >> scan_mode;
+    ds >> priority_channel_select;
+    ds >> priority_channel_1;
+    ds >> priority_channel_2;
+    ds >> revert_channel;
+    ds >> lookback_time_a;
+    ds >> lookback_time_b;
+    ds >> dropout_delay_time;
+    ds >> dwell_time;
+
+    uint8_t name_size;
+    ds >> name_size;
+    for(int i = 0; i < name_size; i++){
+        char c;
+        ds >> c;
+        name.append(c);
+    }
 }

@@ -5,6 +5,7 @@
 #include <QString>
 #include <QDebug>
 #include <QVector>
+#include <QDataStream>
 #include "int.h"
 #include "channel.h"
 
@@ -20,7 +21,10 @@ public:
         void decode(QByteArray data);
         QByteArray encode();
 
-        int id = 0;
+        void save(QDataStream &ds);
+        void load(QDataStream &ds);
+
+        uint8_t id = 0;
         QString name = "";
         QVector<Channel*> channels = {};
         uint8_t scan_mode = 0;

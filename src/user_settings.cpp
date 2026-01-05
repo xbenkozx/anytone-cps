@@ -5,6 +5,7 @@ QString UserSettings::virtual_file_name = QString("bin-dump-contacts.bin"); // H
 QString UserSettings::theme = "";
 DeviceRWType UserSettings::read_write_options = DeviceRWType::RADIO_DATA;
 int UserSettings::aprs_alt_type = 0;
+QString UserSettings::last_save_file = "";
 
 void UserSettings::load(){
     #ifdef _WIN32
@@ -16,6 +17,7 @@ void UserSettings::load(){
     UserSettings::virtual_file_name = settings.value("serial/virt_filename", "").toString();
     UserSettings::theme = settings.value("user/theme", "").toString();
     UserSettings::read_write_options = static_cast<DeviceRWType>(settings.value("user/rwoption", 1).toInt());
+    UserSettings::last_save_file = settings.value("user/save_file", "").toString();
 }
 void UserSettings::save(){
     #ifdef _WIN32
@@ -27,4 +29,5 @@ void UserSettings::save(){
     settings.setValue("serial/virt_filename", UserSettings::virtual_file_name);
     settings.setValue("user/theme", UserSettings::theme);
     settings.setValue("user/rwoption", static_cast<uint8_t>(UserSettings::read_write_options));
+    settings.setValue("user/save_file", UserSettings::last_save_file);
 }

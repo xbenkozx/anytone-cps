@@ -30,7 +30,7 @@ void AutoRepeaterEditDialog::loadData(){
 }
 void AutoRepeaterEditDialog::formatFrequency(){
     double freq = ui->frequencyTxt->text().toDouble();
-    ui->frequencyTxt->setText(QString::number(freq, 'f', 5));
+    ui->frequencyTxt->setText(QString::number(freq, 'f', 3));
 }
 
 void AutoRepeaterEditDialog::nextBtnClicked(){

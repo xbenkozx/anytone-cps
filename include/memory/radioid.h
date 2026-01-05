@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QDebug>
+#include <QDataStream>
 
 namespace Anytone {
     class RadioId {
@@ -11,25 +12,13 @@ namespace Anytone {
         RadioId(){}
         ~RadioId(){}
 
-        void decode(QByteArray data){
-            dmr_id = QString(data.mid(0x0, 0x4).toHex()).toInt();
-            name = QString(data.mid(5, 26));
-            name.remove(QChar('\0'));
-        }
+        void decode(QByteArray data);
+        QByteArray encode();
 
-        QByteArray encode(){
-            QByteArray data(0x20, 0);
-            data.replace(0x0, 4, 
-                QByteArray::fromHex(QString::number(dmr_id).rightJustified(8, '0').toUtf8())
-            );
-            data.replace(5, 26, 
-                name.toUtf8().leftJustified(26, '\0')
-            );
+        void save(QDataStream &ds);
+        void load(QDataStream &ds);
 
-            return data;
-        }
-
-        int id = 0;
+        uint8_t id = 0;
         uint32_t dmr_id = 0;
         QString name = "";
     };

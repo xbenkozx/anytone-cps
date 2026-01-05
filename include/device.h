@@ -34,10 +34,14 @@
 #include "memory/prefabricated_sms.h"
 #include "memory/receive_group_call_list.h"
 #include "memory/aes_encryption_code.h"
+#include "memory/arc4_encryption_code.h"
+#include "memory/encryption_code.h"
 #include "memory/dtmf_settings.h"
 #include "memory/tone2_settings.h"
 #include "memory/tone5_settings.h"
 #include "memory/talk_alias_settings.h"
+#include "analog_address.h"
+#include "hotkey.h"
 
 enum class DeviceRWType : uint8_t {
     NONE = 0,
@@ -137,7 +141,11 @@ public:
     void readReceiveGroups();
     void readAesEncryptionKeys();
     void readAprsSettings();
+    void readArc4EncryptionKeys();
+    void readEncryptionKeys();
     void readToneSettings();
+    void readTone2Settings();
+    void readAnalogAddress();
 
     void writeRadioData();
     void writeDigitalContacts();
@@ -156,8 +164,11 @@ public:
     void writeMasterRadioIdData();
     void writePrefabSms();
     void writeAesKeys();
+    void writeArc4Keys();
+    void writeEncryptionKeys();
     void writeAprsSettings();
     void writeToneSettings();
+    void writeTone2Settings();
     
     bool is_alive = true;
     DeviceRWType read_write_options = DeviceRWType::NONE;
@@ -368,7 +379,7 @@ public:
         port->write(QByteArray("\x02"));
         QByteArray resp = readPort();
         QString radio_model = QString(resp.mid(0x0, 0x8));
-        QString radio_version = QString(resp.mid(0x9, 5));
+        QString radio_version = QString(resp.mid(0x9, 4));
         radio_model.remove(QChar('\0'));
         radio_version.remove(QChar('\0'));
         std::vector<QString> data = {radio_model, radio_version};

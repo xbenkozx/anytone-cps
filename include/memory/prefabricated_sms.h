@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QDebug>
+#include <QDataStream>
 
 namespace Anytone {
     class PrefabricatedSms {
@@ -11,16 +12,13 @@ namespace Anytone {
         PrefabricatedSms(){}
         ~PrefabricatedSms(){}
 
-        void decode(QByteArray data){
-            text = QString(data);
-            text.remove(QChar('\0'));
-        }
+        void decode(QByteArray data);
+        QByteArray encode();
 
-        QByteArray encode(){
-            return text.toUtf8().leftJustified(0xd0, '\0');
-        }
+        void save(QDataStream &ds);
+        void load(QDataStream &ds);
 
-        int id = 0;
+        uint8_t id = 0;
         QString text = "";
     };
 }

@@ -138,7 +138,6 @@ void Anytone::DTMFSettings::decode(QByteArray data_24c1000, QByteArray data_2500
         }
     }
 }
-
 void Anytone::DTMFSettings::encode(QByteArray &data_24c1000, QByteArray &data_2500500){
     data_24c1000[0x86] = hex_char.indexOf(self_id.at(0));
     data_24c1000[0x87] = hex_char.indexOf(self_id.at(1));
@@ -202,4 +201,265 @@ void Anytone::DTMFSettings::encode(QByteArray &data_24c1000, QByteArray &data_25
     i = 0;
     for(QChar c : m16){ data_2500500[0xf0+i] = dtmf_char.indexOf(c); i++; }
     
+}
+
+void Anytone::DTMFSettings::save(QDataStream &ds){
+    ds << tx_time;
+    ds << interval_char;
+    ds << group_code;
+    ds << decoding_response;
+    ds << first_digit_time;
+    ds << pretime;
+    ds << auto_reset_time;
+    ds << decode_time_lapse;
+    ds << ptt_id_pause_time;
+    ds << d_code_pause;
+    ds << side_tone;
+    ds << ptt_id;
+
+    uint8_t self_id_len = self_id.size();
+    ds << self_id_len;
+    for(char c : self_id.toStdString()){ ds << c; }
+
+    uint8_t ptt_id_bot_len = ptt_id_bot.size();
+    ds << ptt_id_bot_len;
+    for(char c : ptt_id_bot.toStdString()){ ds << c; }
+
+    uint8_t ptt_id_eot_len = ptt_id_eot.size();
+    ds << ptt_id_eot_len;
+    for(char c : ptt_id_eot.toStdString()){ ds << c; }
+
+    uint8_t remote_kill_len = remote_kill.size();
+    ds << remote_kill_len;
+    for(char c : remote_kill.toStdString()){ ds << c; }
+
+    uint8_t remote_stun_len = remote_stun.size();
+    ds << remote_stun_len;
+    for(char c : remote_stun.toStdString()){ ds << c; }
+
+    uint8_t m1_len = m1.size();
+    ds << m1_len;
+    for(char c : m1.toStdString()){ ds << c; }
+
+    uint8_t m2_len = m2.size();
+    ds << m2_len;
+    for(char c : m2.toStdString()){ ds << c; }
+
+    uint8_t m3_len = m3.size();
+    ds << m3_len;
+    for(char c : m3.toStdString()){ ds << c; }
+
+    uint8_t m4_len = m4.size();
+    ds << m4_len;
+    for(char c : m4.toStdString()){ ds << c; }
+
+    uint8_t m5_len = m5.size();
+    ds << m5_len;
+    for(char c : m5.toStdString()){ ds << c; }
+
+    uint8_t m6_len = m6.size();
+    ds << m6_len;
+    for(char c : m6.toStdString()){ ds << c; }
+
+    uint8_t m7_len = m7.size();
+    ds << m7_len;
+    for(char c : m7.toStdString()){ ds << c; }
+
+    uint8_t m8_len = m8.size();
+    ds << m8_len;
+    for(char c : m8.toStdString()){ ds << c; }
+
+    uint8_t m9_len = m8.size();
+    ds << m9_len;
+    for(char c : m9.toStdString()){ ds << c; }
+
+    uint8_t m10_len = m8.size();
+    ds << m10_len;
+    for(char c : m10.toStdString()){ ds << c; }
+
+    uint8_t m11_len = m8.size();
+    ds << m11_len;
+    for(char c : m11.toStdString()){ ds << c; }
+
+    uint8_t m12_len = m8.size();
+    ds << m12_len;
+    for(char c : m12.toStdString()){ ds << c; }
+
+    uint8_t m13_len = m8.size();
+    ds << m13_len;
+    for(char c : m13.toStdString()){ ds << c; }
+
+    uint8_t m14_len = m8.size();
+    ds << m14_len;
+    for(char c : m14.toStdString()){ ds << c; }
+
+    uint8_t m15_len = m8.size();
+    ds << m15_len;
+    for(char c : m15.toStdString()){ ds << c; }
+
+    uint8_t m16_len = m8.size();
+    ds << m16_len;
+    for(char c : m8.toStdString()){ ds << c; }
+}
+void Anytone::DTMFSettings::load(QDataStream &ds){
+    ds >> tx_time;
+    ds >> interval_char;
+    ds >> group_code;
+    ds >> decoding_response;
+    ds >> first_digit_time;
+    ds >> pretime;
+    ds >> auto_reset_time;
+    ds >> decode_time_lapse;
+    ds >> ptt_id_pause_time;
+    ds >> d_code_pause;
+    ds >> side_tone;
+    ds >> ptt_id;
+
+    uint8_t str_size;
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        self_id.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        ptt_id_bot.append(c);
+    }
+    
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        ptt_id_eot.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        remote_kill.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        remote_stun.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m1.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m2.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m3.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m4.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m5.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m6.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m7.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m8.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m9.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m10.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m11.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m12.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m13.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m14.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m15.append(c);
+    }
+
+    ds >> str_size;
+    for(int i = 0; i < str_size; i++){
+        char c;
+        ds >> c;
+        m16.append(c);
+    }
 }

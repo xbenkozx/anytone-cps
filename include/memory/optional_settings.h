@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QDebug>
+#include <QDataStream>
 #include "utils.h"
 #include "int.h"
 
@@ -18,6 +19,9 @@ namespace Anytone {
 
         void decode(QByteArray data_2500000, QByteArray data_2500600, QByteArray data_2501280, QByteArray data_2501400);
         void encode(QByteArray &data_2500000, QByteArray &data_2500600, QByteArray &data_2501280, QByteArray &data_2501400);
+
+        void save(QDataStream &ds);
+        void load(QDataStream &ds);
 
         // Power-on
         uint8_t poweron_interface = 0;

@@ -8,9 +8,13 @@
 | 0x24c129c | 0x1 | int | Encode Gap Time |
 | 0x24c129d | 0x1 | int | Encode Auto Reset Time |
 | 0x24c129e | 0x1 | bool | Encode Side Tone |
-| 0x24c1100 | 0x10 | | Encode List 0xff=empty |
 
 # Encode List
+| Address | Length | Data |
+| - | - | - |
+| 0x24c1100 | 0x10 | Encode List Item 0xff=empty|
+| 0x24c1280 | 0x3 | Set List |
+
 | Offset | Length | Type | Data |
 | - | - | - | - |
 | 0x0 | 0x2 | | 1st Tone Freq / 10 |
@@ -20,6 +24,7 @@
 
 # Decode List
 | Address | Length | Data |
+| - | - | - |
 | 0x24c2400 | 0x20 | Decode List Item |
 | 0x24c2600 | 0x2 | Set List |
 

@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QDebug>
+#include <QDataStream>
 
 namespace Anytone {
     class AlarmSettings {
@@ -13,6 +14,8 @@ namespace Anytone {
 
         void decode(QByteArray data_0000, QByteArray data_1400, QByteArray data_1440);
         void encode(QByteArray &data_2500000, QByteArray &data_24c1400, QByteArray &data_24c1440);
+        void save(QDataStream &ds);
+        void load(QDataStream &ds);
 
         uint8_t analog_emergency_alarm = 0;
         uint8_t analog_eni_type = 0;

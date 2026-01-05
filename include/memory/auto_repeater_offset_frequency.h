@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QDebug>
+#include <QDataStream>
 
 namespace Anytone {
     class AutoRepeaterOffsetFrequency{
@@ -12,15 +13,12 @@ namespace Anytone {
         AutoRepeaterOffsetFrequency(){}
         ~AutoRepeaterOffsetFrequency(){}
 
-        double getFrequencyDouble(){
-            return double(frequency) / 100000;
-        };
+        double getFrequencyDouble();
+        QString getFrequencyString();
+        void save(QDataStream &ds);
+        void load(QDataStream &ds);
 
-        QString getFrequencyString(){
-            return QString::number(getFrequencyDouble(), 'f', 3);
-        };
-
-        int id = 0;
+        uint8_t id = 0;
         int frequency = 0;
 
     };

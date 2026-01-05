@@ -12,6 +12,7 @@ class UserSettings{
     static DeviceRWType read_write_options;
     static QString theme;
     static int aprs_alt_type;
+    static QString last_save_file;
     static void load();
     static void save();
 };

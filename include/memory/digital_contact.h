@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QDebug>
+#include <QDataStream>
 
 namespace Anytone {
     class DigitalContact {
@@ -12,10 +13,9 @@ namespace Anytone {
         ~DigitalContact(){}
 
         void save(QDataStream &ds);
-
         void load(QDataStream &ds);
 
-        int id = 0;
+        uint32_t id = 0;
         uint32_t radio_id = 0;
         QString callsign = "";
         QString name = "";

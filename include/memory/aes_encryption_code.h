@@ -2,6 +2,7 @@
 #define ANYTONE_AES_ENCRYPTION_CODE_H
 
 #include <QString>
+#include <QDataStream>
 
 namespace Anytone{
     class AesEncryptionCode{
@@ -11,8 +12,10 @@ namespace Anytone{
 
         QByteArray encode();
         void decode(QByteArray data);
+        void save(QDataStream &ds);
+        void load(QDataStream &ds);
 
-        int index = 0;
+        uint8_t index = 0;
         uint8_t id = 0;
         QString key = QString("");
         uint8_t key_length = 0;

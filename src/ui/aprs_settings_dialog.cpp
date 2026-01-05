@@ -131,7 +131,13 @@ void AprsSettingsDialog::setupUI(){
     for(int i = 100; i < 1001; i+=100){ ui->repeaterActivationDelayCmbx->addItem(QString::number(i)); }
 
     ui->passAllCmbx->addItems(Constants::OFF_ON);
+
+    connect(ui->fixedBeaconLocationCmbx, &QComboBox::currentIndexChanged, this, &AprsSettingsDialog::setFix);
     
+}
+void AprsSettingsDialog::setFix(){
+    int fixIdx = ui->fixedBeaconLocationCmbx->currentIndex();
+    if(fixIdx > 0) ui->tabWidget->setCurrentIndex(fixIdx-1);
 }
 void AprsSettingsDialog::loadData(){
     // Common

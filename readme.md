@@ -2,7 +2,7 @@
   <img src="icons/d878_icon.png" />
 </p>
 
-# Anytone CPS
+# anytone-878uvii-cps
 An open-source, cross-platform Customer Programming Software (CPS) for the AnyTone 878UVII series radios, written in c++.
 
 This project aims to provide a modern, scriptable, and community-maintained alternative to the stock AnyTone CPS, while keeping the workflow familiar for existing users.
@@ -29,6 +29,7 @@ The stock CPS for the 878UVII:
 
 - Is Windows-only and does not run using WINE
 - Makes bulk edits and codeplug management harder than it needs to be
+- Slow Performance
 
 ## Planned Updates
 - Repeater Book Import
@@ -51,66 +52,67 @@ The stock CPS for the 878UVII:
 # Feature Set
 ## Serial Data
 These are not fully tested.
-| Data | Read/Write |
-| - | :---: |
-| Boot Image | R/W |
-| BK Image 1 | R/W |
-| BK Image 2 | R/W |
-| 2Tone Encode/Decode | R/W |
-| 5Tone Encode/Decode | R/W |
-| AES Encryption Code | R/W |
-| Analog Address Book | |
-| APRS | R/W |
-| ARC4 Encryption Code | |
-| Auto Repeater Offset Frequencies | R/W |
-| Alarm Settings | R/W |
-| Channels | R/W |
-| Digital Contacts | R/W |
-| DTMF Encode/Decode | R/W |
-| Encryption Code | |
-| Local Information/Expert Options(AT_OPTIONS) | R |
-| FM Channels | R/W |
-| GPS Roaming | R/W |
-| HotKey HotKey | |
-| HotKey Quick Call | |
-| HotKey State | |
-| Master ID | R/W |
-| Optional Settings | R/W |
-| Prefabricated SMS | R/W |
-| Radio IDs | R/W |
-| Roaming Channels | R/W |
-| Roaming Zones | R/W |
-| Scan Lists | R/W |
-| TalkGroups | R/W |
-| Zones | R/W |
+| Data | D878UVII | D890UV | D168UV |
+| - | :---: | :---: | :---: |
+| Boot Image | R/W | | |
+| BK Image 1 | R/W | | |
+| BK Image 2 | R/W | | |
+| 2Tone Encode/Decode | R/W | | |
+| 5Tone Encode/Decode | R/W | | |
+| AES Encryption Code | R/W | | |
+| Analog Address Book | | | |
+| APRS | R/W | | |
+| ARC4 Encryption Code | R/W | | |
+| Auto Repeater Offset Frequencies | R/W | | |
+| Alarm Settings | R/W | | |
+| Channels | R/W | | |
+| Digital Contacts | R/W | | |
+| DTMF Encode/Decode | R/W | | |
+| Encryption Code | R/W | | |
+| Local Information/Expert Options(AT_OPTIONS) | R/W | R/W | |
+| FM Channels | R/W | | |
+| GPS Roaming | R/W | | |
+| HotKey HotKey | | | |
+| HotKey Quick Call | | | |
+| HotKey State | | | |
+| Master ID | R/W | | |
+| Optional Settings | R/W | | |
+| Prefabricated SMS | R/W | | |
+| Radio IDs | R/W | | |
+| Roaming Channels | R/W | | |
+| Roaming Zones | R/W | | |
+| Scan Lists | R/W | | |
+| Talk Alias Settings | R/W | | |
+| TalkGroups | R/W | | |
+| Zones | R/W | | |
 
 ## CSV Import/Export
-| Data | Import/Export |
-| - | :---: |
-| 2Tone Encode | |
-| 5Tone Encode | |
-| AES Encryption Code | |
-| Alert Tone | |
-| Analog Address Book | |
-| APRS | |
-| ARC4 Encryption Code | |
-| Auto Repeater Offset Frequencies | |
-| Channels | |
-| Digital Contacts | |
-| DTMF Encode | |
-| FM Channels | |
-| GPS Roaming | |
-| HotKey HotKey | |
-| HotKey Quick Call | |
-| HotKey State | |
-| Optional Settings | |
-| Prefabricated SMS | |
-| Radio IDs | I |
-| Roaming Channels | |
-| Roaming Zones | |
-| Scan Lists | |
-| TalkGroups | |
-| Zones | |
+| Data | D878UVII | D890UV | D168UV |
+| - | :---: | :---: | :---: |
+| 2Tone Encode | | | |
+| 5Tone Encode | | | |
+| AES Encryption Code | | | |
+| Alert Tone | | | |
+| Analog Address Book | | | |
+| APRS | | | |
+| ARC4 Encryption Code | | | |
+| Auto Repeater Offset Frequencies | | | |
+| Channels | | | |
+| Digital Contacts | | | |
+| DTMF Encode | | | |
+| FM Channels | | | |
+| GPS Roaming | | | |
+| HotKey HotKey | | | |
+| HotKey Quick Call | | | |
+| HotKey State | | | |
+| Optional Settings | | | |
+| Prefabricated SMS | | | |
+| Radio IDs | I | | |
+| Roaming Channels | | | |
+| Roaming Zones | | | |
+| Scan Lists | | | |
+| TalkGroups | | | |
+| Zones | | | |
 
 ---
 

@@ -24,8 +24,13 @@ ComportDialog::ComportDialog(QWidget *parent) :
         QString vendor_id = QString::number(portInfo.vendorIdentifier(), 16);
         QString product_id = QString::number(portInfo.productIdentifier(), 16);
         if(vendor_id == QString("28e9") && product_id == QString("18a")){
-            ui->comPortCmbx->addItem(portInfo.portName(), portInfo.portName());
+            ui->comPortCmbx->addItem(portInfo.portName() +" - D878UVII", portInfo.portName());
             com_list.push_back(portInfo.portName());
+        }else if(vendor_id == QString("483") && product_id == QString("5740")){
+            ui->comPortCmbx->addItem(portInfo.portName() +" - D890UV", portInfo.portName());
+            com_list.push_back(portInfo.portName());
+        }else if(vendor_id != QString("0") && product_id != QString("0")){
+            qDebug() << vendor_id << product_id;
         }
     }
 

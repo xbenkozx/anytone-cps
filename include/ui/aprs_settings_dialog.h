@@ -24,6 +24,9 @@ public:
     Anytone::AprsSettings *aprs;
     AprsReceiveFilterTableModel *filter_model;
 
+private slots:
+    void setFix();
+
 };
 
 #endif

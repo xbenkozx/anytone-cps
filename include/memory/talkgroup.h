@@ -3,6 +3,7 @@
 
 #include <QByteArray>
 #include <QString>
+#include <QDataStream>
 
 namespace Anytone {
     class Talkgroup {
@@ -14,7 +15,10 @@ namespace Anytone {
         void decode(QByteArray data);
         QByteArray encode();
 
-        int id = 0;
+        void save(QDataStream &ds);
+        void load(QDataStream &ds);
+
+        uint16_t id = 0;
         uint32_t dmr_id = 0;
         uint8_t call_alert = 0;
         QString name = "";

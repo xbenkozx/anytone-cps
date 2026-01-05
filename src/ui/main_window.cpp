@@ -1,4 +1,5 @@
 #include <QSaveFile>
+#include <QFileDialog>
 #include "main_window.h"
 #include "ui_main_window.h"
 #include "memory/memory.h"
@@ -8,6 +9,10 @@
 #include <QSerialPortInfo>
 #include <QLocale>
 #include <QMenu>
+#include <QMessageBox>
+#include <QSpacerItem>
+#include <QLayout>
+#include <QTimer>
 #include "channel_table_model.h"
 #include "zone_table_model.h"
 #include "talkgroup_table_model.h"
@@ -22,8 +27,13 @@
 #include "prefabricated_sms_table_model.h"
 #include "receive_group_call_table_model.h"
 #include "aes_encryption_table_model.h"
+#include "arc4_encryption_table_model.h"
+#include "encryption_table_model.h"
+#include "analog_address_table_model.h"
 
 #include "aes_encryption_code_dialog.h"
+#include "arc4_encryption_code_dialog.h"
+#include "encryption_code_dialog.h"
 #include "alert_settings_dialog.h"
 #include "aprs_settings_dialog.h"
 #include "auto_repeater_edit_dialog.h"
@@ -50,6 +60,7 @@
 #include "hotkey_settings_dialog.h"
 #include "talkgroup_edit_dialog.h"
 #include "hotkey_settings_dialog.h"
+#include "analog_address_edit_dialog.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -68,18 +79,32 @@ MainWindow::MainWindow(QWidget *parent) :
     selected_table_view = "Channel";
 
     setupUI();
+
+    if(UserSettings::last_save_file != ""){
+        openFile(UserSettings::last_save_file);
+    }
     
-    listChannels();
+    showList();
 
     // readFromRadio();
 }
 
 MainWindow::~MainWindow(){}
+void MainWindow::showEvent(QShowEvent *event)
+{
+    QMainWindow::showEvent(event);
 
+    static bool shown = false;
+    if (!shown) {
+        shown = true;
+        if(!debug) QTimer::singleShot(0, this, &MainWindow::showAlphaWarningMessage);
+    }
+}
 void MainWindow::setupUI(){
     loading_dialog = new LoadingDialog(this);
-    connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::openFile);
-    connect(ui->actionSave, &QAction::triggered, this, &MainWindow::saveFile);
+    connect(ui->actionNew, &QAction::triggered, this, &MainWindow::newBtnClicked);
+    connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::openBtnClicked);
+    connect(ui->actionSave, &QAction::triggered, this, &MainWindow::saveBtnClicked);
 
     connect(ui->actionD878UVII, &QAction::triggered, this, &MainWindow::setRadioModel_D878UVII);
     connect(ui->actionD890UV, &QAction::triggered, this, &MainWindow::setRadioModel_D890UV);
@@ -92,8 +117,9 @@ void MainWindow::setupUI(){
     connect(ui->actionStandby_Bk_Picture_2, &QAction::triggered, this, &MainWindow::showBK2ImageDialog);
     connect(ui->actionExpert_Options, &QAction::triggered, this, &MainWindow::showExpertOptions);   
 
-    connect(ui->openFileBtn, &QToolButton::clicked, this, &MainWindow::openFile);
-    connect(ui->saveFileBtn, &QToolButton::clicked, this, &MainWindow::saveFile);
+    connect(ui->newFileBtn, &QToolButton::clicked, this, &MainWindow::newBtnClicked);
+    connect(ui->openFileBtn, &QToolButton::clicked, this, &MainWindow::openBtnClicked);
+    connect(ui->saveFileBtn, &QToolButton::clicked, this, &MainWindow::saveBtnClicked);
         
     connect(ui->mainTreeWidget, &QTreeWidget::itemClicked, this, &MainWindow::onTreeItemClicked);
     connect(ui->comPortBtn, &QToolButton::clicked, this, &MainWindow::showComportDialog);
@@ -156,7 +182,39 @@ void MainWindow::setupTreeView(){
         mainTreeItem->setExpanded(true);
     }
 }
+void MainWindow::showAlphaWarningMessage(){
+    QMessageBox msg(this);
+    msg.setWindowModality(Qt::WindowModal);
+    msg.setIcon(QMessageBox::Warning);
+    msg.setWindowTitle("Alpha Version Warning");
+    msg.setText("This program is currently in ALPHA STAGE and only compatible with FW v4.00");
+    msg.setInformativeText(
+        "Some features may not function correctly or may be incomplete.\n\n"
+        "Use with caution and report any issues you encounter.\n"
+    );
+    msg.setStandardButtons(QMessageBox::Ok);
 
+    // QMessageBox uses a grid layout internally (typically)
+    if (auto *grid = qobject_cast<QGridLayout*>(msg.layout())) {
+
+        // Add an expanding spacer to force width
+        auto *spacer = new QSpacerItem(
+            500, 0,
+            QSizePolicy::Expanding,   // horizontal
+            QSizePolicy::Minimum      // vertical
+        );
+
+        // Put it on the same row as the buttons (last row), last column
+        int row = grid->rowCount() - 1;
+        int col = grid->columnCount();
+        grid->addItem(spacer, row, col, 1, 1);
+    }
+
+    // Optional: set a minimum width instead of a giant resize
+    msg.setMinimumWidth(500);
+
+    msg.exec();
+}
 void MainWindow::copySelectedChannels(){
     QModelIndexList selected_indexes = ui->tableView->selectionModel()->selectedIndexes();
     if(selected_indexes.size() == 0) return;
@@ -269,12 +327,19 @@ void MainWindow::editChannel(){
 
 void MainWindow::updateRadioModel(){
     setupTreeView();
+    updateWindowTitle();
+}
+void MainWindow::updateWindowTitle(){
+    QString current_file_name = "new.rdt";
+    if(!UserSettings::last_save_file.isEmpty()){
+        current_file_name = UserSettings::last_save_file;
+    }
     switch(Anytone::Memory::radio_model){
         case Anytone::RadioModel::D878UVII:
-            setWindowTitle("Anytone D878UVII CPS - 4.00");
+            setWindowTitle("Anytone D878UVII CPS - 4.00 [" + current_file_name + "]");
             break;
         case Anytone::RadioModel::D890UV:
-            setWindowTitle("Anytone D878UVII CPS - 4.00");
+            setWindowTitle("Anytone D890UV CPS - 1.03 [" + current_file_name + "]");
             break;
         default:
             break;
@@ -525,7 +590,48 @@ void MainWindow::listAesEncryptionKeys(bool goto_top){
 
     if(goto_top) ui->tableView->scrollToTop();
 }
+void MainWindow::listArc4EncryptionKeys(bool goto_top){
+    delete table_model;
+    table_model = new Arc4EncryptionTableModel(this);
+    ui->tableView->setModel(table_model);
 
+    ui->tableView->verticalHeader()->setVisible(false);
+    ui->tableView->setSortingEnabled(false);
+
+    ui->tableView->setColumnWidth(0, 70);
+    ui->tableView->setColumnWidth(1, 100);
+    ui->tableView->setColumnWidth(2, 200);
+
+    if(goto_top) ui->tableView->scrollToTop();
+}
+void MainWindow::listEncryptionKeys(bool goto_top){
+    delete table_model;
+    table_model = new EncryptionTableModel(this);
+    ui->tableView->setModel(table_model);
+
+    ui->tableView->verticalHeader()->setVisible(false);
+    ui->tableView->setSortingEnabled(false);
+
+    ui->tableView->setColumnWidth(0, 70);
+    ui->tableView->setColumnWidth(1, 100);
+    ui->tableView->setColumnWidth(2, 200);
+
+    if(goto_top) ui->tableView->scrollToTop();
+}
+void MainWindow::listAnalogAddresses(bool goto_top){
+    delete table_model;
+    table_model = new AnalogAddressTableModel(this);
+    ui->tableView->setModel(table_model);
+
+    ui->tableView->verticalHeader()->setVisible(false);
+    ui->tableView->setSortingEnabled(false);
+
+    ui->tableView->setColumnWidth(0, 70);
+    ui->tableView->setColumnWidth(1, 100);
+    ui->tableView->setColumnWidth(2, 200);
+
+    if(goto_top) ui->tableView->scrollToTop();
+}
 void MainWindow::showComportDialog(){
     comport_dialog = std::make_unique<ComportDialog>(this);
     comport_dialog->show();
@@ -543,11 +649,22 @@ void MainWindow::showWriteOptionsDialog(){
 void MainWindow::showAesEncryptionDialog(int index){
     AesEncryptionCodeDialog aes_encryption_dialog(this, index);
     aes_encryption_dialog.exec();
-    
+}
+void MainWindow::showArc4EncryptionDialog(int index){
+    Arc4EncryptionCodeDialog arc_encryption_dialog(this, index);
+    arc_encryption_dialog.exec();
+}
+void MainWindow::showEncryptionDialog(int index){
+    EncryptionCodeDialog encryption_dialog(this, index);
+    encryption_dialog.exec();
 }
 void MainWindow::showAlertSettingsDialog(){
     AlertSettingsDialog alert_settings_dialog(this);
     alert_settings_dialog.exec();
+}
+void MainWindow::showAnalogAddressEditDialog(int index){
+    AnalogAddressEditDialog encryption_dialog(this, index);
+    encryption_dialog.exec();
 }
 void MainWindow::showAprsSettingsDialog(){
     AprsSettingsDialog aprs_settings_dialog(this);
@@ -864,19 +981,20 @@ void MainWindow::showList(QString list_name){
         listReceiveGroupCall();
     }else if(view == "Encryption Code"){
         selected_table_view = view;
-        
+        listEncryptionKeys();
     }else if(view == "AES Encryption Code"){
         selected_table_view = view;
         listAesEncryptionKeys();
     }else if(view == "ARC4 Encryption Code"){
         selected_table_view = view;
-        
+        listArc4EncryptionKeys();
     }else if(view == "Friends List"){
         
     }else if(view == "Talk Alias Settings" || view == "AIR Alias Settings"){
         showTalkAliasSettingsDialog();
     }else if(view == "Analog Address Book"){
-        
+        selected_table_view = view;
+        listAnalogAddresses();
     }else if(view == "5Tone Settings"){
         showTone5SettingsDialog();
     }else if(view == "2Tone Settings"){
@@ -892,6 +1010,10 @@ void MainWindow::onMainTableDblClicked(QModelIndex index){
 
     if(selected_table_view == "AES Encryption Code"){
         showAesEncryptionDialog(row_index);
+    }else if(selected_table_view == "ARC4 Encryption Code"){
+        showArc4EncryptionDialog(row_index);
+    }else if(selected_table_view == "Encryption Code"){
+        showEncryptionDialog(row_index);
     }else if(selected_table_view == "Auto Repeater Offset Frequencies"){
         showAutoRepeaterEditDialog(row_index);
     }else if(selected_table_view == "Channel"){
@@ -914,10 +1036,59 @@ void MainWindow::onMainTableDblClicked(QModelIndex index){
         showZoneEditDialog(row_index);
     }else if(selected_table_view == "Prefabricated SMS"){
         showPrefabricatesSmsEditDialog(row_index);
+    }else if(selected_table_view == "Analog Address Book"){
+        showAnalogAddressEditDialog(row_index);
     }
+
+    
 }
-void MainWindow::saveFile(){
-    QFile file("savefile.bin");
+void MainWindow::newBtnClicked(){
+    Anytone::Memory::init();
+    UserSettings::last_save_file = "";
+    UserSettings::save();
+    updateWindowTitle();
+    showList();
+}
+void MainWindow::saveBtnClicked(){
+    saveFile();
+}
+void MainWindow::openBtnClicked(){
+    openFile();
+}
+void MainWindow::saveFileAs(){
+    saveFile(true);
+}
+void MainWindow::saveFile(bool save_as){
+    QString filepath = UserSettings::last_save_file;
+    if(save_as) filepath = "";
+
+    #ifdef _WIN32
+    QString default_path = "C:/Users/" + QString(getenv("USERNAME")) + "/Documents";
+    #else
+    QString default_path = "/home/" + QString(getenv("USER")) +  "/Documents";
+    #endif
+
+
+    if(filepath.isEmpty()){
+        QString fname = QFileDialog::getSaveFileName(
+            this,
+            tr("Save Codeplug"),
+            default_path,
+            tr("Radio Data File (*.atd)")
+        );
+
+        if (fname.isEmpty())
+            return;
+
+        if (!fname.endsWith(".atd", Qt::CaseInsensitive)) {
+            fname += ".atd";
+        }
+
+        filepath = fname;
+    }
+    UserSettings::last_save_file = filepath;
+    UserSettings::save();
+    QFile file(filepath);
     if(file.open(QIODevice::WriteOnly | QIODevice::Truncate)){
         QDataStream out(&file);
         out.setVersion(QDataStream::Qt_6_6);
@@ -925,15 +1096,50 @@ void MainWindow::saveFile(){
     }else{
         qDebug() << "Cannot open save file";
     }
+
+    updateWindowTitle();
+    BasicDialog bd(this, "Save file OK", "Save File");
+    bd.exec();
+
 }
-void MainWindow::openFile(){
-    QFile file("savefile.bin");
+void MainWindow::openFile(QString filepath){
+    if(filepath.isEmpty()){
+
+        #ifdef _WIN32
+        QString default_path = "C:/Users/" + QString(getenv("USERNAME")) + "/Documents";
+        #else
+        QString default_path = "/home/" + QString(getenv("USER")) +  "/Documents";
+        #endif
+
+        QString fname = QFileDialog::getOpenFileName(
+            this,
+            tr("Open Codeplug"),
+            default_path,
+            tr("Radio Data File (*.atd)")
+        );
+
+        if (fname.isEmpty())
+            return;
+
+        if (!fname.endsWith(".atd", Qt::CaseInsensitive)) {
+            fname += ".atd";
+        }
+
+        filepath = fname;
+    }
+    QFile file(filepath);
     if(file.open(QIODevice::ReadOnly)){
         QDataStream in(&file);
         in.setVersion(QDataStream::Qt_6_6);
         Anytone::Memory::loadData(in);
         file.close();
+        UserSettings::last_save_file = filepath;
+    }else{
+        UserSettings::last_save_file = "";
     }
 
+    UserSettings::save();
+
+    updateWindowTitle();
     showList();
 }

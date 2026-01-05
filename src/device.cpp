@@ -22,7 +22,7 @@ void Device::readRadioData(){
     }else if(local_info[0] == QString("ID890UV") && local_info[1] == QString("V100")){
         Anytone::Memory::radio_model = Anytone::RadioModel::D890UV;
         if((read_write_options & DeviceRWType::RADIO_DATA) != DeviceRWType::NONE) readOtherData();
-        if((read_write_options & DeviceRWType::DIGITAL_CONTACTS) !=  DeviceRWType::NONE) readDigitalContacts();
+        // if((read_write_options & DeviceRWType::DIGITAL_CONTACTS) !=  DeviceRWType::NONE) readDigitalContacts();
         if((read_write_options & DeviceRWType::BOOT_IMAGE) !=  DeviceRWType::NONE) readBootImage();
         if((read_write_options & DeviceRWType::BK1_IMAGE) !=  DeviceRWType::NONE) readBk1Image();
         if((read_write_options & DeviceRWType::BK2_IMAGE) !=  DeviceRWType::NONE) readBk2Image();
@@ -35,28 +35,58 @@ void Device::readRadioData(){
 }
 void Device::writeRadioData(){
     std::vector<QString> local_info = readDeviceInfo();
-    if(local_info[0] != QString("ID878UV2") || local_info[1] != QString("V101")){
-        emit finished(DeviceStatus::STATUS_DEVICE_MISMATCH);
-        return;
-    }
 
-    if((read_write_options & DeviceRWType::RADIO_DATA) != DeviceRWType::NONE) writeOtherData();
-    if((read_write_options & DeviceRWType::DIGITAL_CONTACTS) != DeviceRWType::NONE) writeDigitalContacts();
-    if((read_write_options & DeviceRWType::BOOT_IMAGE) !=  DeviceRWType::NONE) writeBootImage();
-    if((read_write_options & DeviceRWType::BK1_IMAGE) !=  DeviceRWType::NONE) writeBk1Image();
-    if((read_write_options & DeviceRWType::BK2_IMAGE) !=  DeviceRWType::NONE) writeBk2Image();
+    if(local_info[0] == QString("ID878UV2") && local_info[1] == QString("V101")){
+        Anytone::Memory::radio_model = Anytone::RadioModel::D878UVII;
+        if((read_write_options & DeviceRWType::RADIO_DATA) != DeviceRWType::NONE) writeOtherData();
+        if((read_write_options & DeviceRWType::DIGITAL_CONTACTS) != DeviceRWType::NONE) writeDigitalContacts();
+        if((read_write_options & DeviceRWType::BOOT_IMAGE) !=  DeviceRWType::NONE) writeBootImage();
+        if((read_write_options & DeviceRWType::BK1_IMAGE) !=  DeviceRWType::NONE) writeBk1Image();
+        if((read_write_options & DeviceRWType::BK2_IMAGE) !=  DeviceRWType::NONE) writeBk2Image();
+    }else if(local_info[0] == QString("ID890UV") && local_info[1] == QString("V100")){
+        Anytone::Memory::radio_model = Anytone::RadioModel::D890UV;
+        // if((read_write_options & DeviceRWType::RADIO_DATA) != DeviceRWType::NONE) writeOtherData();
+        // if((read_write_options & DeviceRWType::DIGITAL_CONTACTS) !=  DeviceRWType::NONE) writeDigitalContacts();
+        if((read_write_options & DeviceRWType::BOOT_IMAGE) !=  DeviceRWType::NONE) writeBootImage();
+        if((read_write_options & DeviceRWType::BK1_IMAGE) !=  DeviceRWType::NONE) writeBk1Image();
+        if((read_write_options & DeviceRWType::BK2_IMAGE) !=  DeviceRWType::NONE) writeBk2Image();
+    }else{
+        qDebug() << local_info[0] << local_info[1];
+        emit finished(DeviceStatus::STATUS_DEVICE_MISMATCH);
+    }
 }
 QByteArray Device::readLocalInformation(){
-    return readMemory(0x2fa0000, 0x100);
+    std::vector<QString> local_info = readDeviceInfo();
+    if(local_info[0] == QString("ID878UV2") && local_info[1] == QString("V101")){
+        return readMemory(Anytone::D878_MAP.LocalInfo, 0x100);
+    }else if(local_info[0] == QString("ID890UV") && local_info[1] == QString("V100")){
+        return readMemory(Anytone::D890_MAP.LocalInfo, 0x100);
+    }else{
+        qDebug() << local_info[0] << local_info[1];
+        emit finished(DeviceStatus::STATUS_DEVICE_MISMATCH);
+        return QByteArray(0x100, 0);
+    }
+    
 }
 void Device::writeLocalInformation(QByteArray data){
-    writeMemory(0x2fa0000, data);
+    std::vector<QString> local_info = readDeviceInfo();
+
+    if(local_info[0] == QString("ID878UV2") && local_info[1] == QString("V101")){
+        return writeMemory(Anytone::D878_MAP.LocalInfo, data);
+    }else if(local_info[0] == QString("ID890UV") && local_info[1] == QString("V100")){
+        return writeMemory(Anytone::D890_MAP.LocalInfo, data);
+    }else{
+        qDebug() << local_info[0] << local_info[1];
+        emit finished(DeviceStatus::STATUS_DEVICE_MISMATCH);
+    }
+    
 }
+
 // Images
 void Device::readBootImage(){
     image_data.clear();
     for(int i=0; i<0xa000; i+=0x10){
-        image_data.append(readMemory(0x2ac0000 + i, 0x10));
+        image_data.append(readMemory(Anytone::Memory::Map()->BootImage + i, 0x10));
         if ((i % 0x400) == 0) {
             emit update1(i, 0, "");
         }
@@ -66,7 +96,7 @@ void Device::readBootImage(){
 void Device::readBk1Image(){
     image_data.clear();
     for(int i=0; i<0xa000; i+=0x10){
-        image_data.append(readMemory(0x2b00000 + i, 0x10));
+        image_data.append(readMemory(Anytone::Memory::Map()->BK1Image + i, 0x10));
         if ((i % 0x400) == 0) {
             emit update1(i, 0, "");
         }
@@ -76,7 +106,7 @@ void Device::readBk1Image(){
 void Device::readBk2Image(){
     image_data.clear();
     for(int i=0; i<0xa000; i+=0x10){
-        image_data.append(readMemory(0x2b80000 + i, 0x10));
+        image_data.append(readMemory(Anytone::Memory::Map()->BK2Image + i, 0x10));
         if ((i % 0x400) == 0) {
             emit update1(i, 0, "");
         }
@@ -86,9 +116,9 @@ void Device::readBk2Image(){
 void Device::writeBootImage(){
     if(image_data.size() != 0xa000) return;
     for(int i=0; i<0xa000; i+=0x10){
-        writeMemory(0x2ac0000 + i, image_data.mid(i, 0x10));
+        writeMemory(Anytone::Memory::Map()->BootImage + i, image_data.mid(i, 0x10));
         if ((i % 0x400) == 0) {
-            emit update1(i, 0, "");
+            emit update1(i, 0, ""); 
         }
     }
     emit update1(0xa000, 0, "");
@@ -96,7 +126,7 @@ void Device::writeBootImage(){
 void Device::writeBk1Image(){
     if(image_data.size() != 0xa000) return;
     for(int i=0; i<0xa000; i+=0x10){
-        writeMemory(0x2b00000 + i, image_data.mid(i, 0x10));
+        writeMemory(Anytone::Memory::Map()->BK1Image + i, image_data.mid(i, 0x10));
         if ((i % 0x400) == 0) {
             emit update1(i, 0, "");
         }
@@ -106,7 +136,7 @@ void Device::writeBk1Image(){
 void Device::writeBk2Image(){
     if(image_data.size() != 0xa000) return;
     for(int i=0; i<0xa000; i+=0x10){
-        writeMemory(0x2b80000 + i, image_data.mid(i, 0x10));
+        writeMemory(Anytone::Memory::Map()->BK2Image + i, image_data.mid(i, 0x10));
         if ((i % 0x400) == 0) {
             emit update1(i, 0, "");
         }
@@ -178,12 +208,8 @@ QByteArray Device::getDigitalContactDataBuffer(int offset){
         int addr_mod = i % 0x186a0;
         int block = int(((i - addr_mod) / 0x186a0));
         int addr = 0x5500000 + (block * 0x40000) + addr_mod;
-
-        // qDebug() << block << " " << QString::number(addr, 16);
         data.append(readMemory(addr, 0x10));
     }
-
-    // qDebug() << data;
 
     return data;
 }
@@ -341,13 +367,17 @@ void Device::readOtherData(){
         readReceiveGroups();
         emit update1(14, steps, "Reading Data");
         readAesEncryptionKeys();
+        readArc4EncryptionKeys();
+        readEncryptionKeys();
+
+        readAnalogAddress();
 
         emit update1(15, steps, "Linking Data");
         Anytone::Memory::linkReferences();
     }
 void Device::readChannelData(){
     emit update2(0, 0, "Reading Channel Data");
-    QByteArray channel_set_data = readMemory(0x24c1500, 0x200);
+    QByteArray channel_set_data = readMemory(Anytone::Memory::Map()->ChannelSet, 0x200);
     std::vector<int> channel_id_list;
 
     for (int i = 0; i < channel_set_data.size(); ++i) { 
@@ -358,18 +388,19 @@ void Device::readChannelData(){
         }
     }
 
-    int offset = 0x800000;
+    int offset = Anytone::Memory::Map()->ChannelData;
+    int block_channels = Anytone::Memory::Map()->ChannelDataBlockSize;
     for(int i = 0; i < channel_id_list.size(); i++){
         emit update2(i, channel_id_list.size(), "Reading Channel Data");
 
         int idx = channel_id_list.at(i);
         if(idx >= Anytone::Memory::channels.size()) continue;
-        int channel_data_block = int(idx / 128);
-        int primary_data_address = offset + ((idx - (channel_data_block * 128)) * 0x40) + (channel_data_block * 0x40000);
-        int secondary_data_address = primary_data_address + 0x2000;
+        int channel_data_block = int(idx / block_channels);
+        int primary_data_address = offset + ((idx - (channel_data_block * block_channels)) * Anytone::Memory::Map()->ChannelDataOffset) + (channel_data_block * Anytone::Memory::Map()->ChannelDataBlockOffset);
+        int secondary_data_address = primary_data_address + Anytone::Memory::Map()->ChannelDataSecondaryOffset;
         
-        QByteArray channel_primary_data = readMemory(primary_data_address, 0x40);
-        QByteArray channel_secondary_data = readMemory(secondary_data_address, 0x40);
+        QByteArray channel_data = readMemory(primary_data_address, 0x40);
+        channel_data.append(readMemory(secondary_data_address, 0x40));
          
         if(!is_alive){
             emit finished(DeviceStatus::STATUS_COM_ERROR);
@@ -377,8 +408,7 @@ void Device::readChannelData(){
         }
 
         Anytone::Channel *channel = Anytone::Memory::channels.at(idx);
-        channel->decode(channel_primary_data, channel_secondary_data);
-
+        channel->decode(channel_data);
     }
 }
 void Device::readTalkgroupData(){
@@ -660,27 +690,129 @@ void Device::readReceiveGroups(){
         int idx = id_list.at(i);
         int addr = idx * 0x2000;
         Anytone::Memory::receive_group_call_lists.at(idx)->decode(readMemory(addr, 0x30));
-        qDebug() << idx;
 
     }
 }
 void Device::readAesEncryptionKeys(){
+    QByteArray set_data = readMemory(0x24c8000, 0x10);
+    std::vector<int> id_list;
+
+    for (int i = 0; i < set_data.size(); ++i) { 
+        unsigned char byte = set_data.at(i);
+        for(int j = 0; j < 8; j++){
+            if(!Bit::test(byte, j)) continue;
+            id_list.push_back((i*8) + j);
+        }
+    }
+
     int offset = 0x24c4000;
-    for (int i = 0; i < 255; ++i) { 
-        emit update2(i, 255, "Reading AES Code Data");
+    for(int i = 0; i < id_list.size(); i++){
+        emit update2(i, id_list.size(), "Reading AES Code Data");
         int addr = offset + (i*0x40);
         Anytone::Memory::aes_encryption_keys.at(i)->decode(readMemory(addr, 0x30));
+    }
+}
+void Device::readArc4EncryptionKeys(){
+    QByteArray set_data = readMemory(0x25c1c00, 0x10);
+    std::vector<int> id_list;
+
+    for (int i = 0; i < set_data.size(); ++i) { 
+        unsigned char byte = set_data.at(i);
+        for(int j = 0; j < 8; j++){
+            if(!Bit::test(byte, j)) continue;
+            id_list.push_back((i*8) + j);
+        }
+    }
+
+    int offset = 0x25c0c00;
+    for(int i = 0; i < id_list.size(); i++){
+        emit update2(i, id_list.size(), "Reading ARC4 Code Data");
+        int idx = id_list.at(i);
+        int addr = offset + (i*0x10);
+        Anytone::Memory::arc4_encryption_keys.at(i)->decode(readMemory(addr, 0x10));
+    }
+}
+void Device::readEncryptionKeys(){
+    int id_offset = 0x24c1700;
+    int key_offset = 0x24c1810;
+
+    QByteArray id_data = readMemory(id_offset, 0x40);
+    QByteArray key_data = readMemory(key_offset, 0x40);
+    for (int i = 0; i < 32; ++i) { 
+        emit update2(i, 32, "Reading Encryption Code Data");
+        Anytone::EncryptionCode *key = Anytone::Memory::encryption_keys.at(i);
+        key->id = QString(id_data.mid(i*2, 2).toHex());
+        key->key = QString(key_data.mid(i*2, 2).toHex());
     }
 }
 void Device::readToneSettings(){
     QByteArray data_24c1000 = readMemory(0x24c1000, 0xd0);
     QByteArray data_2500500 = readMemory(0x2500500, 0x100);
+    
+    
+    Anytone::Memory::dtmf_settings->decode(data_24c1000, data_2500500);
+    Anytone::Memory::tone5_settings->decode(data_24c1000);
+
+    readTone2Settings();
+}
+void Device::readTone2Settings(){
     QByteArray data_24c1290 = readMemory(0x24c1290, 0x10);
     QByteArray data_24c1100 = readMemory(0x24c1100, 0x180);
     QByteArray data_24c2400 = readMemory(0x24c2400, 0x100);
-    Anytone::Memory::dtmf_settings->decode(data_24c1000, data_2500500);
-    Anytone::Memory::tone2_settings->decode(data_24c1290, data_24c1100, data_24c2400);
-    Anytone::Memory::tone5_settings->decode(data_24c1000);    
+    QByteArray data_24c2600 = readMemory(0x24c2600, 0x10); // Tone2 Decode set list
+    QByteArray data_24c1280 = readMemory(0x24c1280, 0x10); // Tone2 Encode set list
+
+    Anytone::Memory::tone2_settings->decode(data_24c1290);
+    std::vector<int> tone2_decode_id_list;
+    for (int i = 0; i < data_24c2600.size(); ++i) { 
+        unsigned char byte = data_24c2600.at(i);
+        for(int j = 0; j < 8; j++){
+            if(!Bit::test(byte, j)) continue;
+            tone2_decode_id_list.push_back((i*8) + j);
+        }
+    }
+    for(int i = 0; i < tone2_decode_id_list.size(); i++){
+        int idx = tone2_decode_id_list.at(i);
+        Anytone::Tone2DecodeItem *item = Anytone::Memory::tone2_settings->decode_list.at(idx);
+        item->decode(data_24c2400.mid(idx*0x20, 0x20));
+    }
+
+    std::vector<int> tone2_encode_id_list;
+    for (int i = 0; i < data_24c1280.size(); ++i) { 
+        unsigned char byte = data_24c1280.at(i);
+        for(int j = 0; j < 8; j++){
+            if(!Bit::test(byte, j)) continue;
+            tone2_decode_id_list.push_back((i*8) + j);
+        }
+    }
+    for(int i = 0; i < tone2_encode_id_list.size(); i++){
+        int idx = tone2_encode_id_list.at(i);
+        Anytone::Tone2EncodeItem *item = Anytone::Memory::tone2_settings->encode_list.at(idx);
+        item->decode(data_24c1100.mid(idx*0x10, 0x10));
+    }
+
+}
+void Device::readAnalogAddress(){
+    QByteArray set_list = readMemory(0x2900100, 0x100);
+    QByteArray id_list = readMemory(0x2900000, 0x100);
+
+    QVector<int> idx_list;
+
+    for(uint8_t i : id_list){
+        if(i != 0xff){
+            idx_list.append(i);
+        }
+    }
+
+    int read_len = (idx_list.size() * 0x18);
+    if(read_len % 16 != 0) read_len += 0x8;
+
+    QByteArray data = readMemory(0x2940000, read_len);
+
+    for(uint8_t i : idx_list){
+        Anytone::AnalogAddress *item = Anytone::Memory::analog_addresses.at(i);
+        item->decode(data.mid(i*0x18, 0x18));
+    }
 }
 
 // Write Other Data
@@ -699,6 +831,8 @@ void Device::writeOtherData(){
     writeMasterRadioIdData();
     writePrefabSms();
     writeAesKeys();
+    writeArc4Keys();
+    writeEncryptionKeys();
     writeToneSettings();
 
     emit update1(0, 1, "Writing...");
@@ -999,7 +1133,7 @@ void Device::writePrefabSms(){
 void Device::writeAesKeys(){
     int set_list_addr = 0x24c8000;
     int data_addr = 0x24c4000;
-    QByteArray set_list(0x20, 0);
+    QByteArray set_list(0x10, 0);
     auto* set_list_bytes = reinterpret_cast<std::uint8_t*>(set_list.data());
 
     for(int i=0; i < Anytone::Memory::aes_encryption_keys.size(); i++){
@@ -1010,44 +1144,95 @@ void Device::writeAesKeys(){
         write_data[data_addr + (i * 0x40)] = key->encode();
     }
 
+    write_data[set_list_addr] = set_list;
+
+}
+void Device::writeArc4Keys(){
+    int set_list_addr = 0x25c1c00;
+    int data_addr = 0x25c0c00;
+    QByteArray set_list(0x10, 0);
+    auto* set_list_bytes = reinterpret_cast<std::uint8_t*>(set_list.data());
+
+    for(int i=0; i < Anytone::Memory::arc4_encryption_keys.size(); i++){
+        Anytone::Arc4EncryptionCode *key = Anytone::Memory::arc4_encryption_keys.at(i);
+        if(key->key.size() == 0) continue;
+        int current_byte_idx = int((i - (i % 8))/8);
+        Bit::set(&set_list_bytes[current_byte_idx], i%8);
+        write_data[data_addr + (i * 0x10)] = key->encode();
+    }
+
+    write_data[set_list_addr] = set_list;
+
+}
+void Device::writeEncryptionKeys(){
+    int id_offset = 0x24c1700;
+    int key_offset = 0x24c1810;
+
+    QByteArray id_data = readMemory(id_offset, 0x40);
+    QByteArray key_data = readMemory(key_offset, 0x40);
+    for (int i = 0; i < 32; ++i) {
+        Anytone::EncryptionCode *key = Anytone::Memory::encryption_keys.at(i);
+        id_data.replace(i*2, 2, 
+            QByteArray::fromHex(key->id.rightJustified(4, '0').toUtf8())
+        );
+        key_data.replace(i*2, 2, 
+            QByteArray::fromHex(key->key.rightJustified(4, '0').toUtf8())
+        );
+    }
+
+    write_data[id_offset] = id_data;
+    write_data[key_offset] = key_data;
+
 }
 void Device::writeToneSettings(){
     QByteArray data_24c1000(0xd0, 0);
     QByteArray data_2500500(0x100, 0xff);
-    QByteArray data_24c1100;
-    QByteArray data_24c2400;
     Anytone::Memory::dtmf_settings->encode(data_24c1000, data_2500500);
-    Anytone::Memory::tone2_settings->encode(data_24c1000, data_24c1100, data_24c2400);
     Anytone::Memory::tone5_settings->encode(data_24c1000);
 
-    // 2Tone Encode Frequency Set List Data
+    write_data[0x24c1000] = data_24c1000;
+    write_data[0x2500500] = data_2500500;
+
+    writeTone2Settings();
+}
+void Device::writeTone2Settings(){
+    QByteArray data_24c1290(0x10, 0);
+    QByteArray data_24c1100(0x180, 0xff);
+    QByteArray data_24c2400(0x100, 0xff);
     QByteArray tone2_encode_frequency_set_data = QByteArray(0x10, 0); //0x24c1280
+    QByteArray tone2_decode_frequency_set_data = QByteArray(0x10, 0); //0x24c2600
+
+
+    Anytone::Memory::tone2_settings->encode(data_24c1290);
+
+    // 2Tone Encode Frequency Set List Data
     auto* tone2_encode_frequency_set_bytes = reinterpret_cast<std::uint8_t*>(tone2_encode_frequency_set_data.data());
     for(int i=0; i < Anytone::Memory::tone2_settings->encode_list.size(); i++){
         Anytone::Tone2EncodeItem *item = Anytone::Memory::tone2_settings->encode_list.at(i);
         if(item->tone_frequency_1 > 0) {
             int current_byte_idx = int((i - (i % 8))/8);
             Bit::set(&tone2_encode_frequency_set_bytes[current_byte_idx], i%8);
+            data_24c2400.replace(i*0x20, 0x20, item->encode());
         }
     }
 
     // 2Tone Decode Frequency Set List Data
-    QByteArray tone2_decode_frequency_set_data = QByteArray(0x10, 0); //0x24c1280
     auto* tone2_decode_frequency_set_bytes = reinterpret_cast<std::uint8_t*>(tone2_decode_frequency_set_data.data());
     for(int i=0; i < Anytone::Memory::tone2_settings->decode_list.size(); i++){
         Anytone::Tone2DecodeItem *item = Anytone::Memory::tone2_settings->decode_list.at(i);
         if(item->tone_frequency_1 > 0) {
             int current_byte_idx = int((i - (i % 8))/8);
             Bit::set(&tone2_decode_frequency_set_bytes[current_byte_idx], i%8);
+            data_24c1100.replace(i*0x10, 0x10, item->encode());
         }
     }
 
+    write_data[0x24c1280] = data_24c1290;
+    write_data[0x24c1100] = data_24c1100;
+    write_data[0x24c2400] = data_24c2400;
+
     write_data[0x24c1280] = tone2_encode_frequency_set_data;
     write_data[0x24c2600] = tone2_decode_frequency_set_data;
-
-    write_data[0x24c1000] = data_24c1000;
-    write_data[0x24c1100] = data_24c1100;
-    write_data[0x2500500] = data_2500500;
 }
 void SerialWorker::run(){
     if(comport.size() > 0){
@@ -1064,7 +1249,11 @@ void SerialWorker::run(){
         while(!device->is_alive && connection_attempt < 5){
             connection_attempt++;
             if(device->connect(comport)){
-                if(!is_write) device->readRadioData();
+                if(!is_write) {
+                    device->readRadioData();
+                }else{
+                    device->writeRadioData();
+                }
                 if(device->is_alive) device->endProgMode();
             }
             if(!device->is_alive) QThread::msleep(1000);

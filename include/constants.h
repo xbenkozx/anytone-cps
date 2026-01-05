@@ -129,6 +129,8 @@ public:
     static const QStringList DECODING_STANDARD_DESC;
     static const QStringList RADIO_MODE_BAND;
 
+    static const QStringList HOTKEY_MENU;
+
     static const QStringList TALKALIAS_DISPLAY_PRIORITY_878;
     static const QStringList TALKALIAS_DISPLAY_PRIORITY_890;
     static const QStringList TALKALIAS_DATA_FORMAT;

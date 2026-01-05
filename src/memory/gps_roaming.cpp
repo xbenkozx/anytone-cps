@@ -31,3 +31,31 @@ QByteArray Anytone::GpsRoaming::encode(){
     );
     return data;
 }
+
+void Anytone::GpsRoaming::save(QDataStream &ds){
+    ds << id;
+    ds << enabled;
+    ds << zone_idx;
+    ds << lat_degree;
+    ds << lat_minute;
+    ds << lat_minute_decimal;
+    ds << north_south;
+    ds << long_degree;
+    ds << long_minute;
+    ds << long_minute_decimal;
+    ds << east_west;
+    ds << radius;
+}
+void Anytone::GpsRoaming::load(QDataStream &ds){
+    ds >> enabled;
+    ds >> zone_idx;
+    ds >> lat_degree;
+    ds >> lat_minute;
+    ds >> lat_minute_decimal;
+    ds >> north_south;
+    ds >> long_degree;
+    ds >> long_minute;
+    ds >> long_minute_decimal;
+    ds >> east_west;
+    ds >> radius;
+}

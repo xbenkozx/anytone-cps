@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QDebug>
+#include <QDataStream>
 
 namespace Anytone {
     class FM {
@@ -11,19 +12,13 @@ namespace Anytone {
         FM(){}
         ~FM(){}
 
-        double getFrequencyDouble(){
-            return double(frequency) / 10000;
-        };
+        double getFrequencyDouble();
+        QString getFrequencyString();
+        void setFrequencyString(QString freq_str);
+        void save(QDataStream &ds);
+        void load(QDataStream &ds);
 
-        QString getFrequencyString(){
-            return QString::number(getFrequencyDouble(), 'f', 2);
-        };
-
-        void setFrequencyString(QString freq_str){
-            frequency = int(freq_str.toDouble() * 10000);
-        }
-
-        int id = 0;
+        uint8_t id = 0;
         uint32_t frequency = 0;
         bool scan_add = true;
         QString name;

@@ -13,15 +13,18 @@
 #include "prefabricated_sms.h"
 #include "receive_group_call_list.h"
 #include "aes_encryption_code.h"
+#include "arc4_encryption_code.h"
+#include "encryption_code.h"
 #include "dtmf_settings.h"
 #include "tone2_settings.h"
 #include "tone5_settings.h"
 #include "talk_alias_settings.h"
-
+#include "analog_address.h"
 
 using namespace Anytone;
 
 OptionalSettings* Memory::optional_settings = nullptr;
+Hotkey* Memory::hotkey = nullptr;
 AlarmSettings* Memory::alarm_settings = nullptr;
 AprsSettings* Memory::aprs_settings = nullptr;
 DTMFSettings* Memory::dtmf_settings = nullptr;
@@ -49,107 +52,575 @@ QVector<GpsRoaming*> Memory::gps_roaming_list = {};
 QVector<PrefabricatedSms*> Memory::prefabricated_sms_list = {};
 QVector<ReceiveGroup*> Memory::receive_group_call_lists = {};
 QVector<AesEncryptionCode*> Memory::aes_encryption_keys = {};
+QVector<Arc4EncryptionCode*> Memory::arc4_encryption_keys = {};
+QVector<EncryptionCode*> Memory::encryption_keys = {};
+QVector<AnalogAddress*> Memory::analog_addresses = {};
 
+// **********************
+// Save File Save
+// **********************
 void Memory::saveData(QDataStream &ds){
-    ds << QString("D878UV2").toUtf8() << QString("4.00").toUtf8() << Memory::radio_mode;
+    uint16_t save_file_version = 1;
+    ds << QString("D878UV2").toUtf8() << QString("4.00").toUtf8() << Memory::radio_mode << save_file_version;
 
-    // Channel
-    uint16_t channel_count = 0;
-    QByteArray channel_data;
-    QDataStream channel_ds(&channel_data, QIODevice::WriteOnly);
-    for(Channel *ch : Memory::channels){
-        if(ch->rx_frequency > 0) {
-            channel_count++;
-            ch->save(channel_ds);
-        }
-    }
+    QByteArray radio_data;
 
-    // Zone
-    uint8_t zone_count = 0;
-    QByteArray zone_data;
-    QDataStream zone_ds(&zone_data, QIODevice::WriteOnly);
-    for(Zone *zone : Memory::zones){
-        if(zone->channels.size() > 0) {
-            zone_count++;
-            zone->save(zone_ds);
-        }
-    }
+    radio_data.append(saveAesEncryptionCodes(ds));
+    radio_data.append(saveAprsSettings());
+    radio_data.append(saveAlarmSettings());
+    radio_data.append(saveAnalogAddresses(ds));
+    radio_data.append(saveArc4EncryptionCodes(ds));
+    radio_data.append(saveAutoRepeaterOffsets(ds));
+    radio_data.append(saveChannels(ds));
+    radio_data.append(saveDtmfSettings());
+    radio_data.append(saveEncryptionCodes(ds));
+    radio_data.append(saveFm(ds));
+    radio_data.append(saveGpsRoaming(ds));
+    radio_data.append(saveHotKey());
+    radio_data.append(saveMasterId());
+    radio_data.append(saveOptionalSettings());
+    radio_data.append(savePrefabricatedSms(ds));
+    radio_data.append(saveRadioIds(ds));
+    radio_data.append(saveReceiveGroupCallList(ds));
+    radio_data.append(saveRoamingChannel(ds));
+    radio_data.append(saveRoamingZone(ds));
+    radio_data.append(saveScanList(ds));
+    radio_data.append(saveTalkerAliasSettings());
+    radio_data.append(saveTalkgroups(ds));
+    radio_data.append(saveTone2Settings());
+    radio_data.append(saveTone5Settings());
+    radio_data.append(saveZones(ds));
+    radio_data.append(saveDigitalContacts(ds));
 
-    // Digital Contacts
-    int digital_contact_count = 0;
-    QByteArray digital_contact_data;
-    QDataStream digital_contact_ds(&digital_contact_data, QIODevice::WriteOnly);
-    for(DigitalContact *c : Memory::digital_contacts){
-        if(c->radio_id > 0) {
-            digital_contact_count++;
-            c->save(digital_contact_ds);
-        }
-    }
-
-    ds << channel_count;
-    ds << zone_count;
-    ds << digital_contact_count;
-
-    ds << channel_data;
-    ds << zone_data;
-    ds << digital_contact_data;
+    ds << radio_data;
 }
+QByteArray Memory::saveAesEncryptionCodes(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(AesEncryptionCode *item : Memory::aes_encryption_keys){
+        if(item->id > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveAprsSettings(){
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    Memory::aprs_settings->save(data_ds);
+    return data;
+}
+QByteArray Memory::saveAlarmSettings(){
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    Memory::alarm_settings->save(data_ds);
+    return data;
+}
+QByteArray Memory::saveAnalogAddresses(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(AnalogAddress *item : Memory::analog_addresses){
+        if(item->number > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveArc4EncryptionCodes(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(Arc4EncryptionCode *item : Memory::arc4_encryption_keys){
+        if(item->id > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveAutoRepeaterOffsets(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(AutoRepeaterOffsetFrequency *item : Memory::ar_offset_frequencies){
+        if(item->frequency > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveChannels(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(Channel *item : Memory::channels){
+        if(item->rx_frequency > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveDtmfSettings(){
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    Memory::dtmf_settings->save(data_ds);
+    return data;
+}
+QByteArray Memory::saveEncryptionCodes(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(EncryptionCode *item : Memory::encryption_keys){
+        count++;
+        item->save(data_ds);
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveFm(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(FM *item : Memory::fm_channels){
+        if(item->frequency > 0){
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveGpsRoaming(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(GpsRoaming *item : Memory::gps_roaming_list){
+        count++;
+        item->save(data_ds);
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveHotKey(){
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    Memory::hotkey->save(data_ds);
+    return data;
+}
+QByteArray Memory::saveMasterId(){
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    Memory::master_radio_id->save(data_ds);
+    return data;
+}
+QByteArray Memory::saveOptionalSettings(){
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    Memory::optional_settings->save(data_ds);
+    return data;
+}
+QByteArray Memory::savePrefabricatedSms(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(PrefabricatedSms *item : Memory::prefabricated_sms_list){
+        if(item->text.size() > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveRadioIds(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(RadioId *item : Memory::radioids){
+        if(item->dmr_id > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveReceiveGroupCallList(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(ReceiveGroup *item : Memory::receive_group_call_lists){
+        if(item->talkgroups.size() > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveRoamingChannel(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(RoamingChannel *item : Memory::roaming_channels){
+        if(item->rx_frequency > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveRoamingZone(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(RoamingZone *item : Memory::roaming_zones){
+        if(item->channels.size() > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveScanList(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(ScanList *item : Memory::scanlists){
+        if(item->channels.size() > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveTalkerAliasSettings(){
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    Memory::talk_alias_settings->save(data_ds);
+    return data;
+}
+QByteArray Memory::saveTalkgroups(QDataStream &ds){
+    uint16_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(Talkgroup *item : Memory::talkgroups){
+        if(item->dmr_id > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveTone2Settings(){
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    Memory::tone2_settings->save(data_ds);
+    return data;
+}
+QByteArray Memory::saveTone5Settings(){
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    Memory::tone5_settings->save(data_ds);
+    return data;
+}
+QByteArray Memory::saveZones(QDataStream &ds){
+    uint8_t count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(Zone *item : Memory::zones){
+        if(item->channels.size() > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+QByteArray Memory::saveDigitalContacts(QDataStream &ds){
+    int count = 0;
+    QByteArray data;
+    QDataStream data_ds(&data, QIODevice::WriteOnly);
+    for(DigitalContact *item : Memory::digital_contacts){
+        if(item->radio_id > 0) {
+            count++;
+            item->save(data_ds);
+        }
+    }
+    ds << count;
+    return data;
+}
+
+// **********************
+// Save File Load
+// **********************
 void Memory::loadData(QDataStream &ds){
     init();
     QByteArray radio_model_utf8;
     QByteArray fw_version_utf8;
     uint8_t radio_mode_i = 0;
+    uint16_t save_file_version = 0;
     ds >> radio_model_utf8;
     ds >> fw_version_utf8;
     ds >> radio_mode_i;
+    ds >> save_file_version;
 
+    uint16_t aes_code_count = 0;
+    uint16_t analog_address_count = 0;
+    uint16_t arc4_code_count = 0;
+    uint16_t ar_offset_count = 0;
     uint16_t channel_count = 0;
+    uint16_t encryption_code_count = 0;
+    uint16_t fm_count = 0;
+    uint16_t gps_roaming_count = 0;
+    uint16_t prefab_sms_count = 0;
+    uint16_t radio_id_count = 0;
+    uint16_t receive_group_count = 0;
+    uint16_t roaming_channel_count = 0;
+    uint16_t roaming_zone_count = 0;
+    uint16_t scanlist_count = 0;
+    uint16_t tg_count = 0;
     uint8_t zone_count = 0;
     int digital_contact_count = 0;
+
+    // Get Data Lengths
+    ds >> aes_code_count;
+    ds >> analog_address_count;
+    ds >> arc4_code_count;
+    ds >> ar_offset_count;
     ds >> channel_count;
+    ds >> encryption_code_count;
+    ds >> fm_count;
+    ds >> gps_roaming_count;
+    ds >> prefab_sms_count;
+    ds >> radio_id_count;
+    ds >> receive_group_count;
+    ds >> roaming_channel_count;
+    ds >> roaming_zone_count;
+    ds >> scanlist_count;
+    ds >> tg_count;
     ds >> zone_count;
     ds >> digital_contact_count;
 
-    // Channel
-    int _channel_data_len = 0;
-    ds >> _channel_data_len;
-    for(int i = 0; i < channel_count; i++){
-        uint16_t ch_idx = 0;
-        ds >> ch_idx;
-        Channel *ch = Memory::channels.at(ch_idx);
-        ch->load(ds);
-    }
+    int data_len = 0;
+    ds >> data_len;
 
-    // Channel
-    int _zone_data_len = 0;
-    ds >> _zone_data_len;
-    for(int i = 0; i < zone_count; i++){
-        uint8_t idx = 0;
-        ds >> idx;
-        Zone *zone = Memory::zones.at(idx);
-        zone->load(ds);
-    }
-
-    // Digital Contacts
-    int _digital_contact_len = 0;
-    ds >> _digital_contact_len;
-    for(int i = 0; i < digital_contact_count; i++){
-        int idx = 0;
-        ds >> idx;
-        DigitalContact *c = Memory::digital_contacts.at(idx);
-        c->load(ds);
-    }
+    // Read Data
+    loadAesEncryptionCodes(aes_code_count, ds);
+    loadAprsSettings(ds);
+    loadAlarmSettings(ds);
+    loadAnalogAddresses(analog_address_count, ds);
+    loadArc4EncryptionCodes(arc4_code_count, ds);
+    loadAutoRepeaterOffsets(ar_offset_count, ds);
+    loadChannels(channel_count, ds);
+    loadDtmfSettings(ds);
+    loadEncryptionCodes(encryption_code_count, ds);
+    loadFm(fm_count, ds);
+    loadGpsRoaming(gps_roaming_count, ds);
+    loadHotkey(ds);
+    loadMasterId(ds);
+    loadOptionalSettings(ds);
+    loadPrefabricatedSms(prefab_sms_count, ds);
+    loadRadioIds(radio_id_count, ds);
+    loadReceiveGroupCallList(receive_group_count, ds);
+    loadRoamingChannel(roaming_channel_count, ds);
+    loadRoamingZone(roaming_zone_count, ds);
+    loadScanList(scanlist_count, ds);
+    loadTalkerAliasSettings(ds);
+    loadTalkgroups(tg_count, ds);
+    loadTone2Settings(ds);
+    loadTone5Settings(ds);
+    loadZones(zone_count, ds);
+    loadDigitalContacts(digital_contact_count, ds);
 
     linkReferences();
 }
+void Memory::loadAesEncryptionCodes(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint8_t idx = 0;
+        ds >> idx;
+        AesEncryptionCode *item = Memory::aes_encryption_keys.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadAprsSettings(QDataStream &ds){
+    Memory::aprs_settings->load(ds);
+}
+void Memory::loadAlarmSettings(QDataStream &ds){
+    Memory::alarm_settings->load(ds);
+}
+void Memory::loadAnalogAddresses(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        AnalogAddress *item = Memory::analog_addresses.at(i);
+        item->load(ds);
+    }
+}
+void Memory::loadArc4EncryptionCodes(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint8_t idx = 0;
+        ds >> idx;
+        Arc4EncryptionCode *item = Memory::arc4_encryption_keys.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadAutoRepeaterOffsets(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint8_t idx = 0;
+        ds >> idx;
+        AutoRepeaterOffsetFrequency *item = Memory::ar_offset_frequencies.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadChannels(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint16_t idx = 0;
+        ds >> idx;
+        Channel *item = Memory::channels.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadDtmfSettings(QDataStream &ds){
+    Memory::dtmf_settings->load(ds);
+}
+void Memory::loadEncryptionCodes(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint8_t idx = 0;
+        ds >> idx;
+        EncryptionCode *item = Memory::encryption_keys.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadFm(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint8_t idx = 0;
+        ds >> idx;
+        FM *item = Memory::fm_channels.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadGpsRoaming(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint8_t idx = 0;
+        ds >> idx;
+        GpsRoaming *item = Memory::gps_roaming_list.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadHotkey(QDataStream &ds){
+    Memory::hotkey->load(ds);
+}
+void Memory::loadMasterId(QDataStream &ds){
+    Memory::master_radio_id->load(ds);
+}
+void Memory::loadOptionalSettings(QDataStream &ds){
+    Memory::optional_settings->load(ds);
+}
+void Memory::loadPrefabricatedSms(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint8_t idx = 0;
+        ds >> idx;
+        PrefabricatedSms *item = Memory::prefabricated_sms_list.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadRadioIds(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint8_t idx = 0;
+        ds >> idx;
+        RadioId *item = Memory::radioids.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadReceiveGroupCallList(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint8_t idx = 0;
+        ds >> idx;
+        ReceiveGroup *item = Memory::receive_group_call_lists.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadRoamingChannel(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint8_t idx = 0;
+        ds >> idx;
+        RoamingChannel *item = Memory::roaming_channels.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadRoamingZone(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint8_t idx = 0;
+        ds >> idx;
+        RoamingZone *item = Memory::roaming_zones.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadScanList(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint8_t idx = 0;
+        ds >> idx;
+        ScanList *item = Memory::scanlists.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadTalkerAliasSettings(QDataStream &ds){
+    Memory::talk_alias_settings->load(ds);
+}
+void Memory::loadTalkgroups(uint16_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint16_t idx = 0;
+        ds >> idx;
+        Talkgroup *item = Memory::talkgroups.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadTone2Settings(QDataStream &ds){
+    Memory::tone2_settings->load(ds);
+}
+void Memory::loadTone5Settings(QDataStream &ds){
+    Memory::tone5_settings->load(ds);
+}
+void Memory::loadZones(uint8_t count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint8_t idx = 0;
+        ds >> idx;
+        Zone *item = Memory::zones.at(idx);
+        item->load(ds);
+    }
+}
+void Memory::loadDigitalContacts(int count, QDataStream &ds){
+    for(int i = 0; i < count; i++){
+        uint32_t idx = 0;
+        ds >> idx;
+        DigitalContact *item = Memory::digital_contacts.at(idx);
+        item->load(ds);
+    }
+}
 
+// **********************
+// Data Linkers
+// **********************
 void Memory::linkReferences(){
     Memory::linkZoneRef();
     Memory::linkChannelRef();
     Memory::linkScanListRef();
     Memory::linkRoamingZoneRef();
 }
-
 void Memory::linkZoneRef(){
     for (Zone* zone : zones) {
         if (!zone) continue;
@@ -194,8 +665,11 @@ void Memory::linkRoamingZoneRef(){
     }
 }
 
-
+// **********************
+// Data Initializers
+// **********************
 void Memory::init(){
+    Memory::hotkey = new Hotkey();
     Memory::optional_settings = new OptionalSettings();
     Memory::alarm_settings = new AlarmSettings();
     Memory::aprs_settings = new AprsSettings();
@@ -218,10 +692,13 @@ void Memory::init(){
     Memory::initPrefabricatedSms();
     Memory::initReceiveGroupCallLists();
     Memory::initAesEncryptionKeys();
+    Memory::initArc4EncryptionKeys();
+    Memory::initEncryptionKeys();
+    Memory::initAnalogAddresses();
 
     setDefaults();
+    linkReferences();
 }
-
 void Memory::initChannels(){
     Memory::channels.clear();
     for(int i = 0; i < 4002; i++){
@@ -330,7 +807,52 @@ void Memory::initAesEncryptionKeys(){
     Memory::aes_encryption_keys.clear();
     for(int i = 0; i < 255; i++){
         AesEncryptionCode *key = new AesEncryptionCode();
-        key->id = i;
+        key->index = i;
         Memory::aes_encryption_keys.push_back(key);
     }
+}
+void Memory::initArc4EncryptionKeys(){
+    Memory::arc4_encryption_keys.clear();
+    for(int i = 0; i < 255; i++){
+        Arc4EncryptionCode *key = new Arc4EncryptionCode();
+        key->index = i;
+        Memory::arc4_encryption_keys.push_back(key);
+    }
+}
+void Memory::initEncryptionKeys(){
+    Memory::encryption_keys.clear();
+    for(int i = 0; i < 32; i++){
+        EncryptionCode *key = new EncryptionCode();
+        key->index = i;
+        Memory::encryption_keys.push_back(key);
+    }
+}
+void Memory::initAnalogAddresses(){
+    Memory::analog_addresses.clear();
+    for(int i = 0; i < 128; i++){
+        AnalogAddress *item = new AnalogAddress();
+        Memory::analog_addresses.push_back(item);
+    }
+}
+
+// **********************
+// Data Defaults
+// **********************
+void Memory::setDefaults(){
+    setDefaultMasterID();
+    setDefaultTalkgroups();
+    setDefaultRadioIds();
+}
+void Memory::setDefaultMasterID(){
+    master_radio_id->dmr_id = 12345678;
+    master_radio_id->name = "My Radio";
+    master_radio_id->used = false;
+}
+void Memory::setDefaultTalkgroups(){
+    talkgroups.at(0)->dmr_id = 12345678;
+    talkgroups.at(0)->name = "Contact 1";
+}
+void Memory::setDefaultRadioIds(){
+    radioids.at(0)->dmr_id = 12345678;
+    radioids.at(0)->name = "My Radio";
 }

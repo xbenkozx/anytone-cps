@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QDebug>
+#include <QDataStream>
 #include "aprs_receive_filter.h"
 #include "utils.h"
 #include "int.h"
@@ -23,6 +24,8 @@ namespace Anytone {
 
         void decode(QByteArray data_1000, QByteArray data_1800);
         void encode(QByteArray &data_2501000, QByteArray &data_2501800);
+        void save(QDataStream &ds);
+        void load(QDataStream &ds);
         static double degMinToDecimal(uint8_t deg, double minutes){
             return double(deg) + (minutes / 60);
         }

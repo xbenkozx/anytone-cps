@@ -137,7 +137,7 @@
         <item row="4" column="1">
          <widget class="QLineEdit" name="bandSettingPasswordTxt">
           <property name="enabled">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -156,10 +156,17 @@
          </widget>
         </item>
         <item row="5" column="1">
-         <widget class="QComboBox" name="frequencyCmbx"/>
+         <widget class="QComboBox" name="frequencyCmbx">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
         <item row="6" column="1">
          <widget class="QLineEdit" name="programPasswordTxt">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
           <property name="maxLength">
            <number>4</number>
           </property>
@@ -202,6 +209,9 @@
         </item>
         <item row="9" column="1">
          <widget class="QLineEdit" name="maintenanceDateTxt">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
           <property name="maxLength">
            <number>16</number>
           </property>
@@ -215,7 +225,11 @@
          </widget>
         </item>
         <item row="10" column="1">
-         <widget class="QPlainTextEdit" name="maintenanceDescriptionTxt"/>
+         <widget class="QPlainTextEdit" name="maintenanceDescriptionTxt">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

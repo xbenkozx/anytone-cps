@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>790</width>
-    <height>858</height>
+    <height>859</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -558,7 +558,7 @@
               <item row="0" column="1">
                <widget class="QPushButton" name="digitalContactBtn">
                 <property name="text">
-                 <string>[CONTACT]</string>
+                 <string/>
                 </property>
                </widget>
               </item>
