@@ -15,11 +15,11 @@ Currently, this project is in Alpha stage and is a work is progress. Make sure y
 ---
 
 ## Progress
-| | |
-| - | - |
-| UI | ![90%](https://progress-bar.xyz/90?width=100) |
-| Serial | ![90%](https://progress-bar.xyz/90?width=100) |
-| CSV | ![0%](https://progress-bar.xyz/19?width=100) | 
+| | D878UVII | D890UV | D168UV | D878UV | D868UV |
+| - | :-: | :-: | :-: | :-: | :-: |
+| UI | ![95%](https://progress-bar.xyz/95?width=100) | ![5%](https://progress-bar.xyz/5?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) |
+| Serial | ![98%](https://progress-bar.xyz/98?width=100) | ![1%](https://progress-bar.xyz/1?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) |
+| CSV | ![20%](https://progress-bar.xyz/20?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) |
 
 ## Supported Devices
 - D878UVII
@@ -60,7 +60,7 @@ These are not fully tested.
 | 2Tone Encode/Decode | R/W | | |
 | 5Tone Encode/Decode | R/W | | |
 | AES Encryption Code | R/W | | |
-| Analog Address Book | | | |
+| Analog Address Book | R/W | | |
 | APRS | R/W | | |
 | ARC4 Encryption Code | R/W | | |
 | Auto Repeater Offset Frequencies | R/W | | |
@@ -72,9 +72,9 @@ These are not fully tested.
 | Local Information/Expert Options(AT_OPTIONS) | R/W | R/W | |
 | FM Channels | R/W | | |
 | GPS Roaming | R/W | | |
-| HotKey HotKey | | | |
-| HotKey Quick Call | | | |
-| HotKey State | | | |
+| HotKey HotKey | R/W | | |
+| HotKey Quick Call | R/W | | |
+| HotKey State | R/W | | |
 | Master ID | R/W | | |
 | Optional Settings | R/W | | |
 | Prefabricated SMS | R/W | | |
@@ -92,27 +92,27 @@ These are not fully tested.
 | 2Tone Encode | | | |
 | 5Tone Encode | | | |
 | AES Encryption Code | | | |
-| Alert Tone | | | |
-| Analog Address Book | | | |
-| APRS | | | |
+| Alert Tone | I | | |
+| Analog Address Book | I | | |
+| APRS | I | | |
 | ARC4 Encryption Code | | | |
-| Auto Repeater Offset Frequencies | | | |
-| Channels | | | |
+| Auto Repeater Offset Frequencies | I | | |
+| Channels | I | | |
 | Digital Contacts | | | |
 | DTMF Encode | | | |
-| FM Channels | | | |
-| GPS Roaming | | | |
+| FM Channels | I | | |
+| GPS Roaming | I | | |
 | HotKey HotKey | | | |
 | HotKey Quick Call | | | |
 | HotKey State | | | |
 | Optional Settings | | | |
-| Prefabricated SMS | | | |
+| Prefabricated SMS | I | | |
 | Radio IDs | I | | |
 | Roaming Channels | | | |
 | Roaming Zones | | | |
 | Scan Lists | | | |
-| TalkGroups | | | |
-| Zones | | | |
+| TalkGroups | I | | |
+| Zones | I | | |
 
 ---
 

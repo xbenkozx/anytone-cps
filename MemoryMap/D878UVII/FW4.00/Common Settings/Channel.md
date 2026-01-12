@@ -35,8 +35,7 @@ Max Channels: 4000
 | 0xb | 0x1 | - | int | CTCSS Decode Index |
 | 0xc | 0x2 | - | int | DCS Encode Index | 
 | 0xe | 0x2 | - | int | DCS Decode Index |
-| 0x10 | 0x1 | - | n/a | 0xCF (Unknown data) | 
-| 0x11 | 0x1 | - | n/a | 0x09 (Unknown data) |
+| 0x10 | 0x2 | - | int | Custom CTCSS |
 | 0x12 | 0x1 | - | int | 2tone Decode |
 | 0x13 | 0x2 | - | int (BE) | Contact/TG ID index |
 | 0x18 | 0x1 | - | int | Radio ID index |
@@ -48,8 +47,8 @@ Max Channels: 4000
 | 0x1a | - | 5:4 | int | Optional Signal (0 = off, 1 = DTMF, 2 = 2tone, 3 = 5tone)
 | 0x1a | - | 3:2 | | |
 | 0x1a | - | 1:0 | int | Busy Lock (0 = off, 1 = Different CDT, 2 = Channel Free) |
-| 0x1c | 0x1 | - | int | Receive Group Call List (0xff = None) |
 | 0x1b | 0x1 | - | int | Scan List (xff = None, Scan List index) |
+| 0x1c | 0x1 | - | int | Receive Group Call List (0xff = None) |
 | 0x1d | 0x1 | - | int | 2tone ID |
 | 0x1e | 0x1 | - | int | 5tone ID |
 | 0x1f | 0x1 | - | int | DTMF ID |

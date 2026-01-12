@@ -129,7 +129,7 @@
 | 0x2500053 | 0x1 | int | GPS Template Information |
 | 0x2501280 | 0x20 | int | GPS Information Char |
 | 0x2501435 | 0x1 | int | GPS Mode |
-| ???? | 0x1 | int | GPS Roaming (Disabled in CPS) |
+| 0x2501444 | 0x1 | int | GPS Roaming (Disabled in CPS) |
 
 ## VFO Scan
 | Address | Length | Type | Data |
@@ -287,8 +287,3 @@
 | 0x250004c | 0x1 | Monitor Slot Hold |
 | 0x250003e | 0x1 | Remote Monitor |
 | 0x25000c3 | 0x1 | SMS Format |
-
-## Unknown
-| Address | Length | Type | Data |
-| - | - | - | - |
-| 0x250146f | 0x1 | int | |
