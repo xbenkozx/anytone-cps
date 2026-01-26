@@ -93,6 +93,7 @@ public:
     void showImportDialog();
     void showExportDialog();
     void showSatelliteDialog();
+    void showAboutDialog();
 
     // Table Lists
     void listChannels(bool goto_top = true);

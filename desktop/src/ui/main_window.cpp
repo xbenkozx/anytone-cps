@@ -67,6 +67,7 @@
 #include "analog_address_edit_dialog.h"
 #include "import_export_dialog.h"
 #include "satellite_dialog.h"
+#include "about_dialog.h"
 #include "csv.h"
 #include "satellite.h"
 
@@ -150,6 +151,8 @@ void MainWindow::setupUI(){
     connect(ui->tableView, &QTableView::doubleClicked, this, &MainWindow::onMainTableDblClicked);
 
     connect(ui->actionSatellite, &QAction::triggered, this, &MainWindow::showSatelliteDialog);
+
+    connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAboutDialog);
 
     ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tableView, &QTableView::customContextMenuRequested, this, &MainWindow::showMainTableContextMenu);
@@ -834,6 +837,10 @@ void MainWindow::showExportDialog(){
 }
 void MainWindow::showSatelliteDialog(){
     SatelliteDialog dialog(this);
+    dialog.exec();
+}
+void MainWindow::showAboutDialog(){
+    AboutDialog dialog(this);
     dialog.exec();
 }
 
