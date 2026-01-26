@@ -5,7 +5,7 @@
 #include <QString>
 #include <QObject>
 #include <memory>
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "analog_address.h"
 
 class Ui_AnalogAddressEditDialog;

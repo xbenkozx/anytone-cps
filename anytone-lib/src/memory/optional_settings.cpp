@@ -309,15 +309,16 @@ void Anytone::OptionalSettings::decode_D890UV(
     call_end_fourth_tone_period = Int::fromBytes(data_3500000.mid(0x126,2));
     call_end_fifth_tone_freq = Int::fromBytes(data_3500000.mid(0x11e,2));
     call_end_fifth_tone_period = Int::fromBytes(data_3500000.mid(0x128,2));
+
     call_all_first_tone_freq = Int::fromBytes(data_3500000.mid(0x12a,2));
     call_all_first_tone_period = Int::fromBytes(data_3500000.mid(0x134,2));
     call_all_second_tone_freq = Int::fromBytes(data_3500000.mid(0x12c,2));
     call_all_second_tone_period = Int::fromBytes(data_3500000.mid(0x136,2));
     call_all_third_tone_freq = Int::fromBytes(data_3500000.mid(0x12e,2));
     call_all_third_tone_period = Int::fromBytes(data_3500000.mid(0x138,2));
-    call_all_fourth_tone_freq = Int::fromBytes(data_3500000.mid(0x120,2));
+    call_all_fourth_tone_freq = Int::fromBytes(data_3500000.mid(0x130,2));
     call_all_fourth_tone_period = Int::fromBytes(data_3500000.mid(0x13a,2));
-    call_all_fifth_tone_freq = Int::fromBytes(data_3500000.mid(0x122,2));
+    call_all_fifth_tone_freq = Int::fromBytes(data_3500000.mid(0x132,2));
     call_all_fifth_tone_period = Int::fromBytes(data_3500000.mid(0x13c,2));
 
     // Display
@@ -355,7 +356,7 @@ void Anytone::OptionalSettings::decode_D890UV(
     ranging_interval = static_cast<uint8_t>(data_3500000.at(0xb5));
     distance_unit = static_cast<uint8_t>(data_3500000.at(0xbd));
     gps_template_information = static_cast<uint8_t>(data_3500000.at(0x53));
-    gps_information_char = QString(data_3501280.mid(0x0, 0x40));
+    gps_information_char = QString(data_3501280.mid(0x0, 0x30));
     gps_mode = static_cast<uint8_t>(data_3500000.at(0x105));
     gps_roaming = static_cast<uint8_t>(data_3500000.at(0x114));
 
@@ -371,8 +372,8 @@ void Anytone::OptionalSettings::decode_D890UV(
     auto_repeater_b = static_cast<uint8_t>(data_3500000.at(0xd4));
     auto_repeater_1_uhf = static_cast<uint8_t>(data_3500000.at(0x68));
     auto_repeater_1_vhf = static_cast<uint8_t>(data_3500000.at(0x69));
-    auto_repeater_2_uhf = static_cast<uint8_t>(data_3500000.at(0x22));
-    auto_repeater_2_vhf = static_cast<uint8_t>(data_3500000.at(0x23));
+    auto_repeater_2_uhf = static_cast<uint8_t>(data_3500000.at(0xf1));
+    auto_repeater_2_vhf = static_cast<uint8_t>(data_3500000.at(0xf2));
     repeater_check = static_cast<uint8_t>(data_3500000.at(0xdd));
     repeater_check_interval = static_cast<uint8_t>(data_3500000.at(0xde));
     repeater_check_reconnections = static_cast<uint8_t>(data_3500000.at(0xdf));
@@ -525,7 +526,7 @@ void Anytone::OptionalSettings::decode_D890UV(
 
 }
 
-void Anytone::OptionalSettings::encode(QByteArray &data_2500000, QByteArray &data_2500600, QByteArray &data_2501280, QByteArray &data_2501400){
+void Anytone::OptionalSettings::encode_D878UVII(QByteArray &data_2500000, QByteArray &data_2500600, QByteArray &data_2501280, QByteArray &data_2501400){
     auto* data_2500000_bytes = reinterpret_cast<std::uint8_t*>(data_2500000.data());
     auto* data_2501400_bytes = reinterpret_cast<std::uint8_t*>(data_2501400.data());
     
@@ -801,7 +802,287 @@ void Anytone::OptionalSettings::encode(QByteArray &data_2500000, QByteArray &dat
     data_2500000[0x57] = enhanced_sound_quality;
     data_2501400[0x43] = analog_mic_gain;
 }
+void Anytone::OptionalSettings::encode_D890UV(QByteArray &data_3500000, QByteArray &data_3500900, QByteArray &data_3501280){
+    auto* data_3500000_bytes = reinterpret_cast<std::uint8_t*>(data_3500000.data());
 
+    // Power On
+    data_3500000[0x6] = poweron_interface;
+    data_3500900.replace(0x0, 0xe, poweron_display_1);
+    data_3500900.replace(0x10, 0xe, poweron_display_2);
+    data_3500000[0x7] = poweron_password;
+    data_3500900.replace(0x20, 0x8, poweron_password_char.toUtf8().leftJustified(0x8, 0));
+    data_3500000[0xd7] = default_startup_channel;
+    data_3500000[0xd8] = startup_zone_a;
+    data_3500000[0xda] = startup_channel_a;
+    data_3500000[0xd9] = startup_zone_b;
+    data_3500000[0xdb] = startup_channel_b;
+    data_3500000[0xeb] = startup_gps_test;
+    data_3500000[0xec] = startup_reset;
+
+    // Alert Tone
+    data_3500000[0x29] = sms_alert;
+    data_3500000[0x2f] = call_alert;
+    data_3500000[0x32] = digi_call_reset_tone;
+    data_3500000[0x31] = talk_permit;
+    data_3500000[0x00] = key_tone;
+    data_3500000[0x36] = digi_idle_channel_tone;
+    data_3500000[0x39] = startup_sound;
+    data_3500000[0xbb] = tone_key_sound_adjustable;
+    data_3500000[0x111] = analog_idle_channel_tone;
+    data_3500000[0xb4] = plugin_recording_tone;
+
+    data_3500000.replace(0x72, 2, Int::toBytes(call_permit_first_tone_freq, 2));
+    data_3500000.replace(0x7c, 2, Int::toBytes(call_permit_first_tone_period, 2));
+    data_3500000.replace(0x74, 2, Int::toBytes(call_permit_second_tone_freq, 2));
+    data_3500000.replace(0x7e, 2, Int::toBytes(call_permit_second_tone_period, 2));
+    data_3500000.replace(0x76, 2, Int::toBytes(call_permit_third_tone_freq, 2));
+    data_3500000.replace(0x80, 2, Int::toBytes(call_permit_third_tone_period, 2));
+    data_3500000.replace(0x78, 2, Int::toBytes(call_permit_fourth_tone_freq, 2));
+    data_3500000.replace(0x82, 2, Int::toBytes(call_permit_fourth_tone_period, 2));
+    data_3500000.replace(0x7a, 2, Int::toBytes(call_permit_fifth_tone_freq, 2));
+    data_3500000.replace(0x84, 2, Int::toBytes(call_permit_fifth_tone_period, 2));
+    data_3500000.replace(0x86, 2, Int::toBytes(idle_channel_first_tone_freq, 2));
+    data_3500000.replace(0x90, 2, Int::toBytes(idle_channel_first_tone_period, 2));
+    data_3500000.replace(0x88, 2, Int::toBytes(idle_channel_second_tone_freq, 2));
+    data_3500000.replace(0x92, 2, Int::toBytes(idle_channel_second_tone_period, 2));
+    data_3500000.replace(0x8a, 2, Int::toBytes(idle_channel_third_tone_freq, 2));
+    data_3500000.replace(0x94, 2, Int::toBytes(idle_channel_third_tone_period, 2));
+    data_3500000.replace(0x8c, 2, Int::toBytes(idle_channel_fourth_tone_freq, 2));
+    data_3500000.replace(0x96, 2, Int::toBytes(idle_channel_fourth_tone_period, 2));
+    data_3500000.replace(0x8e, 2, Int::toBytes(idle_channel_fifth_tone_freq, 2));
+    data_3500000.replace(0x98, 2, Int::toBytes(idle_channel_fifth_tone_period, 2));
+    data_3500000.replace(0x9a, 2, Int::toBytes(call_reset_first_tone_freq, 2));
+    data_3500000.replace(0xa4, 2, Int::toBytes(call_reset_first_tone_period, 2));
+    data_3500000.replace(0x9c, 2, Int::toBytes(call_reset_second_tone_freq, 2));
+    data_3500000.replace(0xa6, 2, Int::toBytes(call_reset_second_tone_period, 2));
+    data_3500000.replace(0x9e, 2, Int::toBytes(call_reset_third_tone_freq, 2));
+    data_3500000.replace(0xa8, 2, Int::toBytes(call_reset_third_tone_period, 2));
+    data_3500000.replace(0xa0, 2, Int::toBytes(call_reset_fourth_tone_freq, 2));
+    data_3500000.replace(0xaa, 2, Int::toBytes(call_reset_fourth_tone_period, 2));
+    data_3500000.replace(0xa2, 2, Int::toBytes(call_reset_fifth_tone_freq, 2));
+    data_3500000.replace(0xac, 2, Int::toBytes(call_reset_fifth_tone_period, 2));
+
+    data_3500000.replace(0x116, 2, Int::toBytes(call_end_first_tone_freq, 2));
+    data_3500000.replace(0x120, 2, Int::toBytes(call_end_first_tone_period, 2));
+    data_3500000.replace(0x118, 2, Int::toBytes(call_end_second_tone_freq, 2));
+    data_3500000.replace(0x122, 2, Int::toBytes(call_end_second_tone_period, 2));
+    data_3500000.replace(0x11a, 2, Int::toBytes(call_end_third_tone_freq, 2));
+    data_3500000.replace(0x124, 2, Int::toBytes(call_end_third_tone_period, 2));
+    data_3500000.replace(0x11c, 2, Int::toBytes(call_end_fourth_tone_freq, 2));
+    data_3500000.replace(0x126, 2, Int::toBytes(call_end_fourth_tone_period, 2));
+    data_3500000.replace(0x11e, 2, Int::toBytes(call_end_fifth_tone_freq, 2));
+    data_3500000.replace(0x128, 2, Int::toBytes(call_end_fifth_tone_period, 2));
+    data_3500000.replace(0x12a, 2, Int::toBytes(call_all_first_tone_freq, 2));
+    data_3500000.replace(0x134, 2, Int::toBytes(call_all_first_tone_period, 2));
+    data_3500000.replace(0x12c, 2, Int::toBytes(call_all_second_tone_freq, 2));
+    data_3500000.replace(0x136, 2, Int::toBytes(call_all_second_tone_period, 2));
+    data_3500000.replace(0x12e, 2, Int::toBytes(call_all_third_tone_freq, 2));
+    data_3500000.replace(0x138, 2, Int::toBytes(call_all_third_tone_period, 2));
+    data_3500000.replace(0x130, 2, Int::toBytes(call_all_fourth_tone_freq, 2));
+    data_3500000.replace(0x13a, 2, Int::toBytes(call_all_fourth_tone_period, 2));
+    data_3500000.replace(0x132, 2, Int::toBytes(call_all_fifth_tone_freq, 2));
+    data_3500000.replace(0x13c, 2, Int::toBytes(call_all_fifth_tone_period, 2));
+
+    // Display
+    data_3500000[0x26] = brightness;
+    data_3500000[0x27] = auto_backlight_duration;
+    data_3500000[0xe1] = backlight_tx_delay;
+    data_3500000[0x37] = menu_exit_time;
+    data_3500000[0x51] = time_display;
+    data_3500000[0x4d] = last_caller;
+    data_3500000[0xaf] = call_display_mode;
+    data_3500000[0xbc] = callsign_display_color;
+    data_3500000[0x3a] = call_end_prompt_box;
+    data_3500000[0xb8] = display_channel_number;
+    data_3500000[0xb9] = display_current_contact;
+    data_3500000[0xc0] = standby_char_color;
+    data_3500000[0xc1] = standby_bk_picture;
+    data_3500000[0xc2] = show_last_call_on_launch;
+    data_3500000[0xe1] = separate_display;
+    data_3500000[0xe2] = ch_switching_keeps_caller;
+    data_3500000[0xe5] = backlight_rx_delay;
+    data_3500000[0xe3] = channel_name_color_a;
+    data_3500000[0x109] = channel_name_color_b;
+    data_3500000[0x10d] = zone_name_color_a;
+    data_3500000[0x10e] = zone_name_color_b;
+    if(display_channel_type) Bit::set(&data_3500000_bytes[0x110], 0);
+    if(display_time_slot) Bit::set(&data_3500000_bytes[0x110], 1);
+    if(display_color_code) Bit::set(&data_3500000_bytes[0x110], 2);
+    data_3500000[0x112] = date_display_format;
+    data_3500000[0x47] = volume_bar;
+
+    // GPS/Ranging
+    data_3500000[0x28] = gps_power;
+    data_3500000[0x3f] = gps_positioning;
+    data_3500000[0x30] = time_zone;
+    data_3500000[0xb5] = ranging_interval;
+    data_3500000[0xbd] = distance_unit;
+    data_3500000[0x53] = gps_template_information;
+    data_3501280.replace(0x0, 0x30, Format::wideCharString(gps_information_char).leftJustified(0x30, 0));
+    data_3500000[0x105] = gps_mode;
+    data_3500000[0x114] = gps_roaming;
+
+    // VFO Scan
+    data_3500000[0x0e] = vfo_scan_type;
+    data_3500000.replace(0x58 , 4, Int::toBytes(vfo_scan_start_freq_uhf, 4));
+    data_3500000.replace(0x5c , 4, Int::toBytes(vfo_scan_end_freq_uhf, 4));
+    data_3500000.replace(0x60 , 4, Int::toBytes(vfo_scan_start_freq_vhf, 4));
+    data_3500000.replace(0x64 , 4, Int::toBytes(vfo_scan_end_freq_vhf, 4));
+
+    // Auto Repeater
+    data_3500000[0x48] = auto_repeater_a;
+    data_3500000[0xd4] = auto_repeater_b;
+    data_3500000[0x68] = auto_repeater_1_uhf;
+    data_3500000[0x69] = auto_repeater_1_vhf;
+    data_3500000[0xf1] = auto_repeater_2_uhf;
+    data_3500000[0xf2] = auto_repeater_2_vhf;
+    data_3500000[0xdd] = repeater_check;
+    data_3500000[0xde] = repeater_check_interval;
+    data_3500000[0xdf] = repeater_check_reconnections;
+    data_3500000[0xe5] = repeater_out_of_range_notify;
+    data_3500000[0xea] = out_of_range_notify;
+    data_3500000[0xe7] = auto_roaming;
+    data_3500000[0xe0] = auto_roaming_start_condition;
+    data_3500000[0xba] = auto_roaming_fixed_time;
+    data_3500000[0xbf] = roaming_effect_wait_time;
+    data_3500000[0xd5] = roaming_zone;
+    data_3500000.replace(0xc4, 4, Int::toBytes(auto_repeater_1_min_freq_vhf, 4)); 
+    data_3500000.replace(0xc8, 4, Int::toBytes(auto_repeater_1_max_freq_vhf, 4)); 
+    data_3500000.replace(0xcc, 4, Int::toBytes(auto_repeater_1_min_freq_uhf, 4)); 
+    data_3500000.replace(0xd0, 4, Int::toBytes(auto_repeater_1_max_freq_uhf, 4)); 
+    data_3500000.replace(0xf4, 4, Int::toBytes(auto_repeater_2_min_freq_vhf, 4)); 
+    data_3500000.replace(0xf8, 4, Int::toBytes(auto_repeater_2_max_freq_vhf, 4)); 
+    data_3500000.replace(0xfc, 4, Int::toBytes(auto_repeater_2_min_freq_uhf, 4)); 
+    data_3500000.replace(0x100, 4, Int::toBytes(auto_repeater_2_max_freq_uhf, 4)); 
+    data_3500000[0x143] = repeater_mode;
+    data_3500000[0x144] = rep_cc_limit;
+    data_3500000[0x145] = rep_slot_a;
+    data_3500000[0x146] = rep_slot_b;
+
+    // Record
+    data_3500000[0x22] = record_function;
+    data_3500000[0xae] = record_delay;
+
+    // Volume/Audio
+    data_3500000[0x3b] = max_volume;
+    data_3500000[0x52] = max_headphone_volume;
+    data_3500000[0x0f] = digi_mic_gain;
+    data_3500000[0x57] = enhanced_sound_quality;
+    data_3500000[0x155] = power_on_volume_type;
+    data_3500000[0x156] = power_on_volume;
+    data_3500000[0x113] = analog_mic_gain;
+    data_3500000[0x147] = rx_agc;
+    data_3500000[0x153] = nx_mic_gain;
+
+    // Work Mode
+    data_3500000[0x01] = display_mode;
+    data_3500000[0x15] = vf_mr_a;
+    data_3500000[0x16] = vf_mr_b;
+    data_3500000[0x1f] = mem_zone_a;
+    data_3500000[0x20] = mem_zone_b;
+    data_3500000[0x2c] = main_channel_set;
+    data_3500000[0x2d] = sub_channel_mode;
+    data_3500000[0x34] = working_mode;
+
+    // VOX/BT
+    data_3500000[0x0c] = vox_level;
+    data_3500000[0x0d] = vox_delay;
+    data_3500000[0x33] = vox_detection;
+    data_3500000[0xb1] = bt_on_off_D890UV;
+    data_3500000[0xb2] = bt_int_mic;
+    data_3500000[0xb3] = bt_int_spk;
+    data_3500000[0xb6] = bt_mic_gain;
+    data_3500000[0xb7] = bt_spk_gain;
+    data_3500000[0xeb] = bt_hold_time;
+    data_3500000[0xec] = bt_rx_delay;
+    data_3500000[0xf0] = bt_ptt_hold;
+    data_3500000[0x104] = bt_ptt_sleep_time;
+    data_3500000[0x14b] = bt_nr_before;
+    data_3500000[0x14c] = bt_nr_after;
+
+    // STE
+    data_3500000[0x17] = ste_type_of_ctcss;
+    data_3500000[0x18] = ste_when_no_signal;
+    data_3500000[0x106] = ste_time;
+
+    // AM/FM
+    data_3500000[0x1e] = am_fm_function;
+    data_3500000[0x1e] = fm_vfo_mem;
+    data_3500000[0x1d] = fm_work_channel;
+    data_3500000[0x2b] = fm_monitor;
+    data_3500000[0x13f] = am_vfo_mem;
+    data_3500000[0x140] = am_work_zone;
+    data_3500000[0x141] = am_offset;
+    data_3500000[0x142] = am_sql_level;
+
+    // Power Save
+    data_3500000[0x3] = auto_shutdown;
+    data_3500000[0xb] = power_save;
+    data_3500000[0x3f] = auto_shutdown_type;
+
+    // Key Function
+    data_3500000[0x02] = key_lock;
+    data_3500000[0x10] = pf1_short_key_D890UV;
+    data_3500000[0x11] = pf2_short_key_D890UV;
+    data_3500000[0x12] = pf3_short_key_D890UV;
+    data_3500000[0x13] = p1_short_key_D890UV;
+    data_3500000[0x14] = p2_short_key_D890UV;
+    data_3500000[0x41] = pf1_long_key_D890UV;
+    data_3500000[0x42] = pf2_long_key_D890UV;
+    data_3500000[0x43] = pf3_long_key_D890UV;
+    data_3500000[0x44] = p1_long_key_D890UV;
+    data_3500000[0x45] = p2_long_key_D890UV;
+    data_3500000[0x46] = long_key_time;
+    if(knob_lock) Bit::set(&data_3500000_bytes[0xbe], 0);
+    if(keyboard_lock) Bit::set(&data_3500000_bytes[0xbe], 1);
+    if(side_key_lock) Bit::set(&data_3500000_bytes[0xbe], 3);
+    if(forced_key_lock) Bit::set(&data_3500000_bytes[0xbe], 4);
+
+    // Other
+    data_3500000[0xd5] = address_book_sent_with_code;
+    data_3500000[0x04] = tot;
+    data_3500000[0x05] = language;
+    data_3500000[0x08] = frequency_step;
+    data_3500000[0x09] = sql_level_a;
+    data_3500000[0x0a] = sql_level_b;
+    data_3500000[0x2e] = tbst;
+    data_3500000[0x50] = analog_call_hold_time;
+    data_3500000[0x6e] = call_channel_maintained;
+    data_3500000[0x6f] = priority_zone_a;
+    data_3500000[0x70] = priority_zone_b;
+    data_3500000[0xe8] = mute_timing;
+    data_3500000[0xef] = noaa;
+    data_3500000[0x10a] = encryption_type;
+    data_3500000[0x10b] = tot_predict;
+    data_3500000[0x10c] = tx_power_agc;
+    data_3500000[0x157] = noaa_moni;
+    data_3500000[0x158] = noaa_scan;
+    data_3500000[0x13e] = noaa_channel;
+
+    // Digital Func
+    data_3500000[0x19] = group_call_hold_time;
+    data_3500000[0x1a] = private_call_hold_time;
+    data_3500000[0x107] = manual_dial_group_call_hold_time;
+    data_3500000[0x108] = manual_dial_private_call_hold_time;
+    data_3500000[0x1b] = voice_header_repetitions;
+    data_3500000[0x1c] = tx_preamble_duration;
+    data_3500000[0x38] = filter_own_id;
+    data_3500000[0x3c] = digital_remote_kill;
+    data_3500000[0x49] = digital_monitor;
+    data_3500000[0x4a] = digital_monitor_cc;
+    data_3500000[0x4b] = digital_monitor_id;
+    data_3500000[0x4c] = monitor_slot_hold;
+    data_3500000[0x3e] = remote_monitor;
+    data_3500000[0xc3] = sms_format;
+    // data_3500000[0xc3] = digital_protocol;
+    data_3500000[0x154] = reset_digital_protocol;
+
+    // Satellite
+    data_3500000[0x14e] = sat_location;
+    data_3500000[0x14f] = sat_tx_power;
+    data_3500000[0x150] = sat_ana_sql;
+    data_3500000[0x151] = sat_aos_limit;
+}
 void Anytone::OptionalSettings::save(QXmlStreamWriter &xml){
     xml.writeStartElement("OptionalSettings");
 
@@ -815,8 +1096,8 @@ void Anytone::OptionalSettings::save(QXmlStreamWriter &xml){
     xml.writeAttribute("startup_channel_b", QString::number(startup_channel_b));
     xml.writeAttribute("startup_gps_test", QString::number(startup_gps_test));
     xml.writeAttribute("startup_reset", QString::number(startup_reset));
-    xml.writeAttribute("poweron_display_1", QString(poweron_display_1));
-    xml.writeAttribute("poweron_display_2", QString(poweron_display_2));
+    xml.writeAttribute("poweron_display_1", poweron_display_1.toHex());
+    xml.writeAttribute("poweron_display_2", poweron_display_2.toHex());
     xml.writeAttribute("poweron_password_char", poweron_password_char);
     xml.writeEndElement();
 
@@ -1058,7 +1339,7 @@ void Anytone::OptionalSettings::save(QXmlStreamWriter &xml){
     xml.writeAttribute("gps_template_information", QString::number(gps_template_information));
     xml.writeAttribute("gps_mode", QString::number(gps_mode));
     xml.writeAttribute("gps_roaming", QString::number(gps_roaming));
-    xml.writeAttribute("gps_information_char_len", gps_information_char);
+    xml.writeAttribute("gps_information_char", gps_information_char);
     xml.writeEndElement();
 
     // VFO Scan
@@ -1156,9 +1437,9 @@ void Anytone::OptionalSettings::load(QXmlStreamReader &xml){
                 if(attributes.hasAttribute("startup_reset"))
                     startup_reset = attributes.value("startup_reset").toInt();
                 if(attributes.hasAttribute("poweron_display_1"))
-                    poweron_display_1 = attributes.value("poweron_display_1").toString().toUtf8();
+                    poweron_display_1 = QByteArray::fromHex(attributes.value("poweron_display_1").toString().toUtf8());
                 if(attributes.hasAttribute("poweron_display_2"))
-                    poweron_display_2 = attributes.value("poweron_display_2").toString().toUtf8();
+                    poweron_display_2 = QByteArray::fromHex(attributes.value("poweron_display_2").toString().toUtf8());
                 if(attributes.hasAttribute("poweron_password_char"))
                     poweron_password_char = attributes.value("poweron_password_char").toString();
             }else if(token == QXmlStreamReader::StartElement && xml.name() == "PowerSave"){
@@ -1381,6 +1662,8 @@ void Anytone::OptionalSettings::load(QXmlStreamReader &xml){
                     encryption_type = attributes.value("encryption_type").toInt();
                 if(attributes.hasAttribute("tot_predict"))
                     tot_predict = attributes.value("tot_predict").toInt();
+                if(attributes.hasAttribute("tx_power_agc"))
+                    tx_power_agc = attributes.value("tx_power_agc").toInt();
                 if(attributes.hasAttribute("noaa_moni"))
                     noaa_moni = attributes.value("noaa_moni").toInt();
                 if(attributes.hasAttribute("noaa_scan"))
@@ -1680,14 +1963,4 @@ void Anytone::OptionalSettings::load(QXmlStreamReader &xml){
         }
     }
 }
-    
 
-    
-
-    
-
-    
-
-    
-
-    

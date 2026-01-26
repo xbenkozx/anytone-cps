@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QString>
 #include <QVector>
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "channel.h"
 #include "aes_encryption_code.h"
 

@@ -2,7 +2,7 @@
 #include "hotkey_settings_dialog.h"
 #include "ui_hotkey_settings_dialog.h"
 #include "main_window.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 
 
 HotKeySettingsDialog::HotKeySettingsDialog(MainWindow *parent) :

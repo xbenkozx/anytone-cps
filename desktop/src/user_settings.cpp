@@ -1,6 +1,7 @@
 #include <QString>
+#include <QDir>
 #include "user_settings.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 QString UserSettings::comport = QString("VIRTUAL");
 QString UserSettings::virtual_file_name = QString("bin-dump-contacts.bin"); // Hard-set. remove when ready
 QString UserSettings::theme = "";
@@ -9,12 +10,24 @@ int UserSettings::aprs_alt_type = 0;
 QString UserSettings::last_save_file = "";
 Anytone::RadioModel UserSettings::radio_model = Anytone::RadioModel::None;
 
-void UserSettings::load(){
+QString UserSettings::getUserDirectory(){
     #ifdef _WIN32
-    QSettings settings("C:/Users/" + QString(getenv("USERNAME")) + "/anytone-cps.ini", QSettings::IniFormat);
+    QString dir = "C:/Users/" + QString(getenv("USERNAME")) + "/anytone-cps/";
     #else
-    QSettings settings("/home/" + QString(getenv("USER")) + "/anytone-cps.settings", QSettings::IniFormat);
+    QString dir = "/home/" + QString(getenv("USER")) + "/anytone-cps/";
     #endif
+
+    QDir dirObj;
+
+    if (!dirObj.mkpath(dir)) {
+        qDebug() << "Failed to create directory:" << dir;
+    }
+
+    return dir;
+}
+
+void UserSettings::load(){
+    QSettings settings(getUserDirectory() + "/settings.ini", QSettings::IniFormat);
     UserSettings::comport = settings.value("serial/comport", "VIRTUAL").toString();
     UserSettings::virtual_file_name = settings.value("serial/virt_filename", "").toString();
     UserSettings::theme = settings.value("user/theme", "").toString();
@@ -23,11 +36,7 @@ void UserSettings::load(){
     UserSettings::radio_model = static_cast<Anytone::RadioModel>(settings.value("user/radio_model", 0).toInt());
 }
 void UserSettings::save(){
-    #ifdef _WIN32
-    QSettings settings("C:/Users/" + QString(getenv("USERNAME")) + "/anytone-cps.ini", QSettings::IniFormat);
-    #else
-    QSettings settings("/home/" + QString(getenv("USER")) + "/anytone-cps.settings", QSettings::IniFormat);
-    #endif
+    QSettings settings(getUserDirectory() + "/settings.ini", QSettings::IniFormat);
     settings.setValue("serial/comport", UserSettings::comport);
     settings.setValue("serial/virt_filename", UserSettings::virtual_file_name);
     settings.setValue("user/theme", UserSettings::theme);

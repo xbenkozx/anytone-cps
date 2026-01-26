@@ -2,7 +2,7 @@
 #include "master_id_dialog.h"
 #include "ui_master_id_dialog.h"
 #include "main_window.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 
 
 MasterIdDialog::MasterIdDialog(MainWindow *parent) :

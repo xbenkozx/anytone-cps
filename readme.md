@@ -17,9 +17,8 @@ Currently, this project is in Alpha stage and is a work is progress. Make sure y
 ## Progress
 | | D878UVII | D890UV | D168UV | D878UV | D868UV |
 | - | :-: | :-: | :-: | :-: | :-: |
-| UI | ![95%](https://progress-bar.xyz/95?width=100) | ![5%](https://progress-bar.xyz/5?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) |
-| Serial | ![98%](https://progress-bar.xyz/98?width=100) | ![1%](https://progress-bar.xyz/1?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) |
-| CSV | ![20%](https://progress-bar.xyz/20?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) |
+| UI | ![95%](https://progress-bar.xyz/95?width=100) | ![95%](https://progress-bar.xyz/95?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) |
+| Serial | ![98%](https://progress-bar.xyz/98?width=100) | ![74%](https://progress-bar.xyz/74?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) |
 
 ## Supported Devices
 - D878UVII
@@ -54,65 +53,40 @@ The stock CPS for the 878UVII:
 These are not fully tested.
 | Data | D878UVII | D890UV | D168UV |
 | - | :---: | :---: | :---: |
-| Boot Image | R/W | | |
-| BK Image 1 | R/W | | |
-| BK Image 2 | R/W | | |
+| Boot Image | R/W | R/W | |
+| BK Image 1 | R/W | R/W | |
+| BK Image 2 | R/W | R/W | |
 | 2Tone Encode/Decode | R/W | | |
 | 5Tone Encode/Decode | R/W | | |
-| AES Encryption Code | R/W | | |
-| Analog Address Book | R/W | | |
-| APRS | R/W | | |
-| ARC4 Encryption Code | R/W | | |
-| Auto Repeater Offset Frequencies | R/W | | |
+| AES Encryption Code | R/W | R/W | |
+| AM Air | - | R/W | - |
+| AM Zone | - | R | - |
+| Analog Address Book | R/W | R/W | |
+| APRS | R/W | R/W | |
+| ARC4 Encryption Code | R/W | R/W | |
+| Auto Repeater Offset Frequencies | R/W | R/W | |
 | Alarm Settings | R/W | | |
-| Channels | R/W | | |
+| Channels | R/W | R/W | |
 | Digital Contacts | R/W | | |
 | DTMF Encode/Decode | R/W | | |
-| Encryption Code | R/W | | |
+| Encryption Code | R/W | R/W | |
 | Local Information/Expert Options(AT_OPTIONS) | R/W | R/W | |
-| FM Channels | R/W | | |
-| GPS Roaming | R/W | | |
+| FM Channels | R/W | R/W | |
+| GPS Roaming | R/W | R/W | |
 | HotKey HotKey | R/W | | |
 | HotKey Quick Call | R/W | | |
 | HotKey State | R/W | | |
-| Master ID | R/W | | |
-| Optional Settings | R/W | | |
-| Prefabricated SMS | R/W | | |
-| Radio IDs | R/W | | |
-| Roaming Channels | R/W | | |
-| Roaming Zones | R/W | | |
-| Scan Lists | R/W | | |
+| Master ID | R/W | R/W | |
+| Optional Settings | R/W | R/W | |
+| Prefabricated SMS | R/W | R/W | |
+| Radio IDs | R/W | R/W | |
+| Receive Groups | R/W | R/W | |
+| Roaming Channels | R/W | R/W | |
+| Roaming Zones | R/W | R/W | |
+| Scan Lists | R/W | R/W | |
 | Talk Alias Settings | R/W | | |
-| TalkGroups | R/W | | |
-| Zones | R/W | | |
-
-## CSV Import/Export
-| Data | D878UVII | D890UV | D168UV |
-| - | :---: | :---: | :---: |
-| 2Tone Encode | | | |
-| 5Tone Encode | | | |
-| AES Encryption Code | | | |
-| Alert Tone | I | | |
-| Analog Address Book | I | | |
-| APRS | I | | |
-| ARC4 Encryption Code | | | |
-| Auto Repeater Offset Frequencies | I | | |
-| Channels | I | | |
-| Digital Contacts | | | |
-| DTMF Encode | | | |
-| FM Channels | I | | |
-| GPS Roaming | I | | |
-| HotKey HotKey | | | |
-| HotKey Quick Call | | | |
-| HotKey State | | | |
-| Optional Settings | | | |
-| Prefabricated SMS | I | | |
-| Radio IDs | I | | |
-| Roaming Channels | | | |
-| Roaming Zones | | | |
-| Scan Lists | | | |
-| TalkGroups | I | | |
-| Zones | I | | |
+| TalkGroups | R/W | R/W | |
+| Zones | R/W | R/W | |
 
 ---
 

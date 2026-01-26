@@ -1,5 +1,5 @@
 #include "memory/talkgroup.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 
 #include "utils.h"
 #include "int.h"
@@ -10,13 +10,13 @@ Talkgroup::Talkgroup(){}
 void Talkgroup::decode(QByteArray data){
     switch(Anytone::Memory::radio_model){
         case Anytone::RadioModel::D878UVII_FW400:
-            decode_D878UVII(data);
+            return decode_D878UVII(data);
             break;
         case Anytone::RadioModel::D890UV_FW103:
-            decode_D890UV(data);
+            return decode_D890UV(data);
             break;
         case Anytone::RadioModel::D168UV:
-            decode_D168UV(data);
+            return decode_D168UV(data);
             break;
         default:
         break;
@@ -43,6 +43,20 @@ void Talkgroup::decode_D168UV(QByteArray data){
 
 }
 QByteArray Talkgroup::encode(){
+    switch(Anytone::Memory::radio_model){
+        case Anytone::RadioModel::D878UVII_FW400:
+            return encode_D878UVII();
+        case Anytone::RadioModel::D890UV_FW103:
+            return encode_D890UV();
+        case Anytone::RadioModel::D168UV:
+            return encode_D168UV();
+        default:
+            return QByteArray(0x80, 0);
+        break;
+    }
+}
+
+QByteArray Talkgroup::encode_D878UVII(){
     QByteArray data(0x64, 0);
     auto* bytes = reinterpret_cast<std::uint8_t*>(data.data());
 
@@ -54,6 +68,26 @@ QByteArray Talkgroup::encode(){
     data.replace(0x23, 4, 
         QByteArray::fromHex(QString::number(dmr_id).rightJustified(8, '0').toUtf8())
     );
+    return data;
+}
+QByteArray Talkgroup::encode_D890UV(){
+    QByteArray data(0xc8, 0);
+    auto* bytes = reinterpret_cast<std::uint8_t*>(data.data());
+
+    data[0] = call_type;
+    data.replace(0x6, 0x20, 
+        Format::wideCharString(name).leftJustified(0x20, '\0')
+    );
+    if(call_alert) Bit::set(&bytes[0x01], 2);
+    data.replace(0x2, 4, 
+        QByteArray::fromHex(QString::number(dmr_id).rightJustified(8, '0').toUtf8())
+    );
+    return data;
+}
+QByteArray Talkgroup::encode_D168UV(){
+    QByteArray data(0x64, 0);
+    auto* bytes = reinterpret_cast<std::uint8_t*>(data.data());
+
     return data;
 }
 

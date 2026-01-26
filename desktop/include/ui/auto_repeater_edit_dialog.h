@@ -3,7 +3,7 @@
 
 #include <QDialog>
 #include <QString>
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "auto_repeater_offset_frequency.h"
 
 class Ui_AutoRepeaterOffsetFrequencyEditDialog;

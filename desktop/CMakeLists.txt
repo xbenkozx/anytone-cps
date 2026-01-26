@@ -27,10 +27,8 @@ qt_add_executable(anytone-cps
     resources.qrc
 )
 
-# Or conditionally
-IF (WIN32)
-    #set_property(TARGET anytone-cps PROPERTY WIN32_EXECUTABLE TRUE)
-endif()
+# Optional. Comment if you want a terminal window open
+set_property(TARGET anytone-cps PROPERTY WIN32_EXECUTABLE TRUE)
 
 
 set_target_properties(anytone-cps PROPERTIES 

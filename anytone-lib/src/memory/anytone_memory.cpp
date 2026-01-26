@@ -1,4 +1,4 @@
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "memory/channel.h"
 #include "memory/zone.h"
 #include "memory/talkgroup.h"
@@ -20,6 +20,8 @@
 #include "tone5_settings.h"
 #include "talk_alias_settings.h"
 #include "analog_address.h"
+#include "am_air.h"
+#include "am_zone.h"
 
 using namespace Anytone;
 
@@ -55,6 +57,9 @@ QVector<AesEncryptionCode*> Memory::aes_encryption_keys = {};
 QVector<Arc4EncryptionCode*> Memory::arc4_encryption_keys = {};
 QVector<EncryptionCode*> Memory::encryption_keys = {};
 QVector<AnalogAddress*> Memory::analog_addresses = {};
+QVector<AmAir*> Memory::am_air_list= {};
+QVector<AmZone*> Memory::am_zones = {};
+QVector<Satellite*> Memory::satellite_data_list = {};
 
 // **********************
 // Save File Save
@@ -65,6 +70,8 @@ void Memory::saveData(QXmlStreamWriter &xml){
     saveAesEncryptionCodes(xml);
     saveAprsSettings(xml);
     saveAlarmSettings(xml);
+    saveAmAir(xml);
+    saveAmZones(xml);
     saveAnalogAddresses(xml);
     saveArc4EncryptionCodes(xml);
     saveAutoRepeaterOffsets(xml);
@@ -105,6 +112,24 @@ void Memory::saveAprsSettings(QXmlStreamWriter &xml){
 }
 void Memory::saveAlarmSettings(QXmlStreamWriter &xml){
     alarm_settings->save(xml);
+}
+void Memory::saveAmAir(QXmlStreamWriter &xml){
+    xml.writeStartElement("AmAirList");
+    for(AmAir *item : Memory::am_air_list){
+        if(item->frequency > 0) {
+            item->save(xml);
+        }
+    }
+    xml.writeEndElement();
+}
+void Memory::saveAmZones(QXmlStreamWriter &xml){
+    xml.writeStartElement("AmZoneList");
+    for(AmZone *item : Memory::am_zones){
+        if(item->member_channels.size() > 0 || item->scan_channels.size() > 0) {
+            item->save(xml);
+        }
+    }
+    xml.writeEndElement();
 }
 void Memory::saveAnalogAddresses(QXmlStreamWriter &xml){
     xml.writeStartElement("AnalogAddressList");
@@ -290,6 +315,10 @@ void Memory::loadData(QXmlStreamReader &xml){
             }else if(xml.name() == u"AlarmSettings") {
                 alarm_settings->load(xml);
                 token = xml.readNext();
+            }else if(xml.name() == u"AmAirList") {
+                loadAmAir(xml);
+            }else if(xml.name() == u"AmZoneList") {
+                loadAmZones(xml);
             }else if(xml.name() == u"AnalogAddressList") {
                 loadAnalogAddresses(xml);
             }else if(xml.name() == u"ARC4EncryptionList") {
@@ -363,6 +392,30 @@ void Memory::loadAesEncryptionCodes(QXmlStreamReader &xml){
             AesEncryptionCode *item = Memory::aes_encryption_keys.at(idx);
             item->load(xml);
         }else if(token == QXmlStreamReader::StartElement && xml.name() != u"AESCode") {
+            return;
+        }
+    }
+}
+void Memory::loadAmAir(QXmlStreamReader &xml){
+    while (!xml.atEnd() && !xml.hasError()) {
+        QXmlStreamReader::TokenType token = xml.readNext();
+        if(token == QXmlStreamReader::StartElement && xml.name() == u"AmAir") {
+            int idx = xml.attributes().value("id").toInt();
+            AmAir *item = Memory::am_air_list.at(idx);
+            item->load(xml);
+        }else if(token == QXmlStreamReader::StartElement && xml.name() != u"AmAir") {
+            return;
+        }
+    }
+}
+void Memory::loadAmZones(QXmlStreamReader &xml){
+    while (!xml.atEnd() && !xml.hasError()) {
+        QXmlStreamReader::TokenType token = xml.readNext();
+        if(token == QXmlStreamReader::StartElement && xml.name() == u"AmZone") {
+            int idx = xml.attributes().value("id").toInt();
+            AmZone *item = Memory::am_zones.at(idx);
+            item->load(xml);
+        }else if(token == QXmlStreamReader::StartElement && xml.name() != u"AmZone") {
             return;
         }
     }
@@ -572,6 +625,7 @@ void Memory::linkReferences(){
     Memory::linkScanListRef();
     Memory::linkRoamingZoneRef();
     Memory::linkHotKeyRef();
+    Memory::linkAmZoneRef();
     linkReceiveGroupRef();
 }
 void Memory::linkZoneRef(){
@@ -682,6 +736,25 @@ void Memory::linkReceiveGroupRef(){
         }
     }
 }
+void Memory::linkAmZoneRef(){
+    for(AmZone *zone : am_zones){
+        for(int idx : zone->member_channel_idxs){
+            zone->member_channels.append(am_air_list[idx]);
+        }
+        for(int idx : zone->scan_channel_idxs){
+            zone->scan_channels.append(am_air_list[idx]);
+        }
+
+        if(zone->member_channels.size() > 0){
+            if(zone->aChannelIdx < zone->member_channels.size()) {
+                zone->aChannel = zone->member_channels[zone->aChannelIdx];
+            }else{
+                zone->aChannel = zone->member_channels[0];
+            }
+        }
+    }
+}
+
 // **********************
 // Data Initializers
 // **********************
@@ -712,6 +785,8 @@ void Memory::init(){
     Memory::initArc4EncryptionKeys();
     Memory::initEncryptionKeys();
     Memory::initAnalogAddresses();
+    Memory::initAmAir();
+    Memory::initAmZones();
 
     setDefaults();
     linkReferences();
@@ -850,6 +925,22 @@ void Memory::initAnalogAddresses(){
         AnalogAddress *item = new AnalogAddress();
         item->id = i;
         Memory::analog_addresses.push_back(item);
+    }
+}
+void Memory::initAmAir(){
+    Memory::am_air_list.clear();
+    for(int i = 0; i < 257; i++){
+        AmAir *item = new AmAir();
+        item->index = i;
+        Memory::am_air_list.push_back(item);
+    }
+}
+void Memory::initAmZones(){
+    Memory::am_zones.clear();
+    for(int i = 0; i < 16; i++){
+        AmZone *item = new AmZone();
+        item->index = i;
+        Memory::am_zones.push_back(item);
     }
 }
 

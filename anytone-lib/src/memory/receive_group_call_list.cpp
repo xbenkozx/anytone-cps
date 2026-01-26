@@ -1,5 +1,7 @@
 #include "receive_group_call_list.h"
 #include "int.h"
+#include "utils.h"
+#include "anytone_memory.h"
 
 void Anytone::ReceiveGroup::decode(QByteArray data){
     for(int i = 0; i < 64; i++){
@@ -19,7 +21,13 @@ QByteArray Anytone::ReceiveGroup::encode(){
         Talkgroup *tg = talkgroups.at(i);
         data.replace(i*4, 4, Int::toBytes(tg->id, 4));
     }
-    data.append(name.toUtf8().leftJustified(0x20, 0));
+    
+    if(Anytone::Memory::radio_model == Anytone::RadioModel::D878UVII_FW400){
+        data.append(name.toUtf8().leftJustified(0x20, 0));
+    }else if(Anytone::Memory::radio_model == Anytone::RadioModel::D890UV_FW103){
+        data.append(Format::wideCharString(name).leftJustified(0x20, 0));
+    }
+    
 
     return data;
 }

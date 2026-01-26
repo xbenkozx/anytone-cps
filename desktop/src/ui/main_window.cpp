@@ -2,7 +2,7 @@
 #include <QFileDialog>
 #include "main_window.h"
 #include "ui_main_window.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 
 #include "user_settings.h"
 #include "device.h"
@@ -13,6 +13,9 @@
 #include <QSpacerItem>
 #include <QLayout>
 #include <QTimer>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #include "channel_table_model.h"
 #include "zone_table_model.h"
 #include "talkgroup_table_model.h"
@@ -30,6 +33,8 @@
 #include "arc4_encryption_table_model.h"
 #include "encryption_table_model.h"
 #include "analog_address_table_model.h"
+#include "am_air_table_model.h"
+#include "am_zone_table_model.h"
 
 #include "aes_encryption_code_dialog.h"
 #include "arc4_encryption_code_dialog.h"
@@ -61,7 +66,9 @@
 #include "hotkey_settings_dialog.h"
 #include "analog_address_edit_dialog.h"
 #include "import_export_dialog.h"
+#include "satellite_dialog.h"
 #include "csv.h"
+#include "satellite.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -102,7 +109,7 @@ void MainWindow::showEvent(QShowEvent *event)
 
     if(!debug){
         QTimer::singleShot(0, this, &MainWindow::showAlphaWarningMessage);
-        ui->actionD890UV_103->setDisabled(true);
+        // ui->actionD890UV_103->setDisabled(true);
     }
 
     if(UserSettings::last_save_file != ""){
@@ -141,6 +148,8 @@ void MainWindow::setupUI(){
     connect(ui->readRadioBtn, &QToolButton::clicked, this, &MainWindow::showReadOptionsDialog);
     connect(ui->writeRadioBtn, &QToolButton::clicked, this, &MainWindow::showWriteOptionsDialog);
     connect(ui->tableView, &QTableView::doubleClicked, this, &MainWindow::onMainTableDblClicked);
+
+    connect(ui->actionSatellite, &QAction::triggered, this, &MainWindow::showSatelliteDialog);
 
     ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tableView, &QTableView::customContextMenuRequested, this, &MainWindow::showMainTableContextMenu);
@@ -648,6 +657,37 @@ void MainWindow::listAnalogAddresses(bool goto_top){
 
     if(goto_top) ui->tableView->scrollToTop();
 }
+void MainWindow::listAmAir(bool goto_top){
+    delete table_model;
+    table_model = new AmAirTableModel(this);
+    ui->tableView->setModel(table_model);
+
+    ui->tableView->verticalHeader()->setVisible(false);
+    ui->tableView->setSortingEnabled(false);
+
+    ui->tableView->setColumnWidth(0, 70);
+    ui->tableView->setColumnWidth(1, 100);
+    ui->tableView->setColumnWidth(2, 200);
+
+    if(goto_top) ui->tableView->scrollToTop();
+}
+void MainWindow::listAmZones(bool goto_top){
+    delete table_model;
+    table_model = new AmZoneTableModel(this);
+    ui->tableView->setModel(table_model);
+
+    ui->tableView->verticalHeader()->setVisible(false);
+    ui->tableView->setSortingEnabled(false);
+
+    ui->tableView->setColumnWidth(0, 70);
+    ui->tableView->setColumnWidth(1, 300);
+    ui->tableView->setColumnWidth(2, 100);
+    ui->tableView->setColumnWidth(3, 200);
+
+    if(goto_top) ui->tableView->scrollToTop();
+}
+
+
 void MainWindow::showComportDialog(){
     comport_dialog = std::make_unique<ComportDialog>(this);
     comport_dialog->show();
@@ -790,6 +830,10 @@ void MainWindow::showImportDialog(){
 void MainWindow::showExportDialog(){
     ImportExportDialog dialog(this);
     dialog.is_export = true;
+    dialog.exec();
+}
+void MainWindow::showSatelliteDialog(){
+    SatelliteDialog dialog(this);
     dialog.exec();
 }
 
@@ -1023,6 +1067,12 @@ void MainWindow::showList(QString list_name){
     }else if(view == "Analog Address Book"){
         selected_table_view = view;
         listAnalogAddresses();
+    }else if(view == "AM Air"){
+        selected_table_view = view;
+        listAmAir();
+    }else if(view == "AM Zone"){
+        selected_table_view = view;
+        listAmZones();
     }else if(view == "5Tone Settings"){
         showTone5SettingsDialog();
     }else if(view == "2Tone Settings"){

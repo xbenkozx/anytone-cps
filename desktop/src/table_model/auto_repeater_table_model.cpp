@@ -4,7 +4,7 @@
 #include <QBrush>
 
 // include your actual Channel + Constants headers
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "memory/auto_repeater_offset_frequency.h"
 #include "constants.h"
 

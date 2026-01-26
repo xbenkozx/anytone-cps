@@ -23,8 +23,10 @@ namespace Anytone {
         }
         ~AprsSettings(){}
 
-        void decode(QByteArray data_1000, QByteArray data_1800);
-        void encode(QByteArray &data_2501000, QByteArray &data_2501800);
+        void decode_D878UVII(QByteArray data_1000, QByteArray data_1800);
+        void encode_D878UVII(QByteArray &data_2501000, QByteArray &data_2501800);
+        void decode_D890UV(QByteArray data_1000, QByteArray data_1800);
+        void encode_D890UV(QByteArray &data_3501000, QByteArray &data_3501800);
         void save(QXmlStreamWriter &xml);
         void load(QXmlStreamReader &xml);
         static double degMinToDecimal(uint8_t deg, double minutes){

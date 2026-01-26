@@ -2,7 +2,7 @@
 #include "contact_selection_dialog.h"
 #include "ui_contact_selection_dialog.h"
 #include "channel_edit_dialog.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "memory/talkgroup.h"
 #include "constants.h"
 #include "ui_channel_settings.h"

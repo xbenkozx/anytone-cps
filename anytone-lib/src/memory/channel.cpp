@@ -1,5 +1,5 @@
 #include "memory/channel.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include <QXmlStreamAttributes>
 
 void Anytone::Channel::clear(){
@@ -395,17 +395,17 @@ QByteArray Anytone::Channel::encode_D878UVII(){
     bytes[9] += (ctcss_dcs_encode & 0x3) << 2;
     bytes[9] += (ctcss_dcs_decode & 0x3);
 
-    bytes[10] = ctcss_encode_tone;
-    bytes[11] = ctcss_decode_tone;
+    bytes[0xa] = ctcss_encode_tone;
+    bytes[0xb] = ctcss_decode_tone;
 
-    data.replace(12, 2, 
+    data.replace(0xc, 2, 
         Int::toBytes(dcs_encode_tone, 2)
     );
-    data.replace(14, 2, 
+    data.replace(0xe, 2, 
         Int::toBytes(dcs_decode_tone, 2)
     );
 
-    data.replace(16, 2, 
+    data.replace(0x10, 2, 
         Int::toBytes(custom_ctcss, 2)
     );
 
@@ -468,7 +468,83 @@ QByteArray Anytone::Channel::encode_D878UVII(){
 QByteArray Anytone::Channel::encode_D890UV(){
     QByteArray data(0x80, 0);
     auto* bytes = reinterpret_cast<std::uint8_t*>(data.data());
+    data.replace(0x0, 4, 
+        QByteArray::fromHex(QString::number(rx_frequency).rightJustified(8, '0').toUtf8())
+    );
+    data.replace(0x4, 4, 
+        QByteArray::fromHex(QString::number(offset).rightJustified(8, '0').toUtf8())
+    );
+    data[0x8] = ((offset_direction << 6) + (band_width << 4) + (tx_power << 2) + channel_type) & 0xff;
 
+    if(talkaround) Bit::set(&bytes[9], 7);
+    if(call_confirmation) Bit::set(&bytes[9], 6);
+    if(ptt_prohibit) Bit::set(&bytes[9], 5);
+    if(reverse) Bit::set(&bytes[9], 4);
+
+    bytes[9] += (ctcss_dcs_encode & 0x3) << 2;
+    bytes[9] += (ctcss_dcs_decode & 0x3);
+
+    bytes[0xa] = ctcss_encode_tone;
+    bytes[0xb] = ctcss_decode_tone;
+
+    data.replace(0xc, 2, Int::toBytes(dcs_encode_tone, 2));
+    data.replace(0xe, 2, Int::toBytes(dcs_decode_tone, 2));
+    data.replace(0x10, 2, Int::toBytes(custom_ctcss, 2));
+    data[0x12] = tone2_decode;
+    data.replace(0x13, 2, Int::toBytes(contact_idx, 2, Endian::Big));
+    radio_id_idx = data[0x18];
+    data[0x19] += (squelch_mode << 4);
+    data[0x19] += ptt_id;
+    data[0x1a] += (optional_signal << 4);
+    data[0x1a] += busy_lock;
+    data[0x1b] = scan_list_idx;
+    data[0x1c] = receive_group_call_list_idx;
+    data[0x1d] = tone2_id_idx;
+    data[0x1e] = tone5_id_idx;
+    data[0x1f] = dtmf_id_idx;
+    data[0x20] = rx_color_code_idx;
+
+    if(work_alone) Bit::set(&bytes[0x21], 7);
+    if(aprs_rx) Bit::set(&bytes[0x21], 5);
+    if(slot_suit) Bit::set(&bytes[0x21], 4);
+    if(time_slot) Bit::set(&bytes[0x21], 1);
+    if(sms_confirmation) Bit::set(&bytes[0x21], 0);
+    data[0x21] += (dmr_mode_dcdm << 2);
+
+    data[0x22] = aes_encryption_idx;
+    if(dmr_crc_ignore) Bit::set(&bytes[0x34], 7);
+    if(auto_scan) Bit::set(&bytes[0x34], 4);
+    if(data_ack_disable) Bit::set(&bytes[0x34], 3);
+    if(exclude_channel_roaming) Bit::set(&bytes[0x34], 2);
+    if(dmr_mode) Bit::set(&bytes[0x34], 1);
+    if(ranging) Bit::set(&bytes[0x34], 0);
+
+    data[0x35] = aprs_report_type;
+    data[0x36] = analog_aprs_ptt_mode;
+    data[0x37] = digital_aprs_ptt_mode;
+    data[0x38] = digital_aprs_report_channel;
+    data[0x39] = correct_frequency;
+    data[0x3a] = digital_encryption;
+
+    if(extend_encryption) Bit::set(&bytes[0x3b], 5);
+    if(send_talker_alias) Bit::set(&bytes[0x3b], 4);
+    if(analog_aprs_mute) Bit::set(&bytes[0x3b], 3);
+    if(sms_forbid) Bit::set(&bytes[0x3b], 2);
+    if(aes_random_key) Bit::set(&bytes[0x3b], 1);
+    if(aes_multiple_key) Bit::set(&bytes[0x3b], 0);
+
+    data[0x3c] = analog_aprs_report_frequency_idx;
+    data[0x3d] = arc4_encryption_key_idx;
+    data[0x3e] = scrambler_set;
+    data[0x3f] = custom_scrambler;
+
+    data[0x40] = r5tone_bot;
+    data[0x41] = r5tone_eot;
+    data[0x43] = tx_color_code_idx;
+
+    data.replace(0x44, 0x20, Format::wideCharString(name).leftJustified(0x20, 0x0));
+
+    
     return data;
 }
 QByteArray Anytone::Channel::encode_D168UV(){
@@ -492,6 +568,7 @@ void Anytone::Channel::save(QXmlStreamWriter &xml){
     xml.writeAttribute("talkaround", talkaround?"1":"0");
     xml.writeAttribute("call_confirmation", call_confirmation?"1":"0");
     xml.writeAttribute("ptt_prohibit", ptt_prohibit?"1":"0");
+    xml.writeAttribute("custom_ctcss", QString::number(custom_ctcss));
     xml.writeAttribute("ctcss_dcs_decode",  QString::number(ctcss_dcs_decode));
     xml.writeAttribute("ctcss_dcs_encode",  QString::number(ctcss_dcs_encode));
     xml.writeAttribute("ctcss_decode_tone",  QString::number(ctcss_decode_tone));
@@ -540,6 +617,9 @@ void Anytone::Channel::save(QXmlStreamWriter &xml){
     xml.writeAttribute("r5tone_bot",  QString::number(r5tone_bot));
     xml.writeAttribute("r5tone_eot",  QString::number(r5tone_eot));
     xml.writeAttribute("digital_encryption",  QString::number(digital_encryption));
+    xml.writeAttribute("custom_scrambler",  QString::number(custom_scrambler));
+
+    
     xml.writeEndElement();
 }
 void Anytone::Channel::load(QXmlStreamReader &xml){
@@ -568,6 +648,8 @@ void Anytone::Channel::load(QXmlStreamReader &xml){
             call_confirmation = attributes.value("call_confirmation").toInt();
         if(attributes.hasAttribute("ptt_prohibit"))
             ptt_prohibit = attributes.value("ptt_prohibit").toInt();
+        if(attributes.hasAttribute("custom_ctcss"))
+            custom_ctcss = attributes.value("custom_ctcss").toInt();
         if(attributes.hasAttribute("ctcss_dcs_decode"))
             ctcss_dcs_decode = attributes.value("ctcss_dcs_decode").toInt();
         if(attributes.hasAttribute("ctcss_dcs_encode"))
@@ -664,5 +746,7 @@ void Anytone::Channel::load(QXmlStreamReader &xml){
             r5tone_eot = attributes.value("r5tone_eot").toInt();
         if(attributes.hasAttribute("digital_encryption"))
             digital_encryption = attributes.value("digital_encryption").toInt();
+        if(attributes.hasAttribute("custom_scrambler"))
+            custom_scrambler = attributes.value("custom_scrambler").toInt();
     }
 }

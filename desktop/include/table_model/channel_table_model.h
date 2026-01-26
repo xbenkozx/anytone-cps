@@ -9,7 +9,7 @@
 #include <QBrush>
 #include <vector>
 
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "channel.h"
 
 class ChannelTableModel final : public QAbstractTableModel {

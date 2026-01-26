@@ -2,7 +2,7 @@
 #include "talkgroup_edit_dialog.h"
 #include "ui_talkgroup_edit_dialog.h"
 #include "main_window.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "constants.h"
 
 TalkgroupEditDialog::TalkgroupEditDialog(MainWindow *parent, int index) :

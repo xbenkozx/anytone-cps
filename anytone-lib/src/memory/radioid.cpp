@@ -1,5 +1,5 @@
 #include "radioid.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 
 void Anytone::RadioId::decode(QByteArray data){
     switch(Anytone::Memory::radio_model){
@@ -33,12 +33,38 @@ void Anytone::RadioId::decode_D168UV(QByteArray data){
 }
 
 QByteArray Anytone::RadioId::encode(){
+    switch(Anytone::Memory::radio_model){
+        case Anytone::RadioModel::D878UVII_FW400:
+            return encode_D878UVII();
+        case Anytone::RadioModel::D890UV_FW103:
+            return encode_D890UV();
+        case Anytone::RadioModel::D168UV:
+            // return encode_D168UV();
+        default:
+            return QByteArray(0x80, 0);
+        break;
+    }
+}
+
+QByteArray Anytone::RadioId::encode_D878UVII(){
     QByteArray data(0x20, 0);
     data.replace(0x0, 4, 
         QByteArray::fromHex(QString::number(dmr_id).rightJustified(8, '0').toUtf8())
     );
     data.replace(5, 26, 
         name.toUtf8().leftJustified(26, '\0')
+    );
+
+    return data;
+}
+
+QByteArray Anytone::RadioId::encode_D890UV(){
+    QByteArray data(0x40, 0);
+    data.replace(0x0, 4, 
+        QByteArray::fromHex(QString::number(dmr_id).rightJustified(8, '0').toUtf8())
+    );
+    data.replace(4, 52, 
+        Format::wideCharString(name).leftJustified(52, '\0')
     );
 
     return data;

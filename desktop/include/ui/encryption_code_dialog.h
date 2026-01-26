@@ -5,7 +5,7 @@
 #include <QString>
 #include <QObject>
 #include <memory>
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "encryption_code.h"
 
 class Ui_EncryptionCodeEditDialog;
@@ -27,6 +27,7 @@ public:
 
 private slots:
     void save();
+    void saveClose();
     void prevBtnClicked();
     void nextBtnClicked();
 };

@@ -20,7 +20,8 @@ namespace Anytone {
 
         void decode_D878UVII(QByteArray data_2500000, QByteArray data_2500600, QByteArray data_2501280, QByteArray data_2501400);
         void decode_D890UV(QByteArray data_3500000, QByteArray data_3500900, QByteArray data_3501280);
-        void encode(QByteArray &data_2500000, QByteArray &data_2500600, QByteArray &data_2501280, QByteArray &data_2501400);
+        void encode_D878UVII(QByteArray &data_2500000, QByteArray &data_2500600, QByteArray &data_2501280, QByteArray &data_2501400);
+        void encode_D890UV(QByteArray &data_3500000, QByteArray &data_3500900, QByteArray &data_3501280);
 
         void save(QXmlStreamWriter &xml);
         void load(QXmlStreamReader &xml);

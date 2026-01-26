@@ -15,7 +15,7 @@
 #include <QThread>
 #include "utils.h"
 #include <algorithm>
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "memory/channel.h"
 #include "memory/zone.h"
 #include "memory/talkgroup.h"
@@ -42,6 +42,9 @@
 #include "memory/talk_alias_settings.h"
 #include "memory/analog_address.h"
 #include "memory/hotkey.h"
+#include "memory/am_air.h"
+#include "memory/am_zone.h"
+#include "memory/satellite.h"
 #include "device_types.h"
 
 class Device : public QObject 
@@ -76,6 +79,7 @@ public:
         }
     }
     
+    
     void readBootImage();
     void readBk1Image();
     void readBk2Image();
@@ -87,54 +91,64 @@ public:
     void readRadioData();
     void readDigitalContacts();
     void readOtherData();
-    QByteArray getDigitalContactDataBuffer(int offset);
-    void readChannelData();
-    void readTalkgroupData();
-    void readZoneData();
-    void readRadioIdData();
-    void readScanListData();
-    void readFmData();
-    void readRoamingChannelData();
-    void readRoamingZoneData();
-    void readSettings();
-    void readGpsRoamingData();
-    void readMasterId();
-    void readAutoRepeaterFrequencyData();
-    void readPrefabricatedSms();
-    void readReceiveGroups();
     void readAesEncryptionKeys();
+    void readAmAir();
+    void readAmZones();
+    void readAnalogAddress();
     void readAprsSettings();
     void readArc4EncryptionKeys();
+    void readAutoRepeaterFrequencyData();
+    void readChannelData();
     void readEncryptionKeys();
+    void readFmData();
+    void readGpsRoamingData();
+    void readHotKeySettings();
+    void readMasterId();
+    void readPrefabricatedSms();
+    void readRadioIdData();
+    void readReceiveGroups();
+    void readRoamingChannelData();
+    void readRoamingZoneData();
+    void readScanListData();
+    void readSettings();
+    void readTalkgroupData();
     void readToneSettings();
     void readTone2Settings();
-    void readAnalogAddress();
-    void readHotKeySettings();
+    void readZoneData();
 
     void writeRadioData();
     void writeDigitalContacts();
     void writeOtherData();
+    void writeAesKeys();
+    void writeAmAir();
+    void writeAmZones();
+    void writeAnalogAddress();
+    void writeAprsSettings();
+    void writeArc4Keys();
+    void writeAutoRepeaterFrequencyData();
     void writeChannelData();
-    void writeZoneData();
-    void writeTalkgroupData();
-    void writeRadioIdData();
-    void writeScanListData();
+    void writeEncryptionKeys();
     void writeFMChannelData();
     void writeGpsRoamingData();
-    void writeAutoRepeaterFrequencyData();
-    void writeRoamingChannelData();
-    void writeRoamingZoneData();
-    void writeSettingsData();
+    void writeHotKeySettings();
     void writeMasterRadioIdData();
     void writePrefabSms();
-    void writeAesKeys();
-    void writeArc4Keys();
-    void writeEncryptionKeys();
-    void writeAprsSettings();
+    void writeRadioIdData();
+    void writeReceiveGroups();
+    void writeRoamingChannelData();
+    void writeRoamingZoneData();
+    void writeScanListData();
+    void writeSettingsData();
+    void writeTalkgroupData();
     void writeToneSettings();
     void writeTone2Settings();
-    void writeHotKeySettings();
+    void writeZoneData();
+    void writeSatelliteData();
+
+
+    QByteArray getDigitalContactDataBuffer(int offset);
     
+    static bool verbose;
     bool is_alive = true;
     DeviceRWType read_write_options = DeviceRWType::NONE;
     bool is_write = false;

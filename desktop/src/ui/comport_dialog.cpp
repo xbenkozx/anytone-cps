@@ -4,10 +4,12 @@
 #include <QFileDialog>
 #include "ui_comport_dialog.h"
 #include "user_settings.h"
+#include "main_window.h"
 
-ComportDialog::ComportDialog(QWidget *parent) :
+ComportDialog::ComportDialog(MainWindow *parent) :
     QDialog(parent),
-    ui(std::make_unique<Ui_ComportDialog>())
+    ui(std::make_unique<Ui_ComportDialog>()),
+    main_window(parent)
 {
     ui->setupUi(this);
     setWindowModality(Qt::WindowModal);
@@ -28,10 +30,10 @@ void ComportDialog::populatePorts(){
 
     ui->comPortCmbx->clear();
     
-    // if(main_window->debug) {
-    //     ui->comPortCmbx->addItem(QString("VIRTUAL"), QString("VIRTUAL"));
-    //     com_list.append("VIRTUAL");
-    // }
+    if(main_window->debug) {
+        ui->comPortCmbx->addItem(QString("VIRTUAL"), QString("VIRTUAL"));
+        com_list.append("VIRTUAL");
+    }
 
     const QList<QSerialPortInfo> serialPortInfos = QSerialPortInfo::availablePorts();
     for (const QSerialPortInfo &portInfo : serialPortInfos) {

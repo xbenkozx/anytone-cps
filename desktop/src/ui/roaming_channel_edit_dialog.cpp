@@ -2,7 +2,7 @@
 #include "roaming_channel_edit_dialog.h"
 #include "ui_roaming_channel_edit_dialog.h"
 #include "main_window.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
 

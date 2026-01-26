@@ -38,11 +38,13 @@ void FmEditDialog::loadData(){
     }
 
     ui->scanAddCmbx->setCurrentIndex(fm->scan_add);
+    ui->nameTxt->setText(fm->name);
 }
 
 void FmEditDialog::save(){
     fm->setFrequencyString(ui->frequencyTxt->text());
     fm->scan_add = ui->scanAddCmbx->currentIndex();
+    fm->name = ui->nameTxt->text();
 }
 void FmEditDialog::nextBtnClicked(){
     save();

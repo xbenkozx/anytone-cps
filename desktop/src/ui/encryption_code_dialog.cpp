@@ -14,6 +14,8 @@ EncryptionCodeDialog::EncryptionCodeDialog(MainWindow *parent, int index) :
 
     connect(ui->prevBtn, &QPushButton::clicked, this, &EncryptionCodeDialog::prevBtnClicked);
     connect(ui->nextBtn, &QPushButton::clicked, this, &EncryptionCodeDialog::nextBtnClicked);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &EncryptionCodeDialog::saveClose);
+    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &EncryptionCodeDialog::close);
 
     connect(ui->idTxt, &QLineEdit::textEdited, this, [this](const QString &text){ ui->idTxt->setText(text.toUpper().rightJustified(4, '0')); });
     ui->keyTxt->setValidator(new QRegularExpressionValidator(QRegularExpression("^[0-9abcdABCD]+$"),  ui->idTxt));
@@ -22,7 +24,7 @@ EncryptionCodeDialog::EncryptionCodeDialog(MainWindow *parent, int index) :
     ui->keyTxt->setValidator(new QRegularExpressionValidator(QRegularExpression("^[0-9abcdABCD]+$"),  ui->keyTxt));
 
 
-    loadData();    
+    loadData();
 }
 EncryptionCodeDialog::~EncryptionCodeDialog(){}
 
@@ -55,7 +57,11 @@ void EncryptionCodeDialog::nextBtnClicked(){
     ui->nextBtn->setDisabled(index == Anytone::Memory::encryption_keys.size() - 1);
 }
 
+void EncryptionCodeDialog::saveClose(){
+    save();
+    close();
+}
 void EncryptionCodeDialog::save(){
+    key->id = ui->idTxt->text();
     key->key = ui->keyTxt->text();
-    key->id = ui->keyTxt->text();
 }

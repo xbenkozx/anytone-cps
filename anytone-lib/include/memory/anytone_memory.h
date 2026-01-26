@@ -24,6 +24,22 @@ namespace Anytone {
         int AESData;
         int AESDataOffset;
         int AESDataLength;
+        int AmAirSet;
+        int AmAirData;
+        int AmAirDataStride;
+        int AmAirDataLength;
+        int AmAirVfo;
+        int AmZoneSet;
+        int AmZoneScan;
+        int AmZoneAChannel;
+        int AmZoneData;
+        int AmZoneDataStride;
+        int AmZoneDataLength;
+        int AnalogBookSet;
+        int AnalogBookId;
+        int AnalogBookData;
+        int AnalogBookDataStride;
+        int AnalogBookDataLength;
         int Arc4Set;
         int Arc4Data;
         int Arc4DataOffset;
@@ -35,9 +51,10 @@ namespace Anytone {
         int ChannelDataBlockSize;
         int ChannelDataBlockOffset;
         int ChannelDataSecondaryOffset;
+        int EncryptionCodeId;
+        int EncryptionCodeKey;
         int GpsRoamingData;
         int GpsRoamingDataLength;
-        int GpsRoamingDataOffset;
         int MasterIdData;
         int MasterIdDataLength;
         int PrefabSmsSet;
@@ -90,6 +107,22 @@ namespace Anytone {
         .AESData = 0x24c4000,
         .AESDataOffset = 0x40,
         .AESDataLength = 0x30,
+        .AmAirSet = 0,          // Not Applicable
+        .AmAirData = 0,         //      ''
+        .AmAirDataStride = 0,   //      ''
+        .AmAirDataLength = 0,   //      ''
+        .AmAirVfo = 0,          //      ''
+        .AmZoneSet = 0,         //      ''
+        .AmZoneScan = 0,        //      ''
+        .AmZoneAChannel = 0,    //      ''
+        .AmZoneData = 0,        //      ''
+        .AmZoneDataStride = 0,  //      ''
+        .AmZoneDataLength = 0,  //      ''
+        .AnalogBookSet = 0x2900100,
+        .AnalogBookId = 0x2900000,
+        .AnalogBookData = 0x2940000,
+        .AnalogBookDataStride = 0x18,
+        .AnalogBookDataLength = 0x18,
         .Arc4Set = 0x25c1c00,
         .Arc4Data = 0x25c0c00,
         .Arc4DataOffset = 0x10,
@@ -101,6 +134,8 @@ namespace Anytone {
         .ChannelDataBlockSize = 128,
         .ChannelDataBlockOffset = 0x40000,
         .ChannelDataSecondaryOffset = 0x2000,
+        .EncryptionCodeId = 0x24c1700,
+        .EncryptionCodeKey = 0x24c1810,
         .GpsRoamingData = 0x2504000,
         .GpsRoamingDataLength = 0x400,
         .MasterIdData = 0x2582000,
@@ -135,7 +170,7 @@ namespace Anytone {
         .TalkgroupData = 0x2680000,
         .TalkgroupDataOffset = 0x64,
         .TalkgroupDataLength = 0x40,
-        .TalkgroupOrder = 0x2680000,
+        .TalkgroupOrder = 0x4800000,
         .ZoneSet = 0x24c1300,
         .ZonesName = 0x2540000,
         .ZoneChannels = 0x1000000,
@@ -155,6 +190,22 @@ namespace Anytone {
         .AESData = 0x3580000,
         .AESDataOffset = 0x40,
         .AESDataLength = 0x30,
+        .AmAirSet = 0x3884200,
+        .AmAirData = 0x3880000,
+        .AmAirDataStride = 0x40,
+        .AmAirDataLength = 0x40,
+        .AmAirVfo = 0x3884000,
+        .AmZoneSet = 0x3884400,
+        .AmZoneScan = 0x3884800,
+        .AmZoneAChannel = 0x3884600,
+        .AmZoneData = 0x3888000,
+        .AmZoneDataStride = 0x80,
+        .AmZoneDataLength = 0x80,
+        .AnalogBookSet = 0x3800100,
+        .AnalogBookId = 0x3800000,
+        .AnalogBookData = 0x3801000,
+        .AnalogBookDataStride = 0x40,
+        .AnalogBookDataLength = 0x40,
         .Arc4Set = 0x3585620,
         .Arc4Data = 0x3584000,
         .Arc4DataOffset = 0x10,
@@ -166,6 +217,8 @@ namespace Anytone {
         .ChannelDataBlockSize = 128,
         .ChannelDataBlockOffset = 0x80000,
         .ChannelDataSecondaryOffset = 0x40,
+        .EncryptionCodeId = 0x3585000,
+        .EncryptionCodeKey = 0x3585100,
         .GpsRoamingData = 0x3502000,
         .GpsRoamingDataLength = 0x400,
         .MasterIdData = 0x3684000,
@@ -233,6 +286,9 @@ namespace Anytone {
     class Arc4EncryptionCode;
     class EncryptionCode;
     class AnalogAddress;
+    class AmAir;
+    class AmZone;
+    class Satellite;
 
     class Memory {
 
@@ -240,9 +296,11 @@ namespace Anytone {
         static void init();
         static void saveData(QXmlStreamWriter &xml);
         static void saveAesEncryptionCodes(QXmlStreamWriter &xml);
-        static void saveAprsSettings(QXmlStreamWriter &xml);
         static void saveAlarmSettings(QXmlStreamWriter &xml);
+        static void saveAmAir(QXmlStreamWriter &xml);
+        static void saveAmZones(QXmlStreamWriter &xml);
         static void saveAnalogAddresses(QXmlStreamWriter &xml);
+        static void saveAprsSettings(QXmlStreamWriter &xml);
         static void saveArc4EncryptionCodes(QXmlStreamWriter &xml);
         static void saveAutoRepeaterOffsets(QXmlStreamWriter &xml);
         static void saveChannels(QXmlStreamWriter &xml);
@@ -268,6 +326,8 @@ namespace Anytone {
 
         static void loadData(QXmlStreamReader &xml);
         static void loadAesEncryptionCodes(QXmlStreamReader &xml);
+        static void loadAmAir(QXmlStreamReader &xml);
+        static void loadAmZones(QXmlStreamReader &xml);
         static void loadAnalogAddresses(QXmlStreamReader &xml);
         static void loadArc4EncryptionCodes(QXmlStreamReader &xml);
         static void loadAutoRepeaterOffsets(QXmlStreamReader &xml);
@@ -297,6 +357,7 @@ namespace Anytone {
         static void linkRoamingZoneRef();
         static void linkHotKeyRef();
         static void linkReceiveGroupRef();
+        static void linkAmZoneRef();
 
         static void initChannels();
         static void initZones();
@@ -315,6 +376,8 @@ namespace Anytone {
         static void initArc4EncryptionKeys();
         static void initEncryptionKeys();
         static void initAnalogAddresses();
+        static void initAmAir();
+        static void initAmZones();
 
         static const MemoryMap* Map(){
             switch (Anytone::Memory::radio_model) {
@@ -323,6 +386,8 @@ namespace Anytone {
                 default: return nullptr;
             }
         }
+
+        
 
         static RadioModel radio_model;
         static QString radio_band;
@@ -355,6 +420,9 @@ namespace Anytone {
         static QVector<Arc4EncryptionCode*> arc4_encryption_keys;
         static QVector<EncryptionCode*> encryption_keys;
         static QVector<AnalogAddress*> analog_addresses;
+        static QVector<AmAir*> am_air_list;
+        static QVector<AmZone*> am_zones;
+        static QVector<Satellite*> satellite_data_list;
         
     };
 }

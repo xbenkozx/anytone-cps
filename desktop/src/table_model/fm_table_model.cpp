@@ -4,7 +4,7 @@
 #include <QBrush>
 
 // include your actual Channel + Constants headers
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "memory/fm.h"
 #include "constants.h"
 
@@ -62,7 +62,9 @@ QVariant FmTableModel::data(const QModelIndex& idx, int role) const {
 
     if (empty) {
         // Keep index column visible, others blank like your previous "continue"
-        if (col == ColIndex) {
+        if (col == ColIndex && row == 100) {
+            return "VFO";
+        }else if (col == ColIndex) {
             return QString::number(row + 1);
         }
         return {};

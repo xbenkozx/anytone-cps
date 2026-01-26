@@ -5,7 +5,7 @@
 #include <QComboBox>
 
 // include your actual Channel + Constants headers
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "memory/aprs_receive_filter.h"
 #include "constants.h"
 

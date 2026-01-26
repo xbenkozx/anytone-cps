@@ -4,7 +4,7 @@
 #include <QBrush>
 
 // include your actual Channel + Constants headers
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "memory/encryption_code.h"
 #include "constants.h"
 

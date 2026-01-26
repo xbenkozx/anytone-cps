@@ -13,7 +13,11 @@ namespace Anytone {
         ~AnalogAddress(){}
 
         void decode(QByteArray data);
+        void decode_D878UVII(QByteArray data);
+        void decode_D890UV(QByteArray data);
         QByteArray encode();
+        QByteArray encode_D878UVII();
+        QByteArray encode_D890UV();
         
         void save(QXmlStreamWriter &xml);
         void load(QXmlStreamReader &xml);

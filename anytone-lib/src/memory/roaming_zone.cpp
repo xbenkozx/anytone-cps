@@ -1,5 +1,5 @@
 #include "roaming_zone.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 
 void Anytone::RoamingZone::decode(QByteArray data){
     switch(Anytone::Memory::radio_model){
@@ -36,16 +36,41 @@ void Anytone::RoamingZone::decode_D890UV(QByteArray data){
 void Anytone::RoamingZone::decode_D168UV(QByteArray data){
 
 }
+
 QByteArray Anytone::RoamingZone::encode(){
+    switch(Anytone::Memory::radio_model){
+        case Anytone::RadioModel::D878UVII_FW400:
+            return encode_D878UVII();
+        case Anytone::RadioModel::D890UV_FW103:
+            return encode_D890UV();
+        case Anytone::RadioModel::D168UV:
+            // return encode_D168UV();
+        default:
+            return QByteArray(0x80, 0);
+        break;
+    }
+}
+QByteArray Anytone::RoamingZone::encode_D878UVII(){
     QByteArray data(0x50, 0xff);
-    auto* bytes = reinterpret_cast<std::uint8_t*>(data.data());
     data.replace(0x40, 0x10, 
-        name.toUtf8().leftJustified(16, '\0')
+        name.toUtf8().leftJustified(0x10, '\0')
     );
     for(int i=0; i < channels.size(); i++){
         RoamingChannel *rc = channels.at(i);
         if(rc->rx_frequency == 0) continue;
-        bytes[i] = rc->id;
+        data[i] = rc->id;
+    }
+    return data;
+}
+QByteArray Anytone::RoamingZone::encode_D890UV(){
+    QByteArray data(0x50, 0xff);
+    data.replace(0x40, 0x20, 
+        Format::wideCharString(name).leftJustified(0x20, '\0')
+    );
+    for(int i=0; i < channels.size(); i++){
+        RoamingChannel *rc = channels.at(i);
+        if(rc->rx_frequency == 0) continue;
+        data[i] = rc->id;
     }
     return data;
 }

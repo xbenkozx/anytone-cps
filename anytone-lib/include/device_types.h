@@ -17,7 +17,8 @@ enum class DeviceRWType : uint8_t {
     DIGITAL_CONTACTS = 2,
     BOOT_IMAGE = 4,
     BK1_IMAGE = 8,
-    BK2_IMAGE = 16
+    BK2_IMAGE = 16,
+    SATELLITE_DATA = 32
 };
 
 inline DeviceRWType operator&(DeviceRWType a, DeviceRWType b)

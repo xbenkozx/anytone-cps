@@ -238,8 +238,8 @@ void ChannelEditDialog::loadData(){
     ui->slotCmbx->setCurrentIndex(channel->time_slot);
     ui->digitalEncryptionCmbx->setCurrentIndex(channel->digital_encryption);
     ui->extendEncryptionCmbx->setCurrentIndex(channel->extend_encryption);
-    ui->arc4CodeCmbx->setCurrentIndex(channel->arc4_encryption_key_idx);
-    ui->aesCodeCmbx->setCurrentIndex(channel->aes_encryption_idx);
+    if(channel->arc4_encryption_key_idx != 0) ui->arc4CodeCmbx->setCurrentText(QString::number(channel->arc4_encryption_key_idx));
+    if(channel->aes_encryption_idx != 0) ui->aesCodeCmbx->setCurrentText(QString::number(channel->aes_encryption_idx));
     ui->multiKeyCmbx->setCurrentIndex(channel->aes_multiple_key);
     ui->randomKeyCmbx->setCurrentIndex(channel->aes_random_key);
     ui->smsForbidCmbx->setCurrentIndex(channel->sms_forbid);

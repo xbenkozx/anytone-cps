@@ -2,7 +2,7 @@
 #include "radio_id_edit_dialog.h"
 #include "ui_radio_id_edit_dialog.h"
 #include "main_window.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 
 RadioIdEditDialog::RadioIdEditDialog(MainWindow *parent, int index) :
     QDialog(parent),

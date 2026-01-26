@@ -4,7 +4,7 @@
 #include "dtmf_settings_dialog.h"
 #include "ui_dtmf_settings_dialog.h"
 #include "dtmf_special_call_dialog.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "main_window.h"
 #include "constants.h"
 

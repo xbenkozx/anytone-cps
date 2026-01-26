@@ -1176,6 +1176,9 @@ void OptionalSettingsDialog::playTones(const QVector<QPair<double,double>>& tone
 void OptionalSettingsDialog::save(){
     // Power-On
     Anytone::Memory::optional_settings->poweron_interface = ui->poweronInterfaceCmbx->currentIndex();
+
+    Anytone::Memory::optional_settings->poweron_display_1 = QByteArray(0xe, 0);
+    Anytone::Memory::optional_settings->poweron_display_2 = QByteArray(0xe, 0);
     
     for(int i = 0; i < display_char_line1_txt_list.size(); i++){
         PowerOnCharLineEdit *poc = display_char_line1_txt_list.at(i);

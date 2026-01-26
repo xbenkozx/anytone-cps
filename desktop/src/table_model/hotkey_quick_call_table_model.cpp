@@ -5,7 +5,7 @@
 #include <QComboBox>
 
 // include your actual Channel + Constants headers
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "memory/hotkey.h"
 #include "constants.h"
 #include "dtmf_settings.h"

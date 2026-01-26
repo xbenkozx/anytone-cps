@@ -92,6 +92,7 @@ public:
     void showBK2ImageDialog();
     void showImportDialog();
     void showExportDialog();
+    void showSatelliteDialog();
 
     // Table Lists
     void listChannels(bool goto_top = true);
@@ -111,6 +112,8 @@ public:
     void listArc4EncryptionKeys(bool goto_top = true);
     void listEncryptionKeys(bool goto_top = true);
     void listAnalogAddresses(bool goto_top = true);
+    void listAmAir(bool goto_top = true);
+    void listAmZones(bool goto_top = true);
 
     // Serial
     void readFromRadio();

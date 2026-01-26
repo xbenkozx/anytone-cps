@@ -24,6 +24,8 @@ public:
         void decode_D890UV(QByteArray data);
         void decode_D168UV(QByteArray data);
         QByteArray encode();
+        QByteArray encode_D878UVII();
+        QByteArray encode_D890UV();
 
         void save(QXmlStreamWriter &xml);
         void load(QXmlStreamReader &xml);

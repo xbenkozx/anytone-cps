@@ -14,7 +14,9 @@ namespace Anytone {
         ~PrefabricatedSms(){}
 
         void decode(QByteArray data);
-        QByteArray encode();
+        QByteArray encodeData();
+        QByteArray encode_D878UVII();
+        QByteArray encode_D890UV();
 
         void save(QXmlStreamWriter &xml);
         void load(QXmlStreamReader &xml);

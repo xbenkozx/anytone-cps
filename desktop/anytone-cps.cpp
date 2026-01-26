@@ -5,6 +5,12 @@
 #include "main_window.h"
 #include <QDebug>
 
+// TODO: Create Satellite UI
+// TODO: Create AM Air UI
+// TODO: Create AM Air Table
+// TODO: Create AM Zone UI
+// TODO: Create AM Zone Table
+
 int main(int argc, char *argv[]){
 
     QApplication app(argc, argv);

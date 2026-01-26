@@ -2,7 +2,7 @@
 #include "aprs_settings_dialog.h"
 #include "ui_aprs_settings_dialog.h"
 #include "user_settings.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "channel.h"
 #include "constants.h"
 

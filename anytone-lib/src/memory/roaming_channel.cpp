@@ -1,5 +1,6 @@
 #include "roaming_channel.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
+#include "utils.h"
 
 double Anytone::RoamingChannel::getRxFrequencyDouble(){
     return double(rx_frequency) / 100000;
@@ -48,7 +49,21 @@ void Anytone::RoamingChannel::decode_D890UV(QByteArray data){
 void Anytone::RoamingChannel::decode_D168UV(QByteArray data){
 
 }
+
 QByteArray Anytone::RoamingChannel::encode(){
+    switch(Anytone::Memory::radio_model){
+        case Anytone::RadioModel::D878UVII_FW400:
+            return encode_D878UVII();
+        case Anytone::RadioModel::D890UV_FW103:
+            return encode_D890UV();
+        case Anytone::RadioModel::D168UV:
+            // return encode_D168UV();
+        default:
+            return QByteArray(0x80, 0);
+        break;
+    }
+}
+QByteArray Anytone::RoamingChannel::encode_D878UVII(){
     QByteArray data(0x20, 0);
     data.replace(0x0, 4, 
         QByteArray::fromHex(QString::number(rx_frequency).rightJustified(8, '0').toUtf8())
@@ -56,14 +71,27 @@ QByteArray Anytone::RoamingChannel::encode(){
     data.replace(0x4, 4, 
         QByteArray::fromHex(QString::number(tx_frequency).rightJustified(8, '0').toUtf8())
     );
-    data.replace(0x8, 1, 
-        Int::toBytes(slot, 1)
-    );
-    data.replace(0x9, 1, 
-        Int::toBytes(slot, 1)
-    );
+    data[0x8] = color_code;
+    data[0x9] = slot;
     data.replace(0xa, 0x10, 
-        name.toUtf8().leftJustified(16, '\0')
+        name.toUtf8().leftJustified(0x10, '\0')
+    );
+    
+    return data;
+}
+
+QByteArray Anytone::RoamingChannel::encode_D890UV(){
+    QByteArray data(0x30, 0);
+    data.replace(0x0, 4, 
+        QByteArray::fromHex(QString::number(rx_frequency).rightJustified(8, '0').toUtf8())
+    );
+    data.replace(0x4, 4, 
+        QByteArray::fromHex(QString::number(tx_frequency).rightJustified(8, '0').toUtf8())
+    );
+    data[0x8] = color_code;
+    data[0x9] = slot;
+    data.replace(0xa, 0x20, 
+        Format::wideCharString(name).leftJustified(0x20, '\0')
     );
     
     return data;

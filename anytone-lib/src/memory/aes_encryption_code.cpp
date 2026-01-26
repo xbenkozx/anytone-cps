@@ -2,11 +2,6 @@
 #include "memory/aes_encryption_code.h"
 
 void Anytone::AesEncryptionCode::decode(QByteArray data){
-    if(data.size() != 0x30){
-        qDebug() << "AesEncryptionCode::decode incorrect data size";
-        return;
-    }
-
     id = static_cast<uint8_t>(data.at(0));
     key_length = static_cast<uint8_t>(data.at(0x22));
     key = data.mid(1, 0x21).toHex().mid(0x40 - key_length, key_length);

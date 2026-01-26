@@ -224,7 +224,7 @@ QHeaderView::section {  text-transform: none;padding:0px}</string>
      <x>0</x>
      <y>0</y>
      <width>1600</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -288,6 +288,7 @@ QHeaderView::section {  text-transform: none;padding:0px}</string>
     <addaction name="actionStandby_Bk_Picture_2"/>
     <addaction name="actionChannel_Talker_Alias_Operation"/>
     <addaction name="actionExpert_Options"/>
+    <addaction name="actionSatellite"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -462,6 +463,11 @@ QHeaderView::section {  text-transform: none;padding:0px}</string>
    </property>
    <property name="text">
     <string>v1.03</string>
+   </property>
+  </action>
+  <action name="actionSatellite">
+   <property name="text">
+    <string>Satellite</string>
    </property>
   </action>
  </widget>

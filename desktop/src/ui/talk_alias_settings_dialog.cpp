@@ -1,7 +1,7 @@
 
 #include "talk_alias_settings_dialog.h"
 #include "ui_talk_alias_settings_dialog.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "talk_alias_settings.h"
 #include "constants.h"
 

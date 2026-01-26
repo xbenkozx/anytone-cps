@@ -20,6 +20,7 @@ class UserSettings{
     static Anytone::RadioModel radio_model;
     static void load();
     static void save();
+    static QString getUserDirectory();
 };
 
 #endif

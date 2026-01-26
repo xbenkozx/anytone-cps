@@ -5,7 +5,7 @@
 #include <QString>
 #include <QObject>
 #include <memory>
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 #include "aes_encryption_code.h"
 
 class Ui_AesEncryptionCodeEditDialog;

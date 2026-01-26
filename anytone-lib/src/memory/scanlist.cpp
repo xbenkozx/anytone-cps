@@ -1,5 +1,5 @@
 #include "memory/scanlist.h"
-#include "memory/at_memory.h"
+#include "memory/anytone_memory.h"
 using namespace Anytone;
 void ScanList::decode(QByteArray data){
     switch(Anytone::Memory::radio_model){
@@ -54,34 +54,45 @@ void ScanList::decode_D890UV(QByteArray data){
 void ScanList::decode_D168UV(QByteArray data){
 
 }
-QByteArray ScanList::encode(){
-    QByteArray data(0x1f, 0);
-    QByteArray channel_data(0x65, 0xff);
 
-    data.replace(0x1, 1, 
-        Int::toBytes(priority_channel_select, 1)
-    );
+QByteArray ScanList::encode(){
+    switch(Anytone::Memory::radio_model){
+        case Anytone::RadioModel::D878UVII_FW400:
+            return encode_D878UVII();
+        case Anytone::RadioModel::D890UV_FW103:
+            return encode_D890UV();
+        case Anytone::RadioModel::D168UV:
+            // return encode_D168UV();
+        default:
+            return QByteArray(0x80, 0);
+        break;
+    }
+}
+QByteArray ScanList::encode_D878UVII(){
+    QByteArray data(0x20, 0);
+    QByteArray channel_data(0x64, 0xff);
+
+    data[0x1] = priority_channel_select;
     data.replace(0x2, 2, 
         Int::toBytes(priority_channel_1, 2)
     );
-    data.replace(0x4, 4, 
+    data.replace(0x4, 2, 
         Int::toBytes(priority_channel_2, 2)
     );
-    data.replace(0x6, 4, 
+    data.replace(0x6, 2, 
         Int::toBytes(lookback_time_a + 5, 2)
     );
-    data.replace(0x8, 4, 
+    data.replace(0x8, 2, 
         Int::toBytes(lookback_time_b + 5, 2)
     );
-    data.replace(0xa, 4, 
+    data.replace(0xa, 2, 
         Int::toBytes(dropout_delay_time + 1, 2)
     );
-    data.replace(0xc, 4, 
+    data.replace(0xc, 2, 
         Int::toBytes(dwell_time + 1, 2)
     );
-    data.replace(0xe, 4, 
-        Int::toBytes(revert_channel, 2)
-    );
+    data[0xe] = revert_channel;
+    
     data.replace(0xf, 0x10, 
         name.toUtf8().leftJustified(16, '\0')
     );
@@ -89,11 +100,53 @@ QByteArray ScanList::encode(){
     for(int i=0; i < channels.size(); i++){
         Channel *ch = channels.at(i);
         channel_data.replace(i*2, 2, 
-            Int::toBytes(ch->id, 2, Endian::Big)
+            Int::toBytes(ch->id, 2)
         );
     }
-    channel_data.append(QByteArray(0xc, 0));
+    
     data.append(channel_data);
+
+    return data.leftJustified(0x90, 0);
+}
+QByteArray ScanList::encode_D890UV(){
+    QByteArray data(0x30, 0);
+    QByteArray channel_data(0x64, 0xff);
+
+    data[0x1] = priority_channel_select;
+    
+    data.replace(0x2, 2, 
+        Int::toBytes(priority_channel_1, 2)
+    );
+    data.replace(0x4, 2, 
+        Int::toBytes(priority_channel_2, 2)
+    );
+    data.replace(0x6, 2, 
+        Int::toBytes(lookback_time_a + 5, 2)
+    );
+    data.replace(0x8, 2, 
+        Int::toBytes(lookback_time_b + 5, 2)
+    );
+    data.replace(0xa, 2, 
+        Int::toBytes(dropout_delay_time + 1, 2)
+    );
+    data.replace(0xc, 2, 
+        Int::toBytes(dwell_time + 1, 2)
+    );
+
+    data.replace(0xe, 0x20, 
+        Format::wideCharString(name).leftJustified(0x20, '\0')
+    );
+
+    for(int i=0; i < channels.size(); i++){
+        Channel *ch = channels.at(i);
+        channel_data.replace(i*2, 2, 
+            Int::toBytes(ch->id, 2)
+        );
+    }
+    data.append(channel_data);
+    data = data.leftJustified(0xd0, 0);
+
+    data[0x94] = revert_channel;
 
     return data;
 }
