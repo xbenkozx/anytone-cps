@@ -18,7 +18,7 @@ Currently, this project is in Alpha stage and is a work is progress. Make sure y
 | | D878UVII | D890UV | D168UV | D878UV | D868UV |
 | - | :-: | :-: | :-: | :-: | :-: |
 | UI | ![95%](https://progress-bar.xyz/95?width=100) | ![95%](https://progress-bar.xyz/95?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) |
-| Serial | ![98%](https://progress-bar.xyz/98?width=100) | ![74%](https://progress-bar.xyz/74?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) |
+| Serial | ![98%](https://progress-bar.xyz/98?width=100) | ![88%](https://progress-bar.xyz/88?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) |
 
 ## Supported Devices
 - D878UVII
@@ -60,14 +60,15 @@ These are not fully tested.
 | 5Tone Encode/Decode | R/W | | |
 | AES Encryption Code | R/W | R/W | |
 | AM Air | - | R/W | - |
-| AM Zone | - | R | - |
+| AM Zone | - | R/W | - |
 | Analog Address Book | R/W | R/W | |
 | APRS | R/W | R/W | |
 | ARC4 Encryption Code | R/W | R/W | |
 | Auto Repeater Offset Frequencies | R/W | R/W | |
-| Alarm Settings | R/W | | |
+| Alarm Settings | R/W | R/W | |
 | Channels | R/W | R/W | |
-| Digital Contacts | R/W | | |
+| Digital Contacts | R/W | R/W | |
+| Digital Contact Whitelist | - | R/W | - |
 | DTMF Encode/Decode | R/W | | |
 | Encryption Code | R/W | R/W | |
 | Local Information/Expert Options(AT_OPTIONS) | R/W | R/W | |
@@ -79,13 +80,16 @@ These are not fully tested.
 | Master ID | R/W | R/W | |
 | Optional Settings | R/W | R/W | |
 | Prefabricated SMS | R/W | R/W | |
+| QDC 1200 | - | | - |
+| QDC Address Book | - | | - |
 | Radio IDs | R/W | R/W | |
 | Receive Groups | R/W | R/W | |
 | Roaming Channels | R/W | R/W | |
 | Roaming Zones | R/W | R/W | |
 | Scan Lists | R/W | R/W | |
-| Talk Alias Settings | R/W | | |
+| Talk Alias Settings | R/W | R/W | |
 | TalkGroups | R/W | R/W | |
+| Talkgroup Whitelist | - | R/W | - |
 | Zones | R/W | R/W | |
 
 ---

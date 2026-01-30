@@ -19,8 +19,10 @@ public:
     int mainbar_max = 0;
     QString subbar_text = "";
     QString mainbar_text = "";
+    bool m_isBusy = true;
 
 protected:
+    void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent *event) override;
     
 public slots:

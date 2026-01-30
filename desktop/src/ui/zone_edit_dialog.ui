@@ -272,6 +272,13 @@
                 </widget>
                </item>
                <item>
+                <widget class="QPushButton" name="orderFrequencyBtn">
+                 <property name="text">
+                  <string>Frequency</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="QPushButton" name="orderUpBtn">
                  <property name="text">
                   <string>Up</string>

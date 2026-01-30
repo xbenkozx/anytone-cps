@@ -31,8 +31,17 @@ void Anytone::DigitalContact::save(QXmlStreamWriter &xml){
 void Anytone::DigitalContact::load(QXmlStreamReader &xml){
     if (xml.name() == "DigitalContact"){
         QXmlStreamAttributes attributes = xml.attributes();
-        if(attributes.hasAttribute("info"))
-            QString info = attributes.value("id").toString();
-
+        if(attributes.hasAttribute("info")){
+            QStringList info = attributes.value("info").toString().split(QChar('|'));
+            radio_id = info[0].toInt();
+            call_type = info[1].toInt();
+            call_alert = info[2].toInt();
+            callsign = info[3];
+            name = info[4];
+            city = info[5];
+            state = info[6];
+            country = info[7];
+            remarks = info[8];
+        }
     }
 }

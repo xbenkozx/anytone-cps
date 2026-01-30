@@ -3,7 +3,7 @@
 
 bool Device::verbose = false;
 
-constexpr int kFmSlots = 16 * 8; // 128
+constexpr int kFmSlots = 128;
 
 static inline int readU32beToInt(const QByteArray& data, int offset)
 {
@@ -28,11 +28,24 @@ static inline QString readFixedStringUtf8(const QByteArray& data, int offset, in
 
 QByteArray VirtualDevice::readMemoryAddress(int address, int length) {
     if(length % 16 != 0) qDebug() << "ERR: Memory Alignment" << QByteArray::number(address).toHex();
-    return bin_data->mid(address, length);
+    return bin_data.mid(address, length);
 }
 void VirtualDevice::writeMemoryAddress(int address, QByteArray data) {
     if(data.size() % 16 != 0) qDebug() << "ERR: Memory Alignment" << QString::number(address, 16) << QString::number(data.size(), 16);
-    bin_data->replace(address, data.size(), data);
+    bin_data.replace(address, data.size(), data);
+}
+bool VirtualDevice::connect(QString filepath, int _n) {
+    QFile file(filepath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "ERR: Cannot open file";
+        return false;
+    }
+    
+    bin_data = file.readAll();
+
+    file.close();
+
+    return true;
 }
 void Device::readRadioData(){
     std::vector<QString> local_info = readDeviceInfo();
@@ -69,7 +82,7 @@ void Device::writeRadioData(){
     }else if(local_info[0] == QString("ID890UV") && local_info[1] == QString("V100")){
         Anytone::Memory::radio_model = Anytone::RadioModel::D890UV_FW103;
         if((read_write_options & DeviceRWType::RADIO_DATA) != DeviceRWType::NONE) writeOtherData();
-        // if((read_write_options & DeviceRWType::DIGITAL_CONTACTS) !=  DeviceRWType::NONE) writeDigitalContacts();
+        if((read_write_options & DeviceRWType::DIGITAL_CONTACTS) !=  DeviceRWType::NONE) writeDigitalContacts();
         if((read_write_options & DeviceRWType::BOOT_IMAGE) !=  DeviceRWType::NONE) writeBootImage();
         if((read_write_options & DeviceRWType::BK1_IMAGE) !=  DeviceRWType::NONE) writeBk1Image();
         if((read_write_options & DeviceRWType::BK2_IMAGE) !=  DeviceRWType::NONE) writeBk2Image();
@@ -172,83 +185,165 @@ void Device::writeBk2Image(){
 
 // DIGITAL CONTACTS
 void Device::readDigitalContacts(){
-    // TODO: Implement for D890UV
     // TODO: Implement for D168UV
-    if(Anytone::Memory::radio_model != Anytone::RadioModel::D878UVII_FW400) return;
-    int contact_count = Int::fromBytes(readMemory(0x4840000, 0x10).mid(0, 4));
+
+    Anytone::Memory::initDigitalContacts();
+
+    emit update1(0, 1, "Reading Data");
+
+    const auto* map = Anytone::Memory::Map();
+    if (!map) return;
+
+    int k_DcBufSize = map->DigitalContactBufferLength;
+
+    int contact_count = Int::fromBytes(readMemory(map->DigitalContactMeta, 0x10).mid(0, 4));
     QByteArray contact_data;
-    contact_data.reserve(0x80 * contact_count);
+    contact_data.reserve(k_DcBufSize * contact_count);
+
+    // contact_count = 10;
 
     int offset = 0;
     for(int i = 0; i < contact_count; i++){
-        if(i % int(contact_count/100) == 0){
+        if(contact_count > 100 && i % int(contact_count/100) == 0){
             emit update2(i, contact_count, "Reading Contacts");
         }
 
-        if(contact_data.size() - offset < 0x80){
+        if(contact_data.size() - offset < k_DcBufSize){
             contact_data.append(getDigitalContactDataBuffer(contact_data.size()));
         }
         Anytone::DigitalContact *dc = Anytone::Memory::digital_contacts.at(i);
 
-        int eos = 0;
-
-        dc->call_type = static_cast<uint8_t>(contact_data.at(offset));
-        offset += 1;
-        dc->radio_id = QString(contact_data.mid(offset, 0x4).toHex()).toInt();
-        offset += 4;
-        dc->call_alert = static_cast<uint8_t>(contact_data.at(offset));
-        offset += 1;
-        
-
-        eos = contact_data.indexOf('\0', offset);
-        dc->name = QString(contact_data.mid(offset, eos-offset));
-        offset = eos + 1;
-
-        eos = contact_data.indexOf('\0', offset);
-        dc->city = QString(contact_data.mid(offset, eos-offset));
-        offset = eos + 1;
-        
-        eos = contact_data.indexOf('\0', offset);
-        dc->callsign = QString(contact_data.mid(offset, eos-offset));
-        offset = eos + 1;
-
-        eos = contact_data.indexOf('\0', offset);
-        dc->state = QString(contact_data.mid(offset, eos-offset));
-        offset = eos + 1;
-
-        eos = contact_data.indexOf('\0', offset);
-        dc->country = QString(contact_data.mid(offset, eos-offset));
-        offset = eos + 1;
-
-        eos = contact_data.indexOf('\0', offset);
-        dc->remarks = QString(contact_data.mid(offset, eos-offset));
-        offset = eos + 1;
+        parseDigitalContact(dc, contact_data, offset);
     }
 }
+void Device::parseDigitalContact(Anytone::DigitalContact *dc, QByteArray contact_data, int &offset){
+    if(Anytone::Memory::radio_model == Anytone::RadioModel::D878UVII_FW400){
+        parseDigitalContact_D878UVII(dc, contact_data, offset);
+    }
+    if(Anytone::Memory::radio_model == Anytone::RadioModel::D890UV_FW103){
+        parseDigitalContact_D890UV(dc, contact_data, offset);
+    }
+}
+void Device::parseDigitalContact_D878UVII(Anytone::DigitalContact *dc, QByteArray contact_data, int &offset){
+    int eos = 0;
+
+    dc->call_type = static_cast<uint8_t>(contact_data.at(offset));
+    offset += 1;
+    dc->radio_id = QString(contact_data.mid(offset, 0x4).toHex()).toInt();
+    offset += 4;
+    dc->call_alert = static_cast<uint8_t>(contact_data.at(offset));
+    offset += 1;
+    
+
+    eos = contact_data.indexOf('\0', offset);
+    dc->name = QString(contact_data.mid(offset, eos-offset));
+    offset = eos + 1;
+
+    eos = contact_data.indexOf('\0', offset);
+    dc->city = QString(contact_data.mid(offset, eos-offset));
+    offset = eos + 1;
+    
+    eos = contact_data.indexOf('\0', offset);
+    dc->callsign = QString(contact_data.mid(offset, eos-offset));
+    offset = eos + 1;
+
+    eos = contact_data.indexOf('\0', offset);
+    dc->state = QString(contact_data.mid(offset, eos-offset));
+    offset = eos + 1;
+
+    eos = contact_data.indexOf('\0', offset);
+    dc->country = QString(contact_data.mid(offset, eos-offset));
+    offset = eos + 1;
+
+    eos = contact_data.indexOf('\0', offset);
+    dc->remarks = QString(contact_data.mid(offset, eos-offset));
+    offset = eos + 1;
+}
+void Device::parseDigitalContact_D890UV(Anytone::DigitalContact *dc, QByteArray contact_data, int &offset){
+    int eos = 0;
+
+    dc->call_type = static_cast<uint8_t>(contact_data.at(offset));
+    offset += 1;
+    dc->call_alert = static_cast<uint8_t>(contact_data.at(offset))==2;
+    offset += 1;
+    dc->radio_id = QString(contact_data.mid(offset, 0x4).toHex()).toInt();
+    offset += 4;
+
+    eos = contact_data.indexOf(QByteArray("\0\0", 2), offset);
+    dc->name = QString(contact_data.mid(offset, eos-offset));
+    offset = eos + 2;
+
+    eos = contact_data.indexOf(QByteArray("\0\0", 2), offset);
+    dc->city = QString(contact_data.mid(offset, eos-offset));
+    offset = eos + 2;
+    
+    eos = contact_data.indexOf(QByteArray("\0\0", 2), offset);
+    dc->callsign = QString(contact_data.mid(offset, eos-offset));
+    offset = eos + 2;
+
+    eos = contact_data.indexOf(QByteArray("\0\0", 2), offset);
+    dc->state = QString(contact_data.mid(offset, eos-offset));
+    offset = eos + 2;
+
+    eos = contact_data.indexOf(QByteArray("\0\0", 2), offset);
+    dc->country = QString(contact_data.mid(offset, eos-offset));
+    offset = eos + 2;
+
+    eos = contact_data.indexOf(QByteArray("\0\0", 2), offset);
+    dc->remarks = QString(contact_data.mid(offset, eos-offset));
+    offset = eos + 2;
+
+    offset++;
+
+    dc->name.remove(QChar('\0'));
+    dc->city.remove(QChar('\0'));
+    dc->callsign.remove(QChar('\0'));
+    dc->state.remove(QChar('\0'));
+    dc->country.remove(QChar('\0'));
+    dc->remarks.remove(QChar('\0'));
+
+}
+
 QByteArray Device::getDigitalContactDataBuffer(int offset){
+
+    const auto* map = Anytone::Memory::Map();
+    if (!map) return QByteArray();
+
+    int base = map->DigitalContactData;
+    int k_DcBufSize = map->DigitalContactBufferLength;
+    int k_DcBlkLen = map->DigitalContactDataBlockLength;
+    int k_DcBlkStride = map->DigitalContactDataStride;
+
     QByteArray data;
-    data.reserve(0x80);
+    data.reserve(k_DcBufSize);
     if(offset % 16 != 0){
         qDebug() << "ERR: Offset Alignment";
         return data;
     }
 
-    for(int i = offset; i < offset + 0x80; i += 0x10){
-        int addr_mod = i % 0x186a0;
-        int block = int(((i - addr_mod) / 0x186a0));
-        int addr = 0x5500000 + (block * 0x40000) + addr_mod;
+    for(int i = offset; i < offset + k_DcBufSize; i += 0x10){
+        int addr_mod = i % k_DcBlkLen;
+        int block = int(((i - addr_mod) / k_DcBlkLen));
+        int addr = base + (block * k_DcBlkStride) + addr_mod;
         data.append(readMemory(addr, 0x10));
     }
 
     return data;
 }
 void Device::writeDigitalContacts(){
-    // TODO: Implement for D890UV
     // TODO: Implement for D168UV
-    if(Anytone::Memory::radio_model != Anytone::RadioModel::D878UVII_FW400) return;
-    int contact_count_addr = 0x4840000;
-    int contact_order_addr = 0x4000000;
-    int contact_data_addr = 0x5500000;
+    
+    const auto* map = Anytone::Memory::Map();
+    if (!map) return;
+
+    int contact_data_addr = map->DigitalContactData;
+    int contact_order_addr = map->DigitalContactOrder;
+    int contact_count_addr = map->DigitalContactMeta;
+    int k_DcBufSize = map->DigitalContactBufferLength;
+    int k_DcBlkLen = map->DigitalContactDataBlockLength;
+    int k_DcBlkStride = map->DigitalContactDataStride;
+    int k_OrderBlkLen = map->DigitalContactOrderBlockLength;
+    int k_OrderBlkStride = map->DigitalContactOrderBlockStride;
 
     QByteArray contact_data;
     QByteArray order_data;
@@ -273,7 +368,7 @@ void Device::writeDigitalContacts(){
 
     for(int idx = 0; idx < sorted_contacts.size(); idx++){
         Anytone::DigitalContact *contact = sorted_contacts.at(idx);
-        if(contact_count % int(contact_total/100) == 0){
+        if(contact_total > 100 && contact_count % int(contact_total/100) == 0){
             emit update2(contact_count, contact_total, "Compressing Data");
         }
 
@@ -285,22 +380,36 @@ void Device::writeDigitalContacts(){
             std::tuple<int, QByteArray, QByteArray>(order_rid_int, order_rid, data_offset)
         );
 
-        contact_data.append(contact->call_type);
-        contact_data.append(QByteArray::fromHex(QString::number(contact->radio_id).rightJustified(8, '0').toUtf8()));
-        contact_data.append(contact->call_alert);
-        contact_data.append(contact->name.toUtf8() + '\0');
-        contact_data.append(contact->city.toUtf8() + '\0');
-        contact_data.append(contact->callsign.toUtf8() + '\0');
-        contact_data.append(contact->state.toUtf8() + '\0');
-        contact_data.append(contact->country.toUtf8() + '\0');
-        contact_data.append(contact->remarks.toUtf8() + '\0');        
+        if(Anytone::Memory::radio_model == Anytone::RadioModel::D878UVII_FW400){
+            contact_data.append(contact->call_type);
+            contact_data.append(QByteArray::fromHex(QString::number(contact->radio_id).rightJustified(8, '0').toUtf8()));
+            contact_data.append(contact->call_alert);
+            contact_data.append(contact->name.toUtf8() + '\0');
+            contact_data.append(contact->city.toUtf8() + '\0');
+            contact_data.append(contact->callsign.toUtf8() + '\0');
+            contact_data.append(contact->state.toUtf8() + '\0');
+            contact_data.append(contact->country.toUtf8() + '\0');
+            contact_data.append(contact->remarks.toUtf8() + '\0');
+        }
+        
+        if(Anytone::Memory::radio_model == Anytone::RadioModel::D890UV_FW103){
+            contact_data.append(contact->call_type);
+            contact_data.append(contact->call_alert);
+            contact_data.append(QByteArray::fromHex(QString::number(contact->radio_id).rightJustified(8, '0').toUtf8()));
+            contact_data.append(Format::wideCharString(contact->name) + QByteArray("\0\0", 2));
+            contact_data.append(Format::wideCharString(contact->city) + QByteArray("\0\0", 2));
+            contact_data.append(Format::wideCharString(contact->callsign) + QByteArray("\0\0", 2));
+            contact_data.append(Format::wideCharString(contact->state) + QByteArray("\0\0", 2));
+            contact_data.append(Format::wideCharString(contact->country) + QByteArray("\0\0", 2));
+            contact_data.append(Format::wideCharString(contact->remarks) + QByteArray("\0\0", 2));
+        }
 
         contact_count++;
     }
 
-    int addr_mod = contact_data.size() % 0x186a0;
-    int block = int((contact_data.size() - addr_mod) / 0x186a0);
-    int end_address = contact_data_addr + (block * 0x40000) + addr_mod;
+    int addr_mod = contact_data.size() % k_DcBlkLen;
+    int block = int((contact_data.size() - addr_mod) / k_DcBlkLen);
+    int end_address = contact_data_addr + (block * k_DcBlkStride) + addr_mod;
 
     QByteArray contact_count_data;
     contact_count_data.append(Int::toBytes(contact_total, 4));
@@ -323,26 +432,34 @@ void Device::writeDigitalContacts(){
     order_data.append(QByteArray(0x10 - (order_data.size() % 0x10), 0xff));
     contact_data.append(QByteArray(0x10 - (contact_data.size() % 0x10), 0));
 
+    // Write order data
+    int last_block = -1;
+    int last_addr = 0;
     emit update1(1, 3, "Writing Digital Contacts");
     for(int idx = 0; idx < order_data.size(); idx+=0x10){
-        int addr_mod = idx % 0x1f400;
-        int block = int((idx - addr_mod) / 0x1f400);
-        int addr = contact_order_addr + (block * 0x40000) + addr_mod;
+        int addr_mod = idx % k_OrderBlkLen;
+        int block = int((idx - addr_mod) / k_OrderBlkLen);
+        
+        
+        int addr = contact_order_addr + (block * k_OrderBlkStride) + addr_mod;
         QByteArray data = order_data.mid(idx, 0x10);
+        
         writeMemory(addr, data);
         if(idx > 0 && int(idx / 0x10) % int((order_data.size() / (0x10 * 100))) == 0){
             emit update2(idx, order_data.size(), "Writing Order Data");
         }
     }
 
+    // Write Contact Data
+    int contact_data_modulo = int((contact_data.size() / (0x10 * 100)));
     emit update1(2, 3, "Writing Digital Contacts");
-    for(int idx = 0; idx < order_data.size(); idx+=0x10){
-        int addr_mod = idx % 0x186a0;
-        int block = int((idx - addr_mod) / 0x186a0);
-        int addr = contact_data_addr + (block * 0x40000) + addr_mod;
+    for(int idx = 0; idx < contact_data.size(); idx+=0x10){
+        int addr_mod = idx % k_DcBlkLen;
+        int block = int((idx - addr_mod) / k_DcBlkLen);
+        int addr = contact_data_addr + (block * k_DcBlkStride) + addr_mod;
         QByteArray data = contact_data.mid(idx, 0x10);
         writeMemory(addr, data);
-        if(idx > 0 && int(idx / 0x10) % int((contact_data.size() / (0x10 * 100))) == 0){
+        if(idx > 0 && int(idx / 0x10) % contact_data_modulo == 0){
             emit update2(idx, contact_data.size(), "Writing Digital Data");
         }
     }
@@ -368,34 +485,62 @@ void Device::readOtherData(){
         // 0x25c0b00, 0x30 # HotKey State Information Set List
         // 0x2600000, 0xf0 # list up to 56
 
-        int steps = 16;
+        int steps = 25;
+        int step = 0;
         
         readAmAir();
+        emit update1(step++, steps, "Reading Data");
         readAmZones();
+        emit update1(step++, steps, "Reading Data");
         readChannelData();
+        emit update1(step++, steps, "Reading Data");
         readTalkgroupData();
+        emit update1(step++, steps, "Reading Data");
         readZoneData();
+        emit update1(step++, steps, "Reading Data");
         readRadioIdData();
+        emit update1(step++, steps, "Reading Data");
         readScanListData();
+        emit update1(step++, steps, "Reading Data");
         readFmData();
+        emit update1(step++, steps, "Reading Data");
         readRoamingChannelData();
+        emit update1(step++, steps, "Reading Data");
         readRoamingZoneData();
+        emit update1(step++, steps, "Reading Data");
         readSettings();
+        emit update1(step++, steps, "Reading Data");
         readAprsSettings();
+        emit update1(step++, steps, "Reading Data");
         readToneSettings();
+        emit update1(step++, steps, "Reading Data");
         readTone2Settings();
+        emit update1(step++, steps, "Reading Data");
         readGpsRoamingData();
+        emit update1(step++, steps, "Reading Data");
         readMasterId();
+        emit update1(step++, steps, "Reading Data");
         readAutoRepeaterFrequencyData();
+        emit update1(step++, steps, "Reading Data");
         readPrefabricatedSms();
+        emit update1(step++, steps, "Reading Data");
         readReceiveGroups();
+        emit update1(step++, steps, "Reading Data");
         readAesEncryptionKeys();
+        emit update1(step++, steps, "Reading Data");
         readArc4EncryptionKeys();
+        emit update1(step++, steps, "Reading Data");
         readEncryptionKeys();
+        emit update1(step++, steps, "Reading Data");
         readHotKeySettings();
+        emit update1(step++, steps, "Reading Data");
         readAnalogAddress();
+        emit update1(step++, steps, "Reading Data");
+        readTalkgroupWhitelist();
+        emit update1(step++, steps, "Reading Data");
+        readDigitalContactWhitelist();
 
-        emit update1(15, steps, "Linking Data");
+        emit update1(steps-1, steps, "Linking Data");
         Anytone::Memory::linkReferences();
     }
 void Device::readAesEncryptionKeys()
@@ -505,7 +650,7 @@ void Device::readAmZones(){
 
     QByteArray setData = readMemory(map->AmZoneSet, 0x10);
     QByteArray aChannelData = readMemory(map->AmZoneAChannel, 0x10);
-    QByteArray scanChannelData = readMemory(map->AmZoneScan, 0x10);
+    
 
     std::vector<int> idList;
     for (int byteIndex = 0; byteIndex < setData.size(); ++byteIndex) {
@@ -540,6 +685,8 @@ void Device::readAmZones(){
         az->decode(data);
 
         az->aChannelIdx = Int::fromBytes(aChannelData.mid(idx*2, 2));
+
+        QByteArray scanChannelData = readMemory(map->AmZoneScan + (idx * 0x10), 0x10);
 
         for (int byteIndex = 0; byteIndex < 4; ++byteIndex) {
             const quint8 bits = static_cast<quint8>(scanChannelData.at((idx * 4) + byteIndex));
@@ -765,6 +912,44 @@ void Device::readChannelData()
         channel->decode(data);
     }
 }
+void Device::readDigitalContactWhitelist(){
+    if(Anytone::Memory::radio_model != Anytone::RadioModel::D890UV_FW103){
+        qDebug() << "Skipping Digital Contact Whitelist";
+        return;
+    }
+
+    emit update2(0, 0, "Reading Digital Contact Whitelist");
+
+    bool reading = true;
+    int count = 0;
+    do {
+        QByteArray data = readMemory(0x4c82000 + (count * 0x10), 0x10);
+        if (!is_alive) return;
+        if(data.mid(0x0, 0x8) != QByteArray(0x8, 0xff)){
+            int id = Int::fromBytes(data.mid(0x4, 4));
+            if(id < Anytone::Memory::digital_contact_whitelist.size()){
+                Anytone::TalkgroupWhitelist *dc = Anytone::Memory::digital_contact_whitelist.at(id);
+                int dmr_id_b = Int::fromBytes(data.mid(0x0, 4));
+                dc->dmr_id = Int::toBytes(dmr_id_b >> 1, 4, Endian::Big).toHex().toInt();
+                dc->call_type = dmr_id_b & 0x1;
+            }
+        }
+
+        if(data.mid(0x8, 0x8) != QByteArray(0x8, 0xff)) {
+            int id = Int::fromBytes(data.mid(0xc, 4));
+            if(id < Anytone::Memory::digital_contact_whitelist.size()){
+                Anytone::TalkgroupWhitelist *dc = Anytone::Memory::digital_contact_whitelist.at(id);
+                int dmr_id_b = Int::fromBytes(data.mid(0x0, 4));
+                dc->dmr_id = Int::toBytes(dmr_id_b >> 1, 4, Endian::Big).toHex().toInt();
+                dc->call_type = dmr_id_b & 0x1;
+            }
+        }else{
+            reading = false;
+        }
+        count++;
+
+    } while (reading && count < 10);
+}
 void Device::readEncryptionKeys(){
     // TODO: Implement for D168UV
 
@@ -840,10 +1025,6 @@ void Device::readFmData()
         constexpr int kMetaAddr           = 0x3402000;
         constexpr int kMetaLen            = 0x60;
 
-        constexpr int kHomeFreqOff        = 0x00; // 4 bytes
-        constexpr int kHomeNameOff        = 0x00;
-        constexpr int kHomeNameLen        = 0x04;
-
         constexpr int kActiveMaskBase     = 0x40; // 16 bytes
         constexpr int kScanMaskBase       = 0x50; // 16 bytes
 
@@ -859,9 +1040,9 @@ void Device::readFmData()
         // Get VFO Channel
         if (Memory::fm_channels.size() > 100 && Memory::fm_channels.at(100)) {
             auto* home = Memory::fm_channels.at(100);
-            home->frequency = readU32beToInt(meta, kHomeFreqOff);
+            home->frequency = meta.mid(kEntryFreqOff, 0x4).toHex().toInt();
             if(home->frequency < 0xffffffff)
-                home->name = readFixedStringUtf8(meta, kHomeNameOff, kHomeNameLen);
+                home->name = readFixedStringUtf8(meta, kEntryNameOff, kEntryNameLen);
         }
 
         for (int byteIdx = 0; byteIdx < 16; ++byteIdx) {
@@ -1356,34 +1537,38 @@ void Device::readSettings()
             Anytone::Memory::optional_settings->decode_D878UVII(d2500000, d2500600, d2501280, d2501400);
 
         if (Anytone::Memory::alarm_settings)
-            Anytone::Memory::alarm_settings->decode(d2500000, d24c1400, d24c1440);
+            Anytone::Memory::alarm_settings->decode_D878UVII(d2500000, d24c1400, d24c1440);
 
         // Defensive bounds checks before indexing
         if (Anytone::Memory::dtmf_settings && d2500000.size() > 0x23)
             Anytone::Memory::dtmf_settings->tx_time = static_cast<uint8_t>(d2500000.at(0x23));
 
-        // NOTE: your original set display_priority twice (0x1e then 0x1f).
-        // Keeping one assignment to avoid stomping.
-        if (Anytone::Memory::talk_alias_settings && d2501400.size() > 0x1E)
-            Anytone::Memory::talk_alias_settings->display_priority = static_cast<uint8_t>(d2501400.at(0x1E));
+        if (Anytone::Memory::talk_alias_settings && d2501400.size() > 0x1e)
+            Anytone::Memory::talk_alias_settings->display_priority = static_cast<uint8_t>(d2501400.at(0x1e));
+            Anytone::Memory::talk_alias_settings->data_format = static_cast<uint8_t>(d2501400.at(0x1f));
 
         return;
     }
 
     if (model == Anytone::RadioModel::D890UV_FW103) {
         // --- D890UV FW103 blocks
-        constexpr quint32 kA_3500000 = 0x3500000; constexpr int kL_3500000 = 0x200;
-        constexpr quint32 kA_3500900 = 0x3500900; constexpr int kL_3500900 = 0x60;
-        constexpr quint32 kA_3501280 = 0x3501280; constexpr int kL_3501280 = 0x30;
-
-        const QByteArray d3500000 = readMemory(kA_3500000, kL_3500000);
-        const QByteArray d3500900 = readMemory(kA_3500900, kL_3500900);
-        const QByteArray d3501280 = readMemory(kA_3501280, kL_3501280);
+        const QByteArray d3482e00 = readMemory(0x3482e00, 0x10);
+        const QByteArray d3483000 = readMemory(0x3483000, 0x30);
+        const QByteArray d3500000 = readMemory(0x3500000, 0x200);
+        const QByteArray d3500900 = readMemory(0x3500900, 0x60);
+        const QByteArray d3501280 = readMemory(0x3501280, 0x30);
 
         if (!is_alive) return;
 
         if (Anytone::Memory::optional_settings)
             Anytone::Memory::optional_settings->decode_D890UV(d3500000, d3500900, d3501280);
+
+        if (Anytone::Memory::alarm_settings)
+            Anytone::Memory::alarm_settings->decode_D890UV(d3483000, d3482e00, d3500000);
+
+        if (Anytone::Memory::talk_alias_settings && d3500000.size() > 0xee)
+            Anytone::Memory::talk_alias_settings->display_priority = static_cast<uint8_t>(d3500000.at(0xed));
+            Anytone::Memory::talk_alias_settings->data_format = static_cast<uint8_t>(d3500000.at(0xee));
 
         return;
     }
@@ -1440,6 +1625,44 @@ void Device::readTalkgroupData()
 
         tg->decode(data);
     }
+}
+void Device::readTalkgroupWhitelist(){
+    if(Anytone::Memory::radio_model != Anytone::RadioModel::D890UV_FW103){
+        qDebug() << "Skipping Talkgroup Whitelist";
+        return;
+    }
+
+    emit update2(0, 0, "Reading Talkgroup Whitelist");
+
+    bool reading = true;
+    int count = 0;
+    do {
+        QByteArray data = readMemory(0x4c80000 + (count * 0x10), 0x10);
+        if (!is_alive) return;
+        if(data.mid(0x0, 0x8) != QByteArray(0x8, 0xff)){
+            int id = Int::fromBytes(data.mid(0x4, 4));
+            if(id < Anytone::Memory::talkgroup_whitelist.size()){
+                Anytone::TalkgroupWhitelist *tg = Anytone::Memory::talkgroup_whitelist.at(id);
+                int dmr_id_b = Int::fromBytes(data.mid(0x0, 4));
+                tg->dmr_id = Int::toBytes(dmr_id_b >> 1, 4, Endian::Big).toHex().toInt();
+                tg->call_type = dmr_id_b & 0x1;
+            }
+        }
+
+        if(data.mid(0x8, 0x8) != QByteArray(0x8, 0xff)) {
+            int id = Int::fromBytes(data.mid(0xc, 4));
+            if(id < Anytone::Memory::talkgroup_whitelist.size()){
+                Anytone::TalkgroupWhitelist *tg = Anytone::Memory::talkgroup_whitelist.at(id);
+                int dmr_id_b = Int::fromBytes(data.mid(0x0, 4));
+                tg->dmr_id = Int::toBytes(dmr_id_b >> 1, 4, Endian::Big).toHex().toInt();
+                tg->call_type = dmr_id_b & 0x1;
+            }
+        }else{
+            reading = false;
+        }
+        count++;
+
+    } while (reading && count < 10);
 }
 void Device::readToneSettings(){
     // TODO: Implement for D890UV
@@ -1621,6 +1844,8 @@ void Device::writeOtherData(){
     writeAnalogAddress();
     writeAmAir();
     writeAmZones();
+    writeTalkgroupWhitelist();
+    writeDigitalContactWhitelist();
 
     emit update1(0, 1, "Writing...");
     
@@ -1706,6 +1931,53 @@ void Device::writeAmZones(){
     const auto* map = Anytone::Memory::Map();
     if (!map) return;
 
+    int base = map->AmZoneData;
+    int stride = map->AmZoneDataStride;
+    int len = map->AmZoneDataLength;
+
+    QByteArray setList(0x10, 0);
+    QByteArray aChannelData(0x10, 0);
+    // QByteArray scanChannelData(0x10, 0);
+
+    auto* bytes = reinterpret_cast<quint8*>(setList.data());
+    for (int i = 0; i < Anytone::Memory::am_zones.size(); ++i) {
+        auto* zone = Anytone::Memory::am_zones.at(i);
+        if (!zone) continue;
+
+        // Consider a channel "present" if it has an RX frequency
+        if (zone->scan_channels.size() == 0 && zone->member_channels.size() == 0)
+            continue;
+
+        // --- Set bitmap
+        const int byteIndex = i / 8;
+        const int bitIndex  = i % 8;
+
+        if (byteIndex >= 0 && byteIndex < setList.size()) {
+            Bit::set(&bytes[byteIndex], bitIndex);
+        } else {
+            // Should never happen if kSetBytes matches channel capacity
+            continue;
+        }
+
+        QByteArray scanChannelData(0x10, 0);
+        auto* scan_bytes = reinterpret_cast<quint8*>(scanChannelData.data());
+        for(auto *ch : zone->scan_channels){
+            int ch_idx = zone->member_channels.indexOf(ch);
+            const int scanByteIndex = ch_idx / 8;
+            const int scanBitIndex  = ch_idx % 8;
+            Bit::set(&scan_bytes[scanByteIndex], scanBitIndex);
+        }
+
+        aChannelData[i] = zone->member_channels.indexOf(zone->aChannel);
+        int addr = base + (i * stride);
+        write_data[addr] = zone->encode();
+        write_data[map->AmZoneScan + (i * 0x10)] = scanChannelData;
+
+    }
+
+    write_data[map->AmZoneSet] = setList;
+    write_data[map->AmZoneAChannel] = aChannelData;
+    
 
 }
 void Device::writeAnalogAddress(){
@@ -1739,10 +2011,7 @@ void Device::writeAnalogAddress(){
 void Device::writeAprsSettings(){
     // TODO: Implement for D890UV
     // TODO: Implement for D168UV
-    if(Anytone::Memory::radio_model != Anytone::RadioModel::D878UVII_FW400) {
-        qDebug() << "Skipping APRS Settings";
-        return;
-    }
+    
     if(verbose) qDebug() << "Writing APRS Settings";
 
     if(Anytone::Memory::radio_model == Anytone::RadioModel::D878UVII_FW400) {
@@ -1765,7 +2034,7 @@ void Device::writeAprsSettings(){
         QByteArray data_3501000(0x260, 0);
         QByteArray data_3501300(0x100, 0);
         
-        Anytone::Memory::aprs_settings->encode_D878UVII(data_3501000, data_3501300);
+        Anytone::Memory::aprs_settings->encode_D890UV(data_3501000, data_3501300);
 
         data_3501000.replace(0x100, 0x100, QByteArray(0x100, 0xff));
 
@@ -1884,6 +2153,42 @@ void Device::writeChannelData()
 
     // Finally, write the set bitmap
     write_data[setAddr] = setList;
+}
+void Device::writeDigitalContactWhitelist(){
+    if(Anytone::Memory::radio_model != Anytone::RadioModel::D890UV_FW103){
+        qDebug() << "Skipping Digital Contact Whitelist";
+        return;
+    }
+
+    QVector<Anytone::TalkgroupWhitelist*> list = {};
+
+    for(auto* tg : Anytone::Memory::digital_contact_whitelist){
+        if(tg->dmr_id > 0){
+            list.append(tg);
+        }
+    }
+
+    int d_size = list.size() * 0x8;
+    if(d_size % 16 != 0) d_size += 8;
+    QByteArray data = QByteArray(d_size, 0xff);
+
+    int index = 0;
+    for(auto* tg : list){
+        int offset = (index*8);
+        data.replace(offset + 4, 4, Int::toBytes(index, 4));
+
+        int dmr_id_b = Int::fromBytes(QByteArray::fromHex(QByteArray::number(tg->dmr_id)), Endian::Big);
+        dmr_id_b = dmr_id_b << 1;
+        if(tg->call_type > 0) dmr_id_b+=1;
+
+        data.replace(offset, 4, Int::toBytes(dmr_id_b, 4));
+
+        index++;
+    }
+
+    write_data[0x4c82000] = data;
+
+
 }
 void Device::writeEncryptionKeys(){
     // TODO: Implement for D168UV
@@ -2254,13 +2559,15 @@ void Device::writeSettingsData(){
         QByteArray data_24c1400(0x20, 0);
         QByteArray data_24c1440(0x30, 0);
 
-        Anytone::Memory::alarm_settings->encode(data_2500000, data_24c1400, data_24c1440);
-        Anytone::Memory::optional_settings->encode_D878UVII(data_2500000, data_2500600, data_2501280, data_2501400);
+        if (Anytone::Memory::alarm_settings)
+            Anytone::Memory::alarm_settings->encode_D878UVII(data_2500000, data_24c1400, data_24c1440);
+        if (Anytone::Memory::optional_settings)
+            Anytone::Memory::optional_settings->encode_D878UVII(data_2500000, data_2500600, data_2501280, data_2501400);
 
         data_2501400[0x6f] = Anytone::Memory::aprs_settings->fixed_location_beacon;
 
         data_2501400[0x1e] = Anytone::Memory::talk_alias_settings->display_priority;
-        data_2501400[0x1f] = Anytone::Memory::talk_alias_settings->display_priority;
+        data_2501400[0x1f] = Anytone::Memory::talk_alias_settings->data_format;
         
 
         write_data[data_2500000_addr] = data_2500000;
@@ -2274,19 +2581,40 @@ void Device::writeSettingsData(){
     }
     if(Anytone::Memory::radio_model == Anytone::RadioModel::D890UV_FW103){
 
+        constexpr quint32 kA_3482e00 = 0x3482e00;
+        constexpr quint32 kA_3483000 = 0x3483000;
         constexpr quint32 kA_3500000 = 0x3500000; constexpr int kL_3500000 = 0x200;
         constexpr quint32 kA_3500900 = 0x3500900; constexpr int kL_3500900 = 0x60;
         constexpr quint32 kA_3501280 = 0x3501280; constexpr int kL_3501280 = 0x30;
 
+        QByteArray d3482e00 = QByteArray(0x10, 0);
+        QByteArray d3483000 = QByteArray(0x30, 0);
         QByteArray d3500000 = QByteArray(kL_3500000, 0);
         QByteArray d3500900 = QByteArray(kL_3500900, 0);
         QByteArray d3501280 = QByteArray(kL_3501280, 0);
 
         if (!is_alive) return;
 
+        // Alarm Settings
+        if (Anytone::Memory::alarm_settings)
+            Anytone::Memory::alarm_settings->encode_D890UV(d3483000, d3482e00, d3500000);
+
+        // Optional Settings
         if (Anytone::Memory::optional_settings)
             Anytone::Memory::optional_settings->encode_D890UV(d3500000, d3500900, d3501280);
 
+        // APRS Settings
+
+
+
+        // Air Alias Settings
+        if (Anytone::Memory::talk_alias_settings){
+            d3500000[0xed] = Anytone::Memory::talk_alias_settings->display_priority;
+            d3500000[0xee] = Anytone::Memory::talk_alias_settings->data_format;
+        }
+
+        write_data[kA_3482e00] = d3482e00;
+        write_data[kA_3483000] = d3483000;
         write_data[kA_3500000] = d3500000;
         write_data[kA_3500900] = d3500900;
         write_data[kA_3501280] = d3501280;
@@ -2340,6 +2668,40 @@ void Device::writeTalkgroupData(){
     write_data[tg_set_list_addr] = tg_set_list_data;
     write_data[tg_data_list_addr] = tg_data;
     write_data[tg_order_data_addr] = tg_order_data;
+}
+void Device::writeTalkgroupWhitelist(){
+    if(Anytone::Memory::radio_model != Anytone::RadioModel::D890UV_FW103){
+        qDebug() << "Skipping Digital Contact Whitelist";
+        return;
+    }
+
+    QVector<Anytone::TalkgroupWhitelist*> list = {};
+
+    for(auto* tg : Anytone::Memory::talkgroup_whitelist){
+        if(tg->dmr_id > 0){
+            list.append(tg);
+        }
+    }
+
+    int d_size = list.size() * 0x8;
+    if(d_size % 16 != 0) d_size += 8;
+    QByteArray data = QByteArray(d_size, 0xff);
+
+    int index = 0;
+    for(auto* tg : list){
+        int offset = (index*8);
+        data.replace(offset + 4, 4, Int::toBytes(index, 4));
+
+        int dmr_id_b = Int::fromBytes(QByteArray::fromHex(QByteArray::number(tg->dmr_id)), Endian::Big);
+        dmr_id_b = dmr_id_b << 1;
+        if(tg->call_type > 0) dmr_id_b+=1;
+
+        data.replace(offset, 4, Int::toBytes(dmr_id_b, 4));
+
+        index++;
+    }
+
+    write_data[0x4c80000] = data;
 }
 void Device::writeToneSettings(){
     // TODO: Implement for D890UV
@@ -2482,77 +2844,73 @@ void Device::writeSatelliteData(){
 
 void SerialWorker::run(){
     if(comport.size() > 0){
-        device = new SerialDevice();
-        device->image_data = image_data;
-        device->read_write_options = rw_options;
-
-        QObject::connect(device, &Device::finished, this, &SerialWorker::finished);
-        QObject::connect(device, &Device::update1, this, &SerialWorker::update1);
-        QObject::connect(device, &Device::update2, this, &SerialWorker::update2);
-
-        device->is_alive = false;
-
-        while(!device->is_alive && connection_attempt < 5){
-            connection_attempt++;
-            if(device->connect(comport)){
-                if(!is_write) {
-                    device->readRadioData();
-                }else{
-                    device->writeRadioData();
-                }
-                if(device->is_alive) device->endProgMode();
-            }
-            if(!device->is_alive) QThread::msleep(1000);
-        }
-
-        if(device->is_alive){
-            emit finished(DeviceStatus::STATUS_SUCCESS);
-            emit imageDataReady(device->image_data);
-        }else{
-            emit finished(DeviceStatus::STATUS_COM_ERROR);
-        }
-
-        static_cast<SerialDevice*>(device)->port->close();
-
-
-        // QObject::disconnect(device, &Device::finished, this, &SerialWorker::finished);
-        // QObject::disconnect(device, &Device::update1, this, &SerialWorker::update1);
-        // QObject::disconnect(device, &Device::update2, this, &SerialWorker::update2);
-
-        delete device;
-        device = nullptr;
-
+        runSerial();
     }else if(bin_filepath.size() > 0){
-        device = new VirtualDevice();
-        device->image_data = image_data;
-        device->read_write_options = rw_options;
-
-        QObject::connect(device, &Device::finished, this, &SerialWorker::finished);
-        QObject::connect(device, &Device::update1, this, &SerialWorker::update1);
-        QObject::connect(device, &Device::update2, this, &SerialWorker::update2);
-
-        if(device->connect(bin_filepath)){
-            if(!is_write) {
-                device->readRadioData();
-            }else{
-                device->writeRadioData();
-                static_cast<VirtualDevice*>(device)->save("saved.bin");
-            }
-        }
-
-        emit finished(DeviceStatus::STATUS_SUCCESS);
-        emit imageDataReady(device->image_data);
-
-        // QObject::disconnect(device, &Device::finished, this, &SerialWorker::finished);
-        // QObject::disconnect(device, &Device::update1, this, &SerialWorker::update1);
-        // QObject::disconnect(device, &Device::update2, this, &SerialWorker::update2);
-
-        delete device;
-        device = nullptr;
+        runVirtual();
     }else{
         emit finished(DeviceStatus::STATUS_COM_ERROR);
         qDebug() << "Invalid serial device configuration";
     }
+}
+void SerialWorker::runVirtual(){
+    device = new VirtualDevice();
+    device->image_data = image_data;
+    device->read_write_options = rw_options;
+
+    QObject::connect(device, &Device::finished, this, &SerialWorker::finished);
+    QObject::connect(device, &Device::update1, this, &SerialWorker::update1);
+    QObject::connect(device, &Device::update2, this, &SerialWorker::update2);
+
+    if(device->connect(bin_filepath)){
+        if(!is_write) {
+            device->readRadioData();
+        }else{
+            device->writeRadioData();
+            static_cast<VirtualDevice*>(device)->save("saved.bin");
+        }
+    }
+
+    emit finished(DeviceStatus::STATUS_SUCCESS);
+    emit imageDataReady(device->image_data);
+
+    delete device;
+    device = nullptr;
+}
+void SerialWorker::runSerial(){
+    device = new SerialDevice();
+    device->image_data = image_data;
+    device->read_write_options = rw_options;
+
+    QObject::connect(device, &Device::finished, this, &SerialWorker::finished);
+    QObject::connect(device, &Device::update1, this, &SerialWorker::update1);
+    QObject::connect(device, &Device::update2, this, &SerialWorker::update2);
+
+    device->is_alive = false;
+
+    while(!device->is_alive && connection_attempt < 5){
+        connection_attempt++;
+        if(device->connect(comport)){
+            if(!is_write) {
+                device->readRadioData();
+            }else{
+                device->writeRadioData();
+            }
+            if(device->is_alive) device->endProgMode();
+        }
+        if(!device->is_alive) QThread::msleep(1000);
+    }
+
+    if(device->is_alive){
+        emit finished(DeviceStatus::STATUS_SUCCESS);
+        emit imageDataReady(device->image_data);
+    }else{
+        emit finished(DeviceStatus::STATUS_COM_ERROR);
+    }
+
+    static_cast<SerialDevice*>(device)->port->close();
+
+    delete device;
+    device = nullptr;
 }
 void SerialWorker::done(){
     qDebug() << "ready read";

@@ -625,7 +625,6 @@ void Anytone::Channel::save(QXmlStreamWriter &xml){
 void Anytone::Channel::load(QXmlStreamReader &xml){
     if (xml.name() == "Channel"){
         QXmlStreamAttributes attributes = xml.attributes();
-        
         if(attributes.hasAttribute("rx_frequency"))
             rx_frequency = attributes.value("rx_frequency").toInt();
         if(attributes.hasAttribute("offset"))

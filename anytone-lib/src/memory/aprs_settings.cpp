@@ -1204,7 +1204,7 @@ void Anytone::AprsSettings::load(QXmlStreamReader &xml){
                 AprsReceiveFilter *filter = receive_filters.at(idx);
                 filter->load(xml);
             }else if(token == QXmlStreamReader::StartElement){
-                break;
+                return;
             }
             token = xml.readNext();
         }

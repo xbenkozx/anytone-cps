@@ -51,7 +51,37 @@ SatelliteDialog::SatelliteDialog(QWidget *parent) :
     if (QFile::exists(file_path)) {
         QFileInfo fileInfo(file_path);
         if (fileInfo.exists()) {
-            ui->label->setText("Last Updated: " + fileInfo.lastModified().toString("MM/dd/yy HH:mm"));
+            QDateTime last_update = fileInfo.lastModified();
+            QDateTime now = QDateTime::currentDateTime();
+            QString diff_format = "Second";
+            int diff = last_update.secsTo(now);
+
+             ui->label->setStyleSheet("");
+            
+            if(diff > 60){
+                diff = diff/60;
+                diff_format = "Minute";
+            }
+
+            if(diff > 60){
+                diff = diff/60;
+                diff_format = "Hours";
+            }
+
+            if(diff > 24){
+                diff = diff/60;
+                diff_format = "Days";
+                if(diff > 7) ui->label->setStyleSheet("QLabel {color:red;}");
+            }
+
+            if(diff != 1){
+                diff_format += "s";
+            }
+            
+            ui->label->setText("Last Updated: " + QString::number(diff) + " " + diff_format + " ago (" + last_update.toString("MM/dd/yy HH:mm") + ")");
+            
+        }else{
+            ui->label->setStyleSheet("QLabel {color:red;}");
         }
         QFile file(file_path);
         if(file.open(QIODevice::ReadOnly)){

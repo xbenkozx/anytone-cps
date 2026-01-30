@@ -21,7 +21,7 @@ void AmZone::decode_D890UV(QByteArray data){
     name.remove(QChar('\0'));
 }
 
-QByteArray AmZone::encodeData(){
+QByteArray AmZone::encode(){
     if(Memory::radio_model == RadioModel::D890UV_FW103){
         return encode_D890UV();
     }

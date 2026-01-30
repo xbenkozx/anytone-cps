@@ -35,6 +35,8 @@
 #include "analog_address_table_model.h"
 #include "am_air_table_model.h"
 #include "am_zone_table_model.h"
+#include "talkgroup_whitelist_table_model.h"
+#include "digital_contact_whitelist_table_model.h"
 
 #include "aes_encryption_code_dialog.h"
 #include "arc4_encryption_code_dialog.h"
@@ -68,6 +70,10 @@
 #include "import_export_dialog.h"
 #include "satellite_dialog.h"
 #include "about_dialog.h"
+#include "am_air_edit_dialog.h"
+#include "am_zone_edit_dialog.h"
+#include "talkgroup_whitelist_edit_dialog.h"
+#include "digital_contact_whitelist_edit_dialog.h"
 #include "csv.h"
 #include "satellite.h"
 
@@ -77,7 +83,13 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     Anytone::Memory::init();
+    Anytone::Memory::initDigitalContacts();
+
     UserSettings::load();
+    UserSettings::loadDefaults();
+    UserSettings::saveDefaults();
+
+    Anytone::Memory::setDefaults();
 
     Anytone::Memory::radio_model = UserSettings::radio_model;
 
@@ -94,6 +106,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     threadpool = QThreadPool::globalInstance();
     selected_table_view = "Channel";
+
+    
 
     setupUI();
 
@@ -123,36 +137,45 @@ void MainWindow::showEvent(QShowEvent *event)
 }
 void MainWindow::setupUI(){
     loading_dialog = new LoadingDialog(this);
+
+    // File Menu
     connect(ui->actionNew, &QAction::triggered, this, &MainWindow::newBtnClicked);
     connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::openBtnClicked);
     connect(ui->actionSave, &QAction::triggered, this, &MainWindow::saveBtnClicked);
+    connect(ui->actionSave_As, &QAction::triggered, this, &MainWindow::saveFileAs);
 
+    // Radio Menu
     connect(ui->actionD878UVII_400, &QAction::triggered, this, &MainWindow::setRadioModel_D878UVII);
     connect(ui->actionD890UV_103, &QAction::triggered, this, &MainWindow::setRadioModel_D890UV);
     connect(ui->actionSet_Com, &QAction::triggered, this, &MainWindow::showComportDialog);
     connect(ui->actionSet_Com, &QAction::triggered, this, &MainWindow::showComportDialog);
     connect(ui->actionSet_Com, &QAction::triggered, this, &MainWindow::showComportDialog);
 
+    // Tool Menu
     connect(ui->actionBoot_Image, &QAction::triggered, this, &MainWindow::showBootImageDialog);
     connect(ui->actionStandby_BK_Picture_1, &QAction::triggered, this, &MainWindow::showBK1ImageDialog);
     connect(ui->actionStandby_Bk_Picture_2, &QAction::triggered, this, &MainWindow::showBK2ImageDialog);
     connect(ui->actionExpert_Options, &QAction::triggered, this, &MainWindow::showExpertOptions); 
     connect(ui->actionImport, &QAction::triggered, this, &MainWindow::showImportDialog);
     connect(ui->actionExport, &QAction::triggered, this, &MainWindow::showExportDialog);
+    connect(ui->actionDefault_Channel_Options, &QAction::triggered, this, &MainWindow::showDefaultChannelEditDialog);
+    connect(ui->actionSatellite, &QAction::triggered, this, &MainWindow::showSatelliteDialog);
 
+    // About Menu
+    connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAboutDialog);
+    
+
+    // Tool Bar
     connect(ui->newFileBtn, &QToolButton::clicked, this, &MainWindow::newBtnClicked);
     connect(ui->openFileBtn, &QToolButton::clicked, this, &MainWindow::openBtnClicked);
     connect(ui->saveFileBtn, &QToolButton::clicked, this, &MainWindow::saveBtnClicked);
-        
-    connect(ui->mainTreeWidget, &QTreeWidget::itemClicked, this, &MainWindow::onTreeItemClicked);
     connect(ui->comPortBtn, &QToolButton::clicked, this, &MainWindow::showComportDialog);
     connect(ui->readRadioBtn, &QToolButton::clicked, this, &MainWindow::showReadOptionsDialog);
     connect(ui->writeRadioBtn, &QToolButton::clicked, this, &MainWindow::showWriteOptionsDialog);
     connect(ui->tableView, &QTableView::doubleClicked, this, &MainWindow::onMainTableDblClicked);
 
-    connect(ui->actionSatellite, &QAction::triggered, this, &MainWindow::showSatelliteDialog);
-
-    connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAboutDialog);
+    // Main Widgets
+    connect(ui->mainTreeWidget, &QTreeWidget::itemClicked, this, &MainWindow::onTreeItemClicked);
 
     ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tableView, &QTableView::customContextMenuRequested, this, &MainWindow::showMainTableContextMenu);
@@ -689,7 +712,33 @@ void MainWindow::listAmZones(bool goto_top){
 
     if(goto_top) ui->tableView->scrollToTop();
 }
+void MainWindow::listTalkgroupWhitelist(bool goto_top){
+    delete table_model;
+    table_model = new TalkgroupWhitelistTableModel(this);
+    ui->tableView->setModel(table_model);
 
+    ui->tableView->verticalHeader()->setVisible(false);
+    ui->tableView->setSortingEnabled(false);
+
+    ui->tableView->setColumnWidth(0, 70);
+    ui->tableView->setColumnWidth(1, 100);
+    ui->tableView->setColumnWidth(2, 100);
+
+    if(goto_top) ui->tableView->scrollToTop();
+}
+void MainWindow::listDigitalContactWhitelist(bool goto_top){
+    delete table_model;
+    table_model = new DigitalContactWhitelistTableModel(this);
+    ui->tableView->setModel(table_model);
+
+    ui->tableView->verticalHeader()->setVisible(false);
+    ui->tableView->setSortingEnabled(false);
+
+    ui->tableView->setColumnWidth(0, 70);
+    ui->tableView->setColumnWidth(1, 100);
+
+    if(goto_top) ui->tableView->scrollToTop();
+}
 
 void MainWindow::showComportDialog(){
     comport_dialog = std::make_unique<ComportDialog>(this);
@@ -737,6 +786,9 @@ void MainWindow::showAutoRepeaterEditDialog(int index){
 void MainWindow::showChannelEditDialog(int index){
     ChannelEditDialog channel_edit_dialog(this, index);
     channel_edit_dialog.exec();
+}
+void MainWindow::showDefaultChannelEditDialog(){
+    showChannelEditDialog(-1);
 }
 void MainWindow::showDeviceInformationDialog(){
     DeviceInformationDialog dialog(this);
@@ -843,6 +895,22 @@ void MainWindow::showAboutDialog(){
     AboutDialog dialog(this);
     dialog.exec();
 }
+void MainWindow::showAmAirEditDialog(int index){
+    AmAirEditDialog dialog(this, index);
+    dialog.exec();
+}
+void MainWindow::showAmZoneEditDialog(int index){
+    AmZoneEditDialog dialog(this, index);
+    dialog.exec();
+}
+void MainWindow::showTalkgroupWhitelistEditDialog(int index){
+    TalkgroupWhitelistEditDialog dialog(this, index);
+    dialog.exec();
+}
+void MainWindow::showDigitalContactWhitelistEditDialog(int index){
+    DigitalContactWhitelistEditDialog dialog(this, index);
+    dialog.exec();
+}
 
 void MainWindow::readFromRadio(){
     if(UserSettings::comport.size() == 0){
@@ -866,7 +934,7 @@ void MainWindow::readFromRadio(){
     loading_dialog->setWindowTitle("Radio Read");
     loading_dialog->show();
 
-    // if(adw != nullptr) delete adw;
+    
     adw = new SerialWorker();
     if(UserSettings::comport == QString("VIRTUAL")){
         adw->setVirtualFile(UserSettings::virtual_file_name);
@@ -882,6 +950,7 @@ void MainWindow::readFromRadio(){
 }
 void MainWindow::readFromRadioFinished(const int &result){
     ui->tableView->setUpdatesEnabled(true);
+    loading_dialog->m_isBusy = false;
     loading_dialog->close();
     // showList();
 
@@ -943,6 +1012,7 @@ void MainWindow::writeToRadio(){
     threadpool->start(adw);
 }
 void MainWindow::writeToRadioFinished(const int &result){
+    loading_dialog->m_isBusy = false;
     loading_dialog->close();
     showList();
 
@@ -1086,6 +1156,12 @@ void MainWindow::showList(QString list_name){
         showTone2SettingsDialog();
     }else if(view == "DTMF Settings"){
         showDtmfSettingsDialog();
+    }else if(view == "Talk Group Whitelist"){
+        selected_table_view = view;
+        listTalkgroupWhitelist();
+    }else if(view == "Digital Contact Whitelist"){
+        selected_table_view = view;
+        listDigitalContactWhitelist(); 
     }else{
         qDebug() << view;
     }
@@ -1123,12 +1199,23 @@ void MainWindow::onMainTableDblClicked(QModelIndex index){
         showPrefabricatesSmsEditDialog(row_index);
     }else if(selected_table_view == "Analog Address Book"){
         showAnalogAddressEditDialog(row_index);
+    }else if(selected_table_view == "AM Air"){
+        showAmAirEditDialog(row_index);
+    }else if(selected_table_view == "AM Zone"){
+        showAmZoneEditDialog(row_index);
+    }else if(selected_table_view == "Talk Group Whitelist"){
+        showTalkgroupWhitelistEditDialog(row_index);
+    }else if(selected_table_view == "Digital Contact Whitelist"){
+        showDigitalContactWhitelistEditDialog(row_index);
     }
+    
 
     
 }
 void MainWindow::newBtnClicked(){
     Anytone::Memory::init();
+    Anytone::Memory::initDigitalContacts();
+    Anytone::Memory::setDefaults();
     UserSettings::last_save_file = "";
     UserSettings::save();
     updateWindowTitle();
@@ -1175,21 +1262,24 @@ void MainWindow::saveFile(bool save_as){
     UserSettings::save();
     QFile file(filepath);
     if(file.open(QIODevice::WriteOnly | QIODevice::Truncate)){
-        QXmlStreamWriter xml(&file);
-        xml.setAutoFormatting(true);
-        Anytone::Memory::saveData(xml);
         file.close();
+
+        loading_dialog->setWindowTitle("Save File");
+        loading_dialog->show();
+
+        sfw = new SaveFileWorker();
+        QObject::connect(sfw, &SaveFileWorker::update1, loading_dialog, &LoadingDialog::updateMainbar);
+        QObject::connect(sfw, &SaveFileWorker::update2, loading_dialog, &LoadingDialog::updateSubbar);
+        QObject::connect(sfw, &SaveFileWorker::finished, this, &MainWindow::fileFinished, Qt::QueuedConnection);
+        sfw->filepath = filepath;
+        sfw->user_init = true;
+        sfw->is_write = true;
+        threadpool->start(sfw);
     }else{
         QMessageBox::warning(this,
             tr("Open File"),
             tr("File could not be opened"));
     }
-
-    updateWindowTitle();
-
-    QMessageBox::information(this,
-            tr("Save File"),
-            tr("Save file OK"));
 
 }
 void MainWindow::openFile(QString filepath, bool user_init){
@@ -1219,10 +1309,20 @@ void MainWindow::openFile(QString filepath, bool user_init){
     }
     QFile file(filepath);
     if(file.open(QIODevice::ReadOnly)){
-        QXmlStreamReader xml(&file);
-        Anytone::Memory::loadData(xml);
-        file.close();
         UserSettings::last_save_file = filepath;
+        file.close();
+
+        loading_dialog->setWindowTitle("Open File");
+        loading_dialog->show();
+
+        sfw = new SaveFileWorker();
+        QObject::connect(sfw, &SaveFileWorker::update1, loading_dialog, &LoadingDialog::updateMainbar);
+        QObject::connect(sfw, &SaveFileWorker::update2, loading_dialog, &LoadingDialog::updateSubbar);
+        QObject::connect(sfw, &SaveFileWorker::finished, this, &MainWindow::fileFinished, Qt::QueuedConnection);
+        sfw->filepath = filepath;
+        sfw->user_init = user_init;
+        sfw->is_write = false;
+        threadpool->start(sfw);
     }else{
         if(user_init)
             QMessageBox::warning(this,
@@ -1232,12 +1332,69 @@ void MainWindow::openFile(QString filepath, bool user_init){
     }
 
     UserSettings::save();
-
+}
+void MainWindow::fileFinished(const int &result){
+    loading_dialog->m_isBusy = false;
+    loading_dialog->close();
     updateWindowTitle();
     showList();
 
-    if(user_init)
-        QMessageBox::information(this,
-            tr("Open File"),
-            tr("Open File OK"));
+    switch(result){
+        case SaveFileWorker::Result::NoDialog:
+            //Success but no dialog
+            break;
+        case SaveFileWorker::Result::OpenFileOk:
+            QMessageBox::information(this,
+                tr("Open File"),
+                tr("Open File OK"));
+            break;
+        case SaveFileWorker::Result::OpenFileError:
+            QMessageBox::warning(this,
+                tr("Open File"),
+                tr("File could not be opened"));
+            break;
+        case SaveFileWorker::Result::SaveFileOk:
+            QMessageBox::information(this,
+                tr("Save File"),
+                tr("Save File OK"));
+            break;
+        case SaveFileWorker::Result::SaveFileError:
+            QMessageBox::warning(this,
+                tr("Save File"),
+                tr("File could not be written"));
+            break;
+    }
+}
+
+void SaveFileWorker::run(){
+    connect(&Anytone::Memory::instance(), &Anytone::Memory::update1, this, &SaveFileWorker::update1);
+    connect(&Anytone::Memory::instance(), &Anytone::Memory::update2, this, &SaveFileWorker::update2);
+    QFile file(filepath);
+    if(is_write){
+        if(file.open(QIODevice::WriteOnly | QIODevice::Truncate)){
+            QXmlStreamWriter xml(&file);
+            xml.setAutoFormatting(true);
+            Anytone::Memory::saveData(xml);
+            file.close();
+        }else{
+            emit finished(Result::SaveFileError);
+            return;
+        }
+    }else{
+        if(file.open(QIODevice::ReadOnly)){
+            QXmlStreamReader xml(&file);
+            Anytone::Memory::loadData(xml);
+            file.close();
+        }else{
+            emit finished(Result::OpenFileError);
+            return;
+        }
+    }
+    if(user_init) { 
+        if(is_write){
+            emit finished(Result::SaveFileOk); 
+        }else{
+            emit finished(Result::OpenFileOk);
+        }
+     } else { emit finished(Result::NoDialog); }
 }

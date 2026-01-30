@@ -21,6 +21,8 @@ class UserSettings{
     static void load();
     static void save();
     static QString getUserDirectory();
+    static void saveDefaults();
+    static void loadDefaults();
 };
 
 #endif

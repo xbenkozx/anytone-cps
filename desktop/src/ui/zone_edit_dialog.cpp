@@ -29,6 +29,7 @@ void ZoneEditDialog::setupUI(){
     connect(ui->popChannelBtn, &QPushButton::clicked, this, &ZoneEditDialog::popChannel);
     connect(ui->orderIdBtn, &QPushButton::clicked, this, &ZoneEditDialog::orderMemberId);
     connect(ui->orderNameBtn, &QPushButton::clicked, this, &ZoneEditDialog::orderMemberName);
+    connect(ui->orderFrequencyBtn, &QPushButton::clicked, this, &ZoneEditDialog::orderMemberFreq);
     connect(ui->orderUpBtn, &QPushButton::clicked, this, &ZoneEditDialog::orderUp);
     connect(ui->orderDownBtn, &QPushButton::clicked, this, &ZoneEditDialog::orderDown);
     connect(ui->orderAvailableIdBtn, &QPushButton::clicked, this, &ZoneEditDialog::orderAvailableId);
@@ -94,17 +95,26 @@ void ZoneEditDialog::orderMemberId(){
             [](const Anytone::Channel* a, const Anytone::Channel* b) {
                 return a->id < b->id;
             });
+    updateChannelTables();
 }
 void ZoneEditDialog::orderMemberName(){
     std::stable_sort(member_channels.begin(), member_channels.end(),
         [](const Anytone::Channel* a, const Anytone::Channel* b) {
             return a->name < b->name;
         });
+    updateChannelTables();
+}
+void ZoneEditDialog::orderMemberFreq(){
+    std::stable_sort(member_channels.begin(), member_channels.end(),
+        [](const Anytone::Channel* a, const Anytone::Channel* b) {
+            return a->rx_frequency < b->rx_frequency;
+        });
+    updateChannelTables();
 }
 void ZoneEditDialog::updateChannelTables(){
     // ---------- Member channels ----------
     auto *memberModel = new QStandardItemModel(this);
-    memberModel->setColumnCount(2);
+    memberModel->setColumnCount(3);
 
     for (int i = 0; i < static_cast<int>(member_channels.size()); ++i) {
         const auto &ch = member_channels[i];
@@ -113,6 +123,8 @@ void ZoneEditDialog::updateChannelTables(){
             new QStandardItem(QString::number(ch->id + 1)));
         memberModel->setItem(i, 1,
             new QStandardItem(ch->name));
+        memberModel->setItem(i, 2,
+            new QStandardItem(ch->getRxFrequencyString()));
     }
 
     ui->memberTableView->setModel(memberModel);
@@ -120,7 +132,7 @@ void ZoneEditDialog::updateChannelTables(){
 
     // ---------- Available channels ----------
     auto *channelModel = new QStandardItemModel(this);
-    channelModel->setColumnCount(2);
+    channelModel->setColumnCount(3);
 
     for (int i = 0; i < static_cast<int>(available_channels.size()); ++i) {
         const auto &ch = available_channels[i];
@@ -129,6 +141,8 @@ void ZoneEditDialog::updateChannelTables(){
             new QStandardItem(QString::number(ch->id + 1)));
         channelModel->setItem(i, 1,
             new QStandardItem(ch->name));
+        channelModel->setItem(i, 2,
+            new QStandardItem(ch->getRxFrequencyString()));
     }
 
     ui->availableChannelTableView->setModel(channelModel);
@@ -196,8 +210,8 @@ void ZoneEditDialog::popChannel(){
     updateChannelTables();
 }
 void ZoneEditDialog::orderUp(){
-    if(!ui->availableChannelTableView->selectionModel()->hasSelection()) return;
-    auto rows = ui->availableChannelTableView->selectionModel()->selectedRows();
+    if(!ui->memberTableView->selectionModel()->hasSelection()) return;
+    auto rows = ui->memberTableView->selectionModel()->selectedRows();
     int idx = rows.first().row();
     if(idx == 0) return;
     if (idx <= 0 || idx >= static_cast<int>(member_channels.size()))
@@ -210,8 +224,8 @@ void ZoneEditDialog::orderUp(){
     updateChannelTables();
 }
 void ZoneEditDialog::orderDown(){
-    if(!ui->availableChannelTableView->selectionModel()->hasSelection()) return;
-    auto rows = ui->availableChannelTableView->selectionModel()->selectedRows();
+    if(!ui->memberTableView->selectionModel()->hasSelection()) return;
+    auto rows = ui->memberTableView->selectionModel()->selectedRows();
     int idx = rows.first().row();
     if(idx == zone->channels.size() - 1) return;
     if (idx <= 0 || idx >= static_cast<int>(member_channels.size()))

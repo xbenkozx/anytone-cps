@@ -19,19 +19,34 @@ AlertSettingsDialog::AlertSettingsDialog(MainWindow *parent) :
         this, &AlertSettingsDialog::analogAlarmUpdated);
     connect(ui->analogEniSendSelectCmbx, &QComboBox::currentIndexChanged,
         this, &AlertSettingsDialog::analogEniSendChanged);
+    connect(ui->analogEniSelectCmbx, &QComboBox::currentIndexChanged,
+        this, &AlertSettingsDialog::analogEniSelectChanged);
     connect(ui->digitalEniSendSelectCmbx, &QComboBox::currentIndexChanged,
         this, &AlertSettingsDialog::digitalEniSendChanged);
     connect(ui->saveBtn, &QPushButton::clicked, this, &AlertSettingsDialog::save);
     connect(ui->cancelBtn, &QPushButton::clicked, this, &AlertSettingsDialog::close);
+
+    ui->qdcGroupId->setValidator(new QRegularExpressionValidator(QRegularExpression("^[0-9abcdABCD*#]+$"),  ui->qdcGroupId));
+    ui->qdcPrivateId->setValidator(new QRegularExpressionValidator(QRegularExpression("^[0-9abcdABCD*#]+$"),  ui->qdcPrivateId));
 
     setupUI();
     loadData();
 }
 AlertSettingsDialog::~AlertSettingsDialog(){}
 void AlertSettingsDialog::setupUI(){
+    if(Anytone::Memory::radio_model == Anytone::RadioModel::D890UV_FW103){
+        ui->workAloneD878UVII->setVisible(false);
+    }else{
+        ui->qdcSettings->setVisible(false);
+        ui->workAloneD890UV->setVisible(false);
+    }
+
     // Analog
     ui->analogEmergencyAlarmCmbx->addItems(Constants::ANALOG_EMERGENCY_ALARM);
     ui->analogEniSelectCmbx->addItems(Constants::ANALOG_EMERGENCY_ENI_SELECT);
+    if(Anytone::Memory::radio_model == Anytone::RadioModel::D890UV_FW103)
+        ui->analogEniSelectCmbx->addItem("QDC1200");
+
     ui->analogAlarmTimeCmbx->addItems(Constants::ALARM_DURATION);
     ui->analogTxDurationCmbx->addItems(Constants::ALARM_DURATION);
     ui->analogRxDurationCmbx->addItems(Constants::ALARM_DURATION);
@@ -67,8 +82,21 @@ void AlertSettingsDialog::setupUI(){
     ui->workAloneAreaSwitchCmbx->addItems(Constants::WORK_ALONE_AREA_SWITCH);
     ui->workAloneMicSwitchCmbx->addItems(Constants::WORK_ALONE_MIC_SWITCH);
 
+    for(int i = 0; i < 256; i++){
+        ui->workAloneResponseTimeCmbx->addItem(QString::number(i+1) + "m");
+    }
+
+    for(int i = 0; i < 256; i++){
+        ui->workAloneWarningTimeCmbx->addItem(QString::number(i+1) + "s");
+    }
+
+    ui->workAloneResponseCmbx->addItems(QStringList{"Key", "Voice Transmit"});
+
     // Man Down
     ui->manDownDelayCmbx->addItems(Constants::MAN_DOWN_DELAY);
+
+    // QDC1200
+    ui->qdcKindCmbx->addItems(Constants::CALL_TYPE);
 
 }
 void AlertSettingsDialog::loadData(){
@@ -99,8 +127,20 @@ void AlertSettingsDialog::loadData(){
 
     if(a_idx != -1) ui->analogEmergencyChannelCmbx->setCurrentIndex(a_idx);
     if(d_idx != -1) ui->digitalEmergencyChannelCmbx->setCurrentIndex(d_idx);
+
+
+    ui->qdcKindCmbx->setCurrentIndex(Anytone::Memory::alarm_settings->qdc_call_type);
+    ui->qdcGroupId->setText(Anytone::Memory::alarm_settings->qdc_group_id);
+    ui->qdcPrivateId->setText(Anytone::Memory::alarm_settings->qdc_private_id);
+
+    ui->workAloneResponseTimeCmbx->setCurrentIndex(Anytone::Memory::alarm_settings->work_alone_response_time);
+    ui->workAloneWarningTimeCmbx->setCurrentIndex(Anytone::Memory::alarm_settings->work_alone_warning_time);
+    ui->workAloneResponseCmbx->setCurrentIndex(Anytone::Memory::alarm_settings->work_alone_response);
 }
 
+void AlertSettingsDialog::analogEniSelectChanged(){
+    ui->qdcSettings->setEnabled(ui->analogEniSelectCmbx->currentIndex() == 3);
+}
 void AlertSettingsDialog::analogAlarmUpdated(){
     int ci = ui->analogEmergencyAlarmCmbx->currentIndex();
     ui->analogEniSelectCmbx->setDisabled(ci==0);

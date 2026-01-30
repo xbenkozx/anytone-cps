@@ -19,6 +19,10 @@ ImportExportDialog::ImportExportDialog(QWidget *parent) :
 
     connect(ui->importAllBtn, &QPushButton::clicked, this, &ImportExportDialog::importAllBtnClicked);
 
+    connect(ui->digitalContactBtn, &QPushButton::clicked, this, [this](){
+        this->ui->digitalContactListTxt->setText(openCsv());
+    });
+
     loading_dialog = new LoadingDialog(this);
     
 }
@@ -39,6 +43,17 @@ void ImportExportDialog::showEvent(QShowEvent *event)
     }
 }
 
+QString ImportExportDialog::openCsv(){
+    QString fname = QFileDialog::getOpenFileName(
+        this,
+        tr("Open File"),
+        default_path,
+        tr("CSV File (*.csv)")
+    );
+
+    return fname;
+    
+}
 void ImportExportDialog::importAllBtnClicked(){
     #ifdef _WIN32
     QString default_path = "C:/Users/" + QString(getenv("USERNAME")) + "/Documents";
@@ -85,6 +100,18 @@ void ImportExportDialog::importFinished(const int &result){
 
 void ImportExportDialog::importList(){
 
+    list.clear();
+
+    if(!ui->digitalContactListTxt->text().isEmpty()) list[CsvList::ListType::DigitalContactList] = ui->digitalContactListTxt->text();
+
+    csv_worker = new CsvList(list);
+
+    loading_dialog->show();
+
+    QObject::connect(csv_worker, &CsvList::update1, loading_dialog, &LoadingDialog::updateMainbar, Qt::QueuedConnection);
+    QObject::connect(csv_worker, &CsvList::update2, loading_dialog, &LoadingDialog::updateSubbar, Qt::QueuedConnection);
+    QObject::connect(csv_worker, &CsvList::finished, this, &ImportExportDialog::importFinished, Qt::QueuedConnection);
+    threadpool->start(csv_worker);
 }
 void ImportExportDialog::exportList(){
 

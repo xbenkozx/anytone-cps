@@ -286,14 +286,8 @@ QHeaderView::section {  text-transform: none;padding:0px}</string>
     <addaction name="actionDefault_Channel_Options"/>
     <addaction name="actionStandby_BK_Picture_1"/>
     <addaction name="actionStandby_Bk_Picture_2"/>
-    <addaction name="actionChannel_Talker_Alias_Operation"/>
     <addaction name="actionExpert_Options"/>
     <addaction name="actionSatellite"/>
-   </widget>
-   <widget class="QMenu" name="menuView">
-    <property name="title">
-     <string>View</string>
-    </property>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -304,7 +298,6 @@ QHeaderView::section {  text-transform: none;padding:0px}</string>
    <addaction name="menuFile"/>
    <addaction name="menuProgram"/>
    <addaction name="menuTool"/>
-   <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -359,6 +352,9 @@ QHeaderView::section {  text-transform: none;padding:0px}</string>
    </property>
   </action>
   <action name="actionAPRS_Information_Manager">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>APRS Information Manager</string>
    </property>
@@ -384,6 +380,9 @@ QHeaderView::section {  text-transform: none;padding:0px}</string>
    </property>
   </action>
   <action name="actionFirmware_and_Icon_Updates">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Firmware and Icon Updates</string>
    </property>

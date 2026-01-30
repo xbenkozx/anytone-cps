@@ -22,6 +22,7 @@
 #include "analog_address.h"
 #include "am_air.h"
 #include "am_zone.h"
+#include "talkgroup_whitelist.h"
 
 using namespace Anytone;
 
@@ -35,6 +36,7 @@ Tone5Settings* Memory::tone5_settings = nullptr;
 MasterId* Memory::master_radio_id = nullptr;
 TalkAliasSettings* Memory::talk_alias_settings = nullptr;
 
+Channel* Memory::default_channel = nullptr;
 uint8_t Memory::radio_mode = 0;
 RadioModel Memory::radio_model = RadioModel::None;
 QString Memory::radio_band = "UHF{400 - 480 MHz}\nVHF{136 - 174 MHz}";
@@ -60,40 +62,76 @@ QVector<AnalogAddress*> Memory::analog_addresses = {};
 QVector<AmAir*> Memory::am_air_list= {};
 QVector<AmZone*> Memory::am_zones = {};
 QVector<Satellite*> Memory::satellite_data_list = {};
+QVector<TalkgroupWhitelist*> Memory::talkgroup_whitelist = {};
+QVector<TalkgroupWhitelist*> Memory::digital_contact_whitelist = {};
 
 // **********************
 // Save File Save
 // **********************
 void Memory::saveData(QXmlStreamWriter &xml){
+    int save_max = 30;
+    int save_count = 0;
     xml.writeStartDocument();
     xml.writeStartElement("Codeplug");
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveAesEncryptionCodes(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveAprsSettings(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveAlarmSettings(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveAmAir(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveAmZones(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveAnalogAddresses(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveArc4EncryptionCodes(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveAutoRepeaterOffsets(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveChannels(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
+    saveDigitalContactWhitelist(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveDtmfSettings(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveEncryptionCodes(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveFm(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveGpsRoaming(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveHotKey(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveMasterId(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveOptionalSettings(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     savePrefabricatedSms(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveRadioIds(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveReceiveGroupCallList(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveRoamingChannel(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveRoamingZone(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveScanList(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveTalkerAliasSettings(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveTalkgroups(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
+    saveTalkgroupWhitelist(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveTone2Settings(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveTone5Settings(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveZones(xml);
+    Memory::instance().update1(save_count++, save_max, "Saving Data");
     saveDigitalContacts(xml);
     xml.writeEndElement();
     xml.writeEndDocument();
@@ -163,6 +201,15 @@ void Memory::saveChannels(QXmlStreamWriter &xml){
     for(Anytone::Channel *ch : Anytone::Memory::channels){
         if(ch->rx_frequency > 0){
             ch->save(xml);
+        }
+    }
+    xml.writeEndElement();
+}
+void Memory::saveDigitalContactWhitelist(QXmlStreamWriter &xml){
+    xml.writeStartElement("DigitalContactWhitelistList");
+    for(TalkgroupWhitelist *item : Memory::digital_contact_whitelist){
+        if(item->dmr_id > 0) {
+            item->save(xml);
         }
     }
     xml.writeEndElement();
@@ -268,6 +315,15 @@ void Memory::saveTalkgroups(QXmlStreamWriter &xml){
     }
     xml.writeEndElement();
 }
+void Memory::saveTalkgroupWhitelist(QXmlStreamWriter &xml){
+    xml.writeStartElement("TalkgroupWhitelistList");
+    for(TalkgroupWhitelist *item : Memory::talkgroup_whitelist){
+        if(item->dmr_id > 0) {
+            item->save(xml);
+        }
+    }
+    xml.writeEndElement();
+}
 void Memory::saveTone2Settings(QXmlStreamWriter &xml){
     tone2_settings->save(xml);
 }
@@ -284,20 +340,31 @@ void Memory::saveZones(QXmlStreamWriter &xml){
     xml.writeEndElement();
 }
 void Memory::saveDigitalContacts(QXmlStreamWriter &xml){
-    xml.writeStartElement("DigitalContactList");
+    int count = 0;
+    int index = 0;
+
     for(DigitalContact *item : Memory::digital_contacts){
+        if(item->radio_id > 0) count++;
+    }
+    
+    xml.writeStartElement("DigitalContactList");
+    xml.writeAttribute("items", QString::number(count));
+    for(DigitalContact *item : Memory::digital_contacts){
+        if(index % int(count/100) == 0) Memory::instance().update2(index, count, "Saving Digital Contacts");
         if(item->radio_id > 0) {
             item->save(xml);
         }
+        index++;
     }
     xml.writeEndElement();
 }
-
 
 // **********************
 // Save File Load
 // **********************
 void Memory::loadData(QXmlStreamReader &xml){
+    int load_max = 30;
+    int load_count = 0;
     QXmlStreamReader::TokenType token = QXmlStreamReader::NoToken;
     while (!xml.atEnd() && !xml.hasError()) {
         
@@ -308,71 +375,102 @@ void Memory::loadData(QXmlStreamReader &xml){
 
         if (token == QXmlStreamReader::StartElement) {
             if(xml.name() == u"AESEncryptionList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadAesEncryptionCodes(xml);
             }else if(xml.name() == u"APRSSettings") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 aprs_settings->load(xml);
-                token = xml.readNext();
             }else if(xml.name() == u"AlarmSettings") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 alarm_settings->load(xml);
                 token = xml.readNext();
             }else if(xml.name() == u"AmAirList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadAmAir(xml);
             }else if(xml.name() == u"AmZoneList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadAmZones(xml);
             }else if(xml.name() == u"AnalogAddressList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadAnalogAddresses(xml);
             }else if(xml.name() == u"ARC4EncryptionList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadArc4EncryptionCodes(xml);
             }else if(xml.name() == u"AutoRepeaterList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadAutoRepeaterOffsets(xml);
             }else if(xml.name() == u"ChannelList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadChannels(xml);
+            }else if(xml.name() == u"DigitalContactWhitelistList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
+                loadDigitalContactWhitelist(xml);
             }else if(xml.name() == u"DTMFSettings") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 dtmf_settings->load(xml);
                 token = xml.readNext();
             }else if(xml.name() == u"EncryptionCodeList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadEncryptionCodes(xml);
             }else if(xml.name() == u"FMList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadFm(xml);
             }else if(xml.name() == u"GPSRoamingList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadGpsRoaming(xml);
             }else if(xml.name() == u"HotKeySettings") {
                 hotkey->load(xml);
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 token = xml.readNext();
             }else if(xml.name() == u"OptionalSettings") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 optional_settings->load(xml);
                 token = xml.readNext();
             }else if(xml.name() == u"PrefabricatedSmsList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadPrefabricatedSms(xml);
             }else if(xml.name() == u"RadioIdList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadRadioIds(xml);
             }else if(xml.name() == u"ReceiveGroupList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadReceiveGroupCallList(xml);
             }else if(xml.name() == u"RoamingChannelList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadRoamingChannel(xml);
             }else if(xml.name() == u"RoamingZoneList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadRoamingZone(xml);
             }else if(xml.name() == u"ScanlistList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadScanList(xml);
             }else if(xml.name() == u"TalkAliasSettings") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 talk_alias_settings->load(xml);
                 token = xml.readNext();
             }else if(xml.name() == u"TalkgroupList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadTalkgroups(xml);
+            }else if(xml.name() == u"TalkgroupWhitelistList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
+                loadTalkgroupWhitelist(xml);
             }else if(xml.name() == u"Tone2Settings") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 tone2_settings->load(xml);
                 token = xml.readNext();
             }else if(xml.name() == u"Tone5Settings") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 tone5_settings->load(xml);
                 token = xml.readNext();
             }else if(xml.name() == u"ZoneList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadZones(xml);
             }else if(xml.name() == u"DigitalContactList") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadDigitalContacts(xml);
             }else{
                 token = xml.readNext();
             }
-
         }else{
             token = xml.readNext();
         }
@@ -464,6 +562,18 @@ void Memory::loadChannels(QXmlStreamReader &xml){
             Channel *item = Memory::channels.at(idx);
             item->load(xml);
         }else if(token == QXmlStreamReader::StartElement && xml.name() != u"Channel") {
+            return;
+        }
+    }
+}
+void Memory::loadDigitalContactWhitelist(QXmlStreamReader &xml){
+    while (!xml.atEnd() && !xml.hasError()) {
+        QXmlStreamReader::TokenType token = xml.readNext();
+        if(token == QXmlStreamReader::StartElement && xml.name() == u"TalkgroupWhitelist") {
+            int idx = xml.attributes().value("id").toInt();
+            TalkgroupWhitelist *item = Memory::digital_contact_whitelist.at(idx);
+            item->load(xml);
+        }else if(token == QXmlStreamReader::StartElement && xml.name() != u"TalkgroupWhitelist") {
             return;
         }
     }
@@ -590,6 +700,18 @@ void Memory::loadTalkgroups(QXmlStreamReader &xml){
         }
     }
 }
+void Memory::loadTalkgroupWhitelist(QXmlStreamReader &xml){
+    while (!xml.atEnd() && !xml.hasError()) {
+        QXmlStreamReader::TokenType token = xml.readNext();
+        if(token == QXmlStreamReader::StartElement && xml.name() == u"TalkgroupWhitelist") {
+            int idx = xml.attributes().value("id").toInt();
+            TalkgroupWhitelist *item = Memory::talkgroup_whitelist.at(idx);
+            item->load(xml);
+        }else if(token == QXmlStreamReader::StartElement && xml.name() != u"TalkgroupWhitelist") {
+            return;
+        }
+    }
+}
 void Memory::loadZones(QXmlStreamReader &xml){
     while (!xml.atEnd() && !xml.hasError()) {
         QXmlStreamReader::TokenType token = xml.readNext();
@@ -603,18 +725,23 @@ void Memory::loadZones(QXmlStreamReader &xml){
     }
 }
 void Memory::loadDigitalContacts(QXmlStreamReader &xml){
+    int count = 0;
+    int index = 0;
     while (!xml.atEnd() && !xml.hasError()) {
+        QXmlStreamAttributes attributes = xml.attributes();
+        if(attributes.hasAttribute("items")) count = attributes.value("items").toInt();
         QXmlStreamReader::TokenType token = xml.readNext();
         if(token == QXmlStreamReader::StartElement && xml.name() == u"DigitalContact") {
+            if(index % int(count/100) == 0) Memory::instance().update2(index, count, "Loading Digital Contacts");
             int idx = xml.attributes().value("id").toInt();
             DigitalContact *item = Memory::digital_contacts.at(idx);
             item->load(xml);
+            index++;
         }else if(token == QXmlStreamReader::StartElement && xml.name() != u"DigitalContact") {
             return;
         }
     }
 }
-
 
 // **********************
 // Data Linkers
@@ -759,39 +886,40 @@ void Memory::linkAmZoneRef(){
 // Data Initializers
 // **********************
 void Memory::init(){
-    Memory::hotkey = new Hotkey();
-    Memory::optional_settings = new OptionalSettings();
-    Memory::alarm_settings = new AlarmSettings();
-    Memory::aprs_settings = new AprsSettings();
-    Memory::dtmf_settings = new DTMFSettings();
-    Memory::tone2_settings = new Tone2Settings();
-    Memory::tone5_settings = new Tone5Settings();
-    Memory::master_radio_id = new MasterId();
-    Memory::talk_alias_settings = new TalkAliasSettings();
-    Memory::initChannels();
-    Memory::initZones();
-    Memory::initTalkgroups();
-    Memory::initScanLists();
-    Memory::initRadioIds();
-    Memory::initRoamingZones();
-    Memory::initRoamingChannels();
-    Memory::initFMChannels();
-    Memory::initAutoRepeaterFrequencies();
-    Memory::initDigitalContacts();
-    Memory::initGpsRoaming();
-    Memory::initPrefabricatedSms();
-    Memory::initReceiveGroupCallLists();
-    Memory::initAesEncryptionKeys();
-    Memory::initArc4EncryptionKeys();
-    Memory::initEncryptionKeys();
-    Memory::initAnalogAddresses();
-    Memory::initAmAir();
-    Memory::initAmZones();
-
-    setDefaults();
+    hotkey = new Hotkey();
+    optional_settings = new OptionalSettings();
+    alarm_settings = new AlarmSettings();
+    aprs_settings = new AprsSettings();
+    dtmf_settings = new DTMFSettings();
+    tone2_settings = new Tone2Settings();
+    tone5_settings = new Tone5Settings();
+    master_radio_id = new MasterId();
+    talk_alias_settings = new TalkAliasSettings();
+    initChannels();
+    initZones();
+    initTalkgroups();
+    initScanLists();
+    initRadioIds();
+    initRoamingZones();
+    initRoamingChannels();
+    initFMChannels();
+    initAutoRepeaterFrequencies();
+    initGpsRoaming();
+    initPrefabricatedSms();
+    initReceiveGroupCallLists();
+    initAesEncryptionKeys();
+    initArc4EncryptionKeys();
+    initEncryptionKeys();
+    initAnalogAddresses();
+    initAmAir();
+    initAmZones();
+    initTalkgroupWhitelist();
+    initDigitalContactpWhitelist();
+    
     linkReferences();
 }
 void Memory::initChannels(){
+    qDeleteAll(Memory::channels);
     Memory::channels.clear();
     for(int i = 0; i < 4002; i++){
         Channel *channel = new Channel();
@@ -800,6 +928,7 @@ void Memory::initChannels(){
     }
 }
 void Memory::initZones(){
+    qDeleteAll(Memory::zones);
     Memory::zones.clear();
     for(int i = 0; i < 250; i++){
         Zone *zone = new Zone();
@@ -808,6 +937,7 @@ void Memory::initZones(){
     }
 }
 void Memory::initTalkgroups(){
+    qDeleteAll(Memory::talkgroups);
     Memory::talkgroups.clear();
     for(int i = 0; i < 10000; i++){
         Talkgroup *tg = new Talkgroup();
@@ -816,6 +946,7 @@ void Memory::initTalkgroups(){
     }
 }
 void Memory::initScanLists(){
+    qDeleteAll(Memory::scanlists);
     Memory::scanlists.clear();
     for(int i = 0; i < 250; i++){
         ScanList *sc = new ScanList();
@@ -824,6 +955,7 @@ void Memory::initScanLists(){
     }
 }
 void Memory::initRadioIds(){
+    qDeleteAll(Memory::radioids);
     Memory::radioids.clear();
     for(int i = 0; i < 250; i++){
         RadioId *rid = new RadioId();
@@ -832,6 +964,7 @@ void Memory::initRadioIds(){
     }
 }
 void Memory::initRoamingZones(){
+    qDeleteAll(Memory::roaming_zones);
     Memory::roaming_zones.clear();
     for(int i = 0; i < 64; i++){
         RoamingZone *z = new RoamingZone();
@@ -840,6 +973,7 @@ void Memory::initRoamingZones(){
     }
 }
 void Memory::initRoamingChannels(){
+    qDeleteAll(Memory::roaming_channels);
     Memory::roaming_channels.clear();
     for(int i = 0; i < 250; i++){
         RoamingChannel *ch = new RoamingChannel();
@@ -848,6 +982,7 @@ void Memory::initRoamingChannels(){
     }
 }
 void Memory::initFMChannels(){
+    qDeleteAll(Memory::fm_channels);
     Memory::fm_channels.clear();
     for(int i = 0; i < 101; i++){
         FM *fm = new FM();
@@ -856,6 +991,7 @@ void Memory::initFMChannels(){
     }
 }
 void Memory::initAutoRepeaterFrequencies(){
+    qDeleteAll(Memory::ar_offset_frequencies);
     Memory::ar_offset_frequencies.clear();
     for(int i = 0; i < 250; i++){
         AutoRepeaterOffsetFrequency *ar = new AutoRepeaterOffsetFrequency();
@@ -864,6 +1000,7 @@ void Memory::initAutoRepeaterFrequencies(){
     }
 }
 void Memory::initDigitalContacts(){
+    qDeleteAll(Memory::digital_contacts);
     Memory::digital_contacts.clear();
     for(int i = 0; i < 500000; i++){
         DigitalContact *contact = new DigitalContact();
@@ -872,6 +1009,7 @@ void Memory::initDigitalContacts(){
     }
 }
 void Memory::initGpsRoaming(){
+    qDeleteAll(Memory::gps_roaming_list);
     Memory::gps_roaming_list.clear();
     for(int i = 0; i < 32; i++){
         GpsRoaming *gps = new GpsRoaming();
@@ -880,6 +1018,7 @@ void Memory::initGpsRoaming(){
     }
 }
 void Memory::initPrefabricatedSms(){
+    qDeleteAll(Memory::prefabricated_sms_list);
     Memory::prefabricated_sms_list.clear();
     for(int i = 0; i < 100; i++){
         PrefabricatedSms *sms = new PrefabricatedSms();
@@ -888,6 +1027,7 @@ void Memory::initPrefabricatedSms(){
     }
 }
 void Memory::initReceiveGroupCallLists(){
+    qDeleteAll(Memory::receive_group_call_lists);
     Memory::receive_group_call_lists.clear();
     for(int i = 0; i < 100; i++){
         ReceiveGroup *rgcl = new ReceiveGroup();
@@ -896,6 +1036,7 @@ void Memory::initReceiveGroupCallLists(){
     }
 }
 void Memory::initAesEncryptionKeys(){
+    qDeleteAll(Memory::aes_encryption_keys);
     Memory::aes_encryption_keys.clear();
     for(int i = 0; i < 255; i++){
         AesEncryptionCode *key = new AesEncryptionCode();
@@ -904,6 +1045,7 @@ void Memory::initAesEncryptionKeys(){
     }
 }
 void Memory::initArc4EncryptionKeys(){
+    qDeleteAll(Memory::arc4_encryption_keys);
     Memory::arc4_encryption_keys.clear();
     for(int i = 0; i < 255; i++){
         Arc4EncryptionCode *key = new Arc4EncryptionCode();
@@ -912,6 +1054,7 @@ void Memory::initArc4EncryptionKeys(){
     }
 }
 void Memory::initEncryptionKeys(){
+    qDeleteAll(Memory::encryption_keys);
     Memory::encryption_keys.clear();
     for(int i = 0; i < 32; i++){
         EncryptionCode *key = new EncryptionCode();
@@ -920,6 +1063,7 @@ void Memory::initEncryptionKeys(){
     }
 }
 void Memory::initAnalogAddresses(){
+    qDeleteAll(Memory::analog_addresses);
     Memory::analog_addresses.clear();
     for(int i = 0; i < 128; i++){
         AnalogAddress *item = new AnalogAddress();
@@ -928,6 +1072,7 @@ void Memory::initAnalogAddresses(){
     }
 }
 void Memory::initAmAir(){
+    qDeleteAll(Memory::am_air_list);
     Memory::am_air_list.clear();
     for(int i = 0; i < 257; i++){
         AmAir *item = new AmAir();
@@ -936,6 +1081,7 @@ void Memory::initAmAir(){
     }
 }
 void Memory::initAmZones(){
+    qDeleteAll(Memory::am_zones);
     Memory::am_zones.clear();
     for(int i = 0; i < 16; i++){
         AmZone *item = new AmZone();
@@ -943,14 +1089,51 @@ void Memory::initAmZones(){
         Memory::am_zones.push_back(item);
     }
 }
+void Memory::initTalkgroupWhitelist(){
+    qDeleteAll(Memory::talkgroup_whitelist);
+    Memory::talkgroup_whitelist.clear();
+    for(int i = 0; i < 1000; i++){
+        TalkgroupWhitelist *item = new TalkgroupWhitelist();
+        item->index = i;
+        Memory::talkgroup_whitelist.push_back(item);
+    }
+}
+void Memory::initDigitalContactpWhitelist(){
+    qDeleteAll(Memory::digital_contact_whitelist);
+    Memory::digital_contact_whitelist.clear();
+    for(int i = 0; i < 1000; i++){
+        TalkgroupWhitelist *item = new TalkgroupWhitelist();
+        item->index = i;
+        Memory::digital_contact_whitelist.push_back(item);
+    }
+}
 
 // **********************
 // Data Defaults
 // **********************
 void Memory::setDefaults(){
+    setDefaultChannel();
+    setDefaultZones();
     setDefaultMasterID();
     setDefaultTalkgroups();
     setDefaultRadioIds();
+    
+    linkReferences();
+}
+void Memory::setDefaultChannel(){
+    if(!default_channel){
+        default_channel = new Channel();
+        default_channel->name = "Channel {id}";
+        default_channel->rx_frequency = 44000000;
+        default_channel->band_width = 1;
+    }
+
+    Anytone::Memory::channels.at(0)->copy(default_channel);
+    Anytone::Memory::channels.at(0)->name.replace("{id}", QString::number(1));
+}
+void Memory::setDefaultZones(){
+    Anytone::Memory::zones.at(0)->name = "Zone 1";
+    Anytone::Memory::zones.at(0)->temp_member_channel_idxs.append(0);
 }
 void Memory::setDefaultMasterID(){
     master_radio_id->dmr_id = 12345678;

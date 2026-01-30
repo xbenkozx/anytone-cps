@@ -19,6 +19,7 @@ public:
     explicit ImportExportDialog(QWidget *parent);
     ~ImportExportDialog();
     void showEvent(QShowEvent *event) override;
+    QString openCsv();
 
     std::unique_ptr<Ui_ImportExportDialog> ui;
     bool is_export = false;
@@ -27,12 +28,18 @@ public:
     QThreadPool *threadpool;
     CsvList *csv_worker;
     LoadingDialog *loading_dialog;
+    QMap<CsvList::ListType, QString> list;
+
+    #ifdef _WIN32
+    QString default_path = "C:/Users/" + QString(getenv("USERNAME")) + "/Downloads";
+    #else
+    QString default_path = "/home/" + QString(getenv("USER")) +  "/Downloads";
+    #endif
 
 private slots:
     void importList();
     void exportList();
     void importFinished(const int &result);
-
 
     void importAllBtnClicked();
 };

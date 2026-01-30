@@ -38,6 +38,7 @@ private slots:
     void orderAvailable(int sort_type);
     void orderMemberId();
     void orderMemberName();
+    void orderMemberFreq();
     void updateChannelTables();
     void pushChannel();
     void popChannel();

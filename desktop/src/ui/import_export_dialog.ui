@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>780</width>
-    <height>482</height>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,6 +25,9 @@
       </property>
       <item>
        <widget class="QPushButton" name="importAllBtn">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Import From File List</string>
         </property>
@@ -32,6 +35,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="exportAllBtn">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Export All</string>
         </property>
@@ -47,6 +53,9 @@
        <layout class="QFormLayout" name="formLayout">
         <item row="0" column="0">
          <widget class="QPushButton" name="channelBtn">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -78,6 +87,9 @@
         </item>
         <item row="0" column="1">
          <widget class="QLineEdit" name="channelTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -85,6 +97,9 @@
         </item>
         <item row="1" column="0">
          <widget class="QPushButton" name="pushButton_2">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -104,6 +119,9 @@
         </item>
         <item row="2" column="0">
          <widget class="QPushButton" name="pushButton_3">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -123,6 +141,9 @@
         </item>
         <item row="3" column="0">
          <widget class="QPushButton" name="pushButton_4">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -142,6 +163,9 @@
         </item>
         <item row="4" column="0">
          <widget class="QPushButton" name="pushButton_5">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -161,6 +185,9 @@
         </item>
         <item row="5" column="0">
          <widget class="QPushButton" name="pushButton_6">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -179,7 +206,7 @@
          </widget>
         </item>
         <item row="6" column="0">
-         <widget class="QPushButton" name="pushButton_7">
+         <widget class="QPushButton" name="digitalContactBtn">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -199,6 +226,9 @@
         </item>
         <item row="7" column="0">
          <widget class="QPushButton" name="pushButton_8">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -218,6 +248,9 @@
         </item>
         <item row="8" column="0">
          <widget class="QPushButton" name="pushButton_9">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -237,6 +270,9 @@
         </item>
         <item row="9" column="0">
          <widget class="QPushButton" name="pushButton_10">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -256,6 +292,9 @@
         </item>
         <item row="10" column="0">
          <widget class="QPushButton" name="pushButton_11">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -275,6 +314,9 @@
         </item>
         <item row="11" column="0">
          <widget class="QPushButton" name="pushButton_12">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -294,6 +336,9 @@
         </item>
         <item row="12" column="0">
          <widget class="QPushButton" name="pushButton_13">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -313,6 +358,9 @@
         </item>
         <item row="1" column="1">
          <widget class="QLineEdit" name="radioIdListTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -320,6 +368,9 @@
         </item>
         <item row="2" column="1">
          <widget class="QLineEdit" name="zoneTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -327,6 +378,9 @@
         </item>
         <item row="3" column="1">
          <widget class="QLineEdit" name="scanListTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -334,6 +388,9 @@
         </item>
         <item row="4" column="1">
          <widget class="QLineEdit" name="analogAddressBookTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -341,6 +398,9 @@
         </item>
         <item row="5" column="1">
          <widget class="QLineEdit" name="talkgroupsTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -355,6 +415,9 @@
         </item>
         <item row="7" column="1">
          <widget class="QLineEdit" name="prefabricatedSmsTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -362,6 +425,9 @@
         </item>
         <item row="8" column="1">
          <widget class="QLineEdit" name="fmTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -369,6 +435,9 @@
         </item>
         <item row="9" column="1">
          <widget class="QLineEdit" name="receiveGroupCallListTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -376,6 +445,9 @@
         </item>
         <item row="10" column="1">
          <widget class="QLineEdit" name="tone5EncodeTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -383,6 +455,9 @@
         </item>
         <item row="11" column="1">
          <widget class="QLineEdit" name="tone2EncodeTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -390,6 +465,9 @@
         </item>
         <item row="12" column="1">
          <widget class="QLineEdit" name="dtmfEncodeTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -407,6 +485,9 @@
         </property>
         <item row="0" column="0">
          <widget class="QPushButton" name="pushButton_14">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>150</width>
@@ -420,6 +501,9 @@
         </item>
         <item row="1" column="0">
          <widget class="QPushButton" name="pushButton_15">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>150</width>
@@ -433,6 +517,9 @@
         </item>
         <item row="2" column="0">
          <widget class="QPushButton" name="pushButton_16">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>150</width>
@@ -446,6 +533,9 @@
         </item>
         <item row="3" column="0">
          <widget class="QPushButton" name="pushButton_17">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>150</width>
@@ -459,6 +549,9 @@
         </item>
         <item row="4" column="0">
          <widget class="QPushButton" name="pushButton_18">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>150</width>
@@ -472,6 +565,9 @@
         </item>
         <item row="5" column="0">
          <widget class="QPushButton" name="pushButton_19">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>150</width>
@@ -485,6 +581,9 @@
         </item>
         <item row="6" column="0">
          <widget class="QPushButton" name="pushButton_20">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>150</width>
@@ -498,6 +597,9 @@
         </item>
         <item row="7" column="0">
          <widget class="QPushButton" name="pushButton_21">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>150</width>
@@ -511,6 +613,9 @@
         </item>
         <item row="8" column="0">
          <widget class="QPushButton" name="pushButton_22">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>150</width>
@@ -524,6 +629,9 @@
         </item>
         <item row="9" column="0">
          <widget class="QPushButton" name="pushButton_23">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -549,6 +657,9 @@
         </item>
         <item row="10" column="0">
          <widget class="QPushButton" name="pushButton_24">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>150</width>
@@ -562,6 +673,9 @@
         </item>
         <item row="11" column="0">
          <widget class="QPushButton" name="pushButton_25">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>150</width>
@@ -575,6 +689,9 @@
         </item>
         <item row="0" column="1">
          <widget class="QLineEdit" name="hotkeyQuickCallTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -582,6 +699,9 @@
         </item>
         <item row="1" column="1">
          <widget class="QLineEdit" name="hotkeyStateTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -589,6 +709,9 @@
         </item>
         <item row="2" column="1">
          <widget class="QLineEdit" name="hotkeyHotKeyTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -596,6 +719,9 @@
         </item>
         <item row="3" column="1">
          <widget class="QLineEdit" name="autoRepeaterOffsetsTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -603,6 +729,9 @@
         </item>
         <item row="4" column="1">
          <widget class="QLineEdit" name="roamingChannelTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -610,6 +739,9 @@
         </item>
         <item row="5" column="1">
          <widget class="QLineEdit" name="romaingZoneTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -617,6 +749,9 @@
         </item>
         <item row="6" column="1">
          <widget class="QLineEdit" name="aprsTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -624,6 +759,9 @@
         </item>
         <item row="7" column="1">
          <widget class="QLineEdit" name="gpsRoamingTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -631,6 +769,9 @@
         </item>
         <item row="8" column="1">
          <widget class="QLineEdit" name="optionalSettingTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -638,6 +779,9 @@
         </item>
         <item row="9" column="1">
          <widget class="QLineEdit" name="alertToneTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -645,6 +789,9 @@
         </item>
         <item row="10" column="1">
          <widget class="QLineEdit" name="aesEncryptionCodeTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -652,6 +799,9 @@
         </item>
         <item row="11" column="1">
          <widget class="QLineEdit" name="arc4EncryptionCodeTxt">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -694,6 +844,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="exportBtn">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Export</string>
         </property>

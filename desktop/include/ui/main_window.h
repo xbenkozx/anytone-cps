@@ -27,6 +27,32 @@
 
 class Ui_MainWindow;
 
+class SaveFileWorker : public QObject, public QRunnable {
+    Q_OBJECT
+
+public:
+
+    enum Result {
+        NoDialog,
+        SaveFileOk,
+        SaveFileError,
+        OpenFileOk,
+        OpenFileError
+    };
+
+    SaveFileWorker(){}
+    ~SaveFileWorker(){}
+
+    void run();
+    QString filepath;
+    bool user_init = false;
+    bool is_write = false;
+signals:
+    void finished(const int &result);
+    void update1(const int &val, const int &max, const QString &text);
+    void update2(const int &val, const int &max, const QString &text);
+};
+
 class MainWindow : public QMainWindow 
 {
 
@@ -68,6 +94,7 @@ public:
     void showAprsSettingsDialog();
     void showAutoRepeaterEditDialog(int index);
     void showChannelEditDialog(int index);
+    void showDefaultChannelEditDialog();
     void showDeviceInformationDialog();
     void showDtmfSettingsDialog();
     void showExpertOptions();
@@ -94,6 +121,10 @@ public:
     void showExportDialog();
     void showSatelliteDialog();
     void showAboutDialog();
+    void showAmAirEditDialog(int index);
+    void showAmZoneEditDialog(int index);
+    void showTalkgroupWhitelistEditDialog(int index);
+    void showDigitalContactWhitelistEditDialog(int index);
 
     // Table Lists
     void listChannels(bool goto_top = true);
@@ -115,6 +146,8 @@ public:
     void listAnalogAddresses(bool goto_top = true);
     void listAmAir(bool goto_top = true);
     void listAmZones(bool goto_top = true);
+    void listTalkgroupWhitelist(bool goto_top = true);
+    void listDigitalContactWhitelist(bool goto_top = true);
 
     // Serial
     void readFromRadio();
@@ -133,6 +166,7 @@ public:
 
 
 private slots:
+    void fileFinished(const int &result);
     void onTreeItemClicked(QTreeWidgetItem* item, int column);
     void onMainTableDblClicked(QModelIndex index);
     void showMainTableContextMenu(QPoint pos);
@@ -144,7 +178,6 @@ private:
     void updateWindowTitle();
     QString selected_table_view = "";
     std::unique_ptr<Ui_MainWindow> ui;
-    QThreadPool *threadpool;
 
     std::unique_ptr<ComportDialog> comport_dialog;
     std::unique_ptr<ReadWriteOptionsDialog> rwo_dialog;
@@ -162,7 +195,9 @@ private:
 
     
     QAbstractTableModel *table_model = nullptr;
-    SerialWorker *adw;
+    QThreadPool *threadpool;
+    SerialWorker *adw = nullptr;
+    SaveFileWorker *sfw = nullptr;
 
     QVector<QPair<QString, QStringList>> d878uvii_tree_settings = {
         {

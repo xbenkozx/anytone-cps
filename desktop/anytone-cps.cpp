@@ -32,6 +32,8 @@ int main(int argc, char *argv[]){
 
     bool debug = parser.isSet(debugOption);
 
+    debug = true; // Remove for production
+
     app.setWindowIcon(QIcon(":/icons/d878_icon_64.ico"));
 
     QFont font = qApp->font();

@@ -1,6 +1,7 @@
 #include "memory/alarm_settings.h"
+#include "int.h"
 
-void Anytone::AlarmSettings::decode(QByteArray data_0000, QByteArray data_1400, QByteArray data_1440){
+void Anytone::AlarmSettings::decode_D878UVII(QByteArray data_0000, QByteArray data_1400, QByteArray data_1440){
     analog_emergency_alarm = static_cast<uint8_t>(data_1400.at(0x0));
     analog_eni_type = static_cast<uint8_t>(data_1400.at(0x1));
     analog_emergency_id = static_cast<uint8_t>(data_1400.at(0x2));
@@ -8,7 +9,7 @@ void Anytone::AlarmSettings::decode(QByteArray data_0000, QByteArray data_1400, 
     analog_tx_duration = static_cast<uint8_t>(data_1400.at(0x4));
     analog_rx_duration = static_cast<uint8_t>(data_1400.at(0x5));
     analog_eni_send = static_cast<uint8_t>(data_1400.at(0x8));
-    analog_emergency_channel = static_cast<uint8_t>(data_1400.at(0x6));
+    analog_emergency_channel = Int::fromBytes(data_1400.mid(0x6, 2));
     analog_emergency_cycle = static_cast<uint8_t>(data_1400.at(0x9));
     work_mode_voice_switch =  static_cast<uint8_t>(data_1400.at(0x12));
     work_mode_area_switch =  static_cast<uint8_t>(data_1400.at(0x13));
@@ -27,7 +28,46 @@ void Anytone::AlarmSettings::decode(QByteArray data_0000, QByteArray data_1400, 
 
     digital_tg_dmr_id = QString(data_1440.mid(0x23, 0x4).toHex()).toInt();
 }
-void Anytone::AlarmSettings::encode(QByteArray &data_2500000, QByteArray &data_24c1400, QByteArray &data_24c1440){
+void Anytone::AlarmSettings::decode_D890UV(QByteArray data_3483000, QByteArray data_3482e00, QByteArray data_3500000){
+    analog_emergency_alarm = static_cast<uint8_t>(data_3483000.at(0x0));
+    analog_eni_type = static_cast<uint8_t>(data_3483000.at(0x1));
+    analog_emergency_id = static_cast<uint8_t>(data_3483000.at(0x2));
+    analog_alarm_time = static_cast<uint8_t>(data_3483000.at(0x3));
+    analog_tx_duration = static_cast<uint8_t>(data_3483000.at(0x4));
+    analog_rx_duration = static_cast<uint8_t>(data_3483000.at(0x5));
+    analog_eni_send = static_cast<uint8_t>(data_3483000.at(0x8));
+    analog_emergency_channel = Int::fromBytes(data_3483000.mid(0x6, 2));
+    analog_emergency_cycle = static_cast<uint8_t>(data_3483000.at(0x9));
+    // work_mode_voice_switch =  static_cast<uint8_t>(data_3483000.at(0x12));
+    // work_mode_area_switch =  static_cast<uint8_t>(data_3483000.at(0x13));
+    // work_mode_mic_switch =  static_cast<uint8_t>(data_3483000.at(0x14));
+    digital_emergency_alarm = static_cast<uint8_t>(data_3483000.at(0xa));
+    digital_alarm_time = static_cast<uint8_t>(data_3483000.at(0xb));
+    digital_tx_duration = static_cast<uint8_t>(data_3483000.at(0xc));
+    digital_rx_duration = static_cast<uint8_t>(data_3483000.at(0xd));
+    digital_eni_send =  static_cast<uint8_t>(data_3483000.at(0x10));
+    digital_emergency_channel = static_cast<uint8_t>(data_3483000.at(0xe));
+    digital_emergency_cycle =  static_cast<uint8_t>(data_3483000.at(0x11));
+    digital_call_type = static_cast<uint8_t>(data_3482e00.at(0x0));
+    receive_alarm =  static_cast<uint8_t>(data_3483000.at(0x15));
+    man_down =  static_cast<uint8_t>(data_3500000.at(0x24));
+    man_down_delay =  static_cast<uint8_t>(data_3500000.at(0x4f));
+
+    work_alone_response_time = static_cast<uint8_t>(data_3483000.at(0x12));
+    work_alone_warning_time = static_cast<uint8_t>(data_3483000.at(0x13));
+    work_alone_response = static_cast<uint8_t>(data_3483000.at(0x14));
+
+    QByteArray qdc_group_id_t = data_3483000.mid(0x18, 2);
+    std::reverse(qdc_group_id_t.begin(), qdc_group_id_t.end());
+    qdc_group_id = QString(qdc_group_id_t.toHex()).mid(1, 3);
+
+    QByteArray qdc_private_id_t = data_3483000.mid(0x1a, 2);
+    std::reverse(qdc_private_id_t.begin(), qdc_private_id_t.end());
+    qdc_private_id = QString(qdc_private_id_t.toHex());
+
+    digital_tg_dmr_id = QString(data_3482e00.mid(0x02, 0x4).toHex()).toInt();
+}
+void Anytone::AlarmSettings::encode_D878UVII(QByteArray &data_2500000, QByteArray &data_24c1400, QByteArray &data_24c1440){
     data_24c1400[0x00] = analog_emergency_alarm;
     data_24c1400[0x01] = analog_eni_type;
     data_24c1400[0x02] = analog_emergency_id;
@@ -35,7 +75,7 @@ void Anytone::AlarmSettings::encode(QByteArray &data_2500000, QByteArray &data_2
     data_24c1400[0x04] = analog_tx_duration;
     data_24c1400[0x05] = analog_rx_duration;
     data_24c1400[0x08] = analog_eni_send;
-    data_24c1400[0x06] = analog_emergency_channel;
+    data_24c1400.replace(0x6, 2, Int::toBytes(analog_emergency_channel, 2));
     data_24c1400[0x09] = analog_emergency_cycle;
     data_24c1400[0x12] = work_mode_voice_switch;
     data_24c1400[0x13] = work_mode_area_switch;
@@ -45,7 +85,7 @@ void Anytone::AlarmSettings::encode(QByteArray &data_2500000, QByteArray &data_2
     data_24c1400[0x0c] = digital_tx_duration;
     data_24c1400[0x0d] = digital_rx_duration;
     data_24c1400[0x10] = digital_eni_send;
-    data_24c1400[0x0e] = digital_emergency_channel;
+    data_24c1400.replace(0xe, 2, Int::toBytes(digital_emergency_channel, 2));
     data_24c1400[0x11] = digital_emergency_cycle;
     data_24c1440.replace(0x23, 4, 
         QByteArray::fromHex(QString::number(digital_tg_dmr_id).rightJustified(8, '0').toUtf8())
@@ -54,6 +94,46 @@ void Anytone::AlarmSettings::encode(QByteArray &data_2500000, QByteArray &data_2
     data_24c1400[0x15] = receive_alarm;
     data_2500000[0x24] = man_down;
     data_2500000[0x4f] = man_down_delay;
+}
+
+void Anytone::AlarmSettings::encode_D890UV(QByteArray &data_3483000, QByteArray &data_3482e00, QByteArray &data_3500000){
+    data_3483000[0x00] = analog_emergency_alarm;
+    data_3483000[0x01] = analog_eni_type;
+    data_3483000[0x02] = analog_emergency_id;
+    data_3483000[0x03] = analog_alarm_time;
+    data_3483000[0x04] = analog_tx_duration;
+    data_3483000[0x05] = analog_rx_duration;
+    data_3483000[0x08] = analog_eni_send;
+    data_3483000.replace(0x6, 2, Int::toBytes(analog_emergency_channel, 2));
+    data_3483000[0x09] = analog_emergency_cycle;
+    
+    data_3483000[0x0a] = digital_emergency_alarm;
+    data_3483000[0x0b] = digital_alarm_time;
+    data_3483000[0x0c] = digital_tx_duration;
+    data_3483000[0x0d] = digital_rx_duration;
+    data_3483000[0x10] = digital_eni_send;
+    data_3483000.replace(0xe, 2, Int::toBytes(digital_emergency_channel, 2));
+    data_3483000[0x11] = digital_emergency_cycle;
+
+    data_3482e00.replace(0x02, 4, 
+        QByteArray::fromHex(QString::number(digital_tg_dmr_id).rightJustified(8, '0').toUtf8())
+    );
+    data_3482e00[0x0] = digital_call_type;
+    data_3483000[0x15] = receive_alarm;
+    data_3500000[0x24] = man_down;
+    data_3500000[0x4f] = man_down_delay;
+
+    data_3483000[0x12] = work_alone_response_time;
+    data_3483000[0x13] = work_alone_warning_time;
+    data_3483000[0x14] = work_alone_response;
+
+    QByteArray qdc_group_id_t = QByteArray::fromHex(qdc_group_id.rightJustified(4, '0').toUtf8());
+    std::reverse(qdc_group_id_t.begin(), qdc_group_id_t.end());
+    data_3483000.replace(0x18, 2, qdc_group_id_t);
+
+    QByteArray qdc_private_id_t = QByteArray::fromHex(qdc_private_id.rightJustified(4, '0').toUtf8());
+    std::reverse(qdc_private_id_t.begin(), qdc_private_id_t.end());
+    data_3483000.replace(0x1a, 2, qdc_private_id_t);
 }
 
 void Anytone::AlarmSettings::save(QXmlStreamWriter &xml){
@@ -82,6 +162,12 @@ void Anytone::AlarmSettings::save(QXmlStreamWriter &xml){
     xml.writeAttribute("receive_alarm", QString::number(receive_alarm));
     xml.writeAttribute("man_down", QString::number(man_down));
     xml.writeAttribute("man_down_delay", QString::number(man_down_delay));
+
+    xml.writeAttribute("work_alone_response_time", QString::number(work_alone_response_time));
+    xml.writeAttribute("work_alone_warning_time", QString::number(work_alone_warning_time));
+    xml.writeAttribute("work_alone_response", QString::number(work_alone_response));
+    xml.writeAttribute("qdc_group_id", qdc_group_id);
+    xml.writeAttribute("qdc_private_id", qdc_private_id);
     xml.writeEndElement();
 }
 void Anytone::AlarmSettings::load(QXmlStreamReader &xml){
@@ -136,6 +222,15 @@ void Anytone::AlarmSettings::load(QXmlStreamReader &xml){
             man_down = attributes.value("man_down").toInt();
         if(attributes.hasAttribute("man_down_delay"))
             man_down_delay = attributes.value("man_down_delay").toInt();
-
+        if(attributes.hasAttribute("work_alone_response_time"))
+            work_alone_response_time = attributes.value("work_alone_response_time").toInt();
+        if(attributes.hasAttribute("work_alone_warning_time"))
+            work_alone_warning_time = attributes.value("work_alone_warning_time").toInt();
+        if(attributes.hasAttribute("work_alone_response"))
+            work_alone_response = attributes.value("work_alone_response").toInt();
+        if(attributes.hasAttribute("qdc_group_id"))
+            qdc_group_id = attributes.value("qdc_group_id").toString();
+        if(attributes.hasAttribute("qdc_private_id"))
+            qdc_private_id = attributes.value("qdc_private_id").toString();
     }
 }

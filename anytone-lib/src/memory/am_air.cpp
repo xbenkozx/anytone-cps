@@ -34,6 +34,10 @@ QString AmAir::getFrequencyString(){
     return QString::number(double(frequency) / 100000, 'f', 5);
 }
 
+void AmAir::setFrequencyString(QString frequency){
+    this->frequency = std::round(frequency.toDouble() * 100000);
+}
+
 void AmAir::save(QXmlStreamWriter &xml){
     xml.writeStartElement("AmAir");
     xml.writeAttribute("id", QString::number(index));

@@ -31,6 +31,7 @@ private slots:
     void analogAlarmUpdated();
     void analogEniSendChanged();
     void digitalEniSendChanged();
+    void analogEniSelectChanged();
     void save();
 };
 

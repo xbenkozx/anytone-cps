@@ -20,7 +20,7 @@ namespace Anytone {
         void load(QXmlStreamReader &xml);
         void decode(QByteArray data);
         void decode_D890UV(QByteArray data);
-        QByteArray encodeData();
+        QByteArray encode();
         QByteArray encode_D890UV();
 
         uint16_t index = 0;

@@ -1,6 +1,7 @@
 
 #include "channel_edit_dialog.h"
 #include "ui_channel_settings.h"
+#include "anytone_memory.h"
 #include "main_window.h"
 #include "constants.h"
 #include "utils.h"
@@ -8,7 +9,10 @@
 #include "arc4_encryption_code.h"
 #include "aes_encryption_code.h"
 #include "encryption_code.h"
+#include "user_settings.h"
 #include <QStringList>
+#include <QRegularExpression>
+#include <QRegularExpressionValidator>
 
 
 ChannelEditDialog::ChannelEditDialog(MainWindow *parent, int index) :
@@ -49,6 +53,20 @@ ChannelEditDialog::ChannelEditDialog(MainWindow *parent, int index) :
     connect(this->ui->channelTypeCmbx, &QComboBox::currentIndexChanged, this, &ChannelEditDialog::setModeFormVisibility);
     connect(this->ui->analogAprsMuteChbx, &QCheckBox::checkStateChanged, this, &ChannelEditDialog::analogAprsMuteToggle);
 
+    ui->receiveFrequencyTxt->setValidator(
+        new QRegularExpressionValidator(
+            QRegularExpression(R"(\d+(\.\d+)?)"),
+            ui->receiveFrequencyTxt
+        )
+    );
+
+    ui->transmitFrequencyTxt->setValidator(
+        new QRegularExpressionValidator(
+            QRegularExpression(R"(\d+(\.\d+)?)"),
+            ui->transmitFrequencyTxt
+        )
+    );
+
     if(index == 0) ui->prevBtn->setDisabled(true);
     if(index == Anytone::Memory::channels.size() - 1) ui->nextBtn->setDisabled(true);
 
@@ -57,7 +75,6 @@ ChannelEditDialog::ChannelEditDialog(MainWindow *parent, int index) :
     loadData();
 }
 ChannelEditDialog::~ChannelEditDialog(){}
-
 
 void ChannelEditDialog::setupUI(){
     // Common Settings
@@ -173,8 +190,15 @@ void ChannelEditDialog::setupUI(){
     }
 }
 void ChannelEditDialog::loadData(){
-    setWindowTitle("Channel Information Edit---" + QString::number(index+1));
-    channel = Anytone::Memory::channels.at(index);
+    if(index == -1){
+        setWindowTitle("Default Channel Information");
+        channel = Anytone::Memory::default_channel;
+        ui->nextBtn->setVisible(false);
+        ui->prevBtn->setVisible(false);
+    }else{
+        setWindowTitle("Channel Information Edit---" + QString::number(index+1));
+        channel = Anytone::Memory::channels.at(index);
+    }
 
     selected_ctcss_encode_tone_idx = channel->ctcss_encode_tone;
     selected_dcs_encode_tone_idx = channel->dcs_encode_tone;
@@ -183,7 +207,8 @@ void ChannelEditDialog::loadData(){
 
     // Set the default channel settings if it is a new channel
     if(channel->rx_frequency == 0){
-        // createChannelDefaults();
+        channel->copy(Anytone::Memory::default_channel);
+        channel->name.replace("{id}", QString::number(index+1));
     }
 
     ui->channelNameTxt->setText(channel->name);
@@ -577,6 +602,10 @@ void ChannelEditDialog::save(){
     Anytone::RadioId *rid = radio_id_list.at(ui->radioIdCmbx->currentIndex());
     channel->radio_id_idx = rid->id;
     channel->radioid = rid;
+
+    if(index == -1){
+        UserSettings::saveDefaults();
+    }
 }
 void ChannelEditDialog::saveClose(){
     save();

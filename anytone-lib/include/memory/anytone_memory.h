@@ -51,6 +51,14 @@ namespace Anytone {
         int ChannelDataBlockSize;
         int ChannelDataBlockOffset;
         int ChannelDataSecondaryOffset;
+        int DigitalContactMeta;
+        int DigitalContactData;
+        int DigitalContactBufferLength;
+        int DigitalContactDataBlockLength;
+        int DigitalContactDataStride;
+        int DigitalContactOrder;
+        int DigitalContactOrderBlockLength;
+        int DigitalContactOrderBlockStride;
         int EncryptionCodeId;
         int EncryptionCodeKey;
         int GpsRoamingData;
@@ -134,6 +142,14 @@ namespace Anytone {
         .ChannelDataBlockSize = 128,
         .ChannelDataBlockOffset = 0x40000,
         .ChannelDataSecondaryOffset = 0x2000,
+        .DigitalContactMeta = 0x4840000,
+        .DigitalContactData = 0x5500000,
+        .DigitalContactBufferLength = 0x80,
+        .DigitalContactDataBlockLength = 0x186a0,
+        .DigitalContactDataStride = 0x40000,
+        .DigitalContactOrder = 0x4000000,
+        .DigitalContactOrderBlockLength = 0x1f400,
+        .DigitalContactOrderBlockStride = 0x40000,
         .EncryptionCodeId = 0x24c1700,
         .EncryptionCodeKey = 0x24c1810,
         .GpsRoamingData = 0x2504000,
@@ -217,6 +233,14 @@ namespace Anytone {
         .ChannelDataBlockSize = 128,
         .ChannelDataBlockOffset = 0x80000,
         .ChannelDataSecondaryOffset = 0x40,
+        .DigitalContactMeta = 0x7000000,
+        .DigitalContactData = 0x7900000,
+        .DigitalContactBufferLength = 0x100,
+        .DigitalContactDataBlockLength = 0x30d40,
+        .DigitalContactDataStride = 0x80000,
+        .DigitalContactOrder = 0x7080000,
+        .DigitalContactOrderBlockLength = 0x3e800,
+        .DigitalContactOrderBlockStride = 0x80000,
         .EncryptionCodeId = 0x3585000,
         .EncryptionCodeKey = 0x3585100,
         .GpsRoamingData = 0x3502000,
@@ -289,10 +313,17 @@ namespace Anytone {
     class AmAir;
     class AmZone;
     class Satellite;
+    class TalkgroupWhitelist;
 
-    class Memory {
+    class Memory : public QObject {
+    
+        Q_OBJECT
 
     public:
+        static Memory& instance() {
+            static Memory inst;
+            return inst;
+        }
         static void init();
         static void saveData(QXmlStreamWriter &xml);
         static void saveAesEncryptionCodes(QXmlStreamWriter &xml);
@@ -304,6 +335,7 @@ namespace Anytone {
         static void saveArc4EncryptionCodes(QXmlStreamWriter &xml);
         static void saveAutoRepeaterOffsets(QXmlStreamWriter &xml);
         static void saveChannels(QXmlStreamWriter &xml);
+        static void saveDigitalContactWhitelist(QXmlStreamWriter &xml);
         static void saveDtmfSettings(QXmlStreamWriter &xml);
         static void saveEncryptionCodes(QXmlStreamWriter &xml);
         static void saveFm(QXmlStreamWriter &xml);
@@ -319,10 +351,12 @@ namespace Anytone {
         static void saveScanList(QXmlStreamWriter &xml);
         static void saveTalkerAliasSettings(QXmlStreamWriter &xml);
         static void saveTalkgroups(QXmlStreamWriter &xml);
+        static void saveTalkgroupWhitelist(QXmlStreamWriter &xml);
         static void saveTone2Settings(QXmlStreamWriter &xml);
         static void saveTone5Settings(QXmlStreamWriter &xml);
         static void saveZones(QXmlStreamWriter &xml);
         static void saveDigitalContacts(QXmlStreamWriter &xml);
+        
 
         static void loadData(QXmlStreamReader &xml);
         static void loadAesEncryptionCodes(QXmlStreamReader &xml);
@@ -332,20 +366,24 @@ namespace Anytone {
         static void loadArc4EncryptionCodes(QXmlStreamReader &xml);
         static void loadAutoRepeaterOffsets(QXmlStreamReader &xml);
         static void loadChannels(QXmlStreamReader &xml);
-        static void loadEncryptionCodes(QXmlStreamReader &ds);
-        static void loadFm(QXmlStreamReader &ds);
-        static void loadGpsRoaming(QXmlStreamReader &ds);
-        static void loadPrefabricatedSms(QXmlStreamReader &ds);
-        static void loadRadioIds(QXmlStreamReader &ds);
-        static void loadReceiveGroupCallList(QXmlStreamReader &ds);
-        static void loadRoamingChannel(QXmlStreamReader &ds);
-        static void loadRoamingZone(QXmlStreamReader &ds);
-        static void loadScanList(QXmlStreamReader &ds);
-        static void loadTalkgroups(QXmlStreamReader &ds);
-        static void loadZones(QXmlStreamReader &ds);
-        static void loadDigitalContacts(QXmlStreamReader &ds);
+        static void loadDigitalContactWhitelist(QXmlStreamReader &xml);
+        static void loadEncryptionCodes(QXmlStreamReader &xml);
+        static void loadFm(QXmlStreamReader &xml);
+        static void loadGpsRoaming(QXmlStreamReader &xml);
+        static void loadPrefabricatedSms(QXmlStreamReader &xml);
+        static void loadRadioIds(QXmlStreamReader &xml);
+        static void loadReceiveGroupCallList(QXmlStreamReader &xml);
+        static void loadRoamingChannel(QXmlStreamReader &xml);
+        static void loadRoamingZone(QXmlStreamReader &xml);
+        static void loadScanList(QXmlStreamReader &xml);
+        static void loadTalkgroups(QXmlStreamReader &xml);
+        static void loadTalkgroupWhitelist(QXmlStreamReader &xml);
+        static void loadZones(QXmlStreamReader &xml);
+        static void loadDigitalContacts(QXmlStreamReader &xml);
 
         static void setDefaults();
+        static void setDefaultChannel();
+        static void setDefaultZones();
         static void setDefaultMasterID();
         static void setDefaultTalkgroups();
         static void setDefaultRadioIds();
@@ -378,6 +416,8 @@ namespace Anytone {
         static void initAnalogAddresses();
         static void initAmAir();
         static void initAmZones();
+        static void initTalkgroupWhitelist();
+        static void initDigitalContactpWhitelist();
 
         static const MemoryMap* Map(){
             switch (Anytone::Memory::radio_model) {
@@ -390,6 +430,7 @@ namespace Anytone {
         
 
         static RadioModel radio_model;
+        static Channel *default_channel;
         static QString radio_band;
         static QString radio_version;
         static uint8_t radio_mode;
@@ -423,7 +464,15 @@ namespace Anytone {
         static QVector<AmAir*> am_air_list;
         static QVector<AmZone*> am_zones;
         static QVector<Satellite*> satellite_data_list;
-        
+        static QVector<TalkgroupWhitelist*> talkgroup_whitelist;
+        static QVector<TalkgroupWhitelist*> digital_contact_whitelist;
+
+    signals:
+        void update1(const int &val, const int &max, const QString &text);
+        void update2(const int &val, const int &max, const QString &text);
+
+    private:
+        Memory() = default;
     };
 }
 

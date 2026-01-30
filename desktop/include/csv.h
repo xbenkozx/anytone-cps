@@ -54,6 +54,7 @@ public:
 
     bool loadCsvFile(QString filepath, CsvList::ListType list_type);
     bool saveCsvFile(QString filepath, CsvList::ListType list_type);
+    void parseData(CsvList::ListType list_type);
     void parseAESEncryptionCode();
     void parseAlertTone();
     void parseAnalogAddressBookData();
@@ -81,7 +82,7 @@ public:
     void parseZoneData();    
 
     QStringList headers;
-    QVector<QMap<QString, QString>> data_list;
+    QVector<QHash<QString, QString>> data_list;
 
 signals:
     void finished(const int &result);

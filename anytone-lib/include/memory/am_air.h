@@ -16,7 +16,7 @@ namespace Anytone {
         void save(QXmlStreamWriter &xml);
         void load(QXmlStreamReader &xml);
         QString getFrequencyString();
-        void setFrequencyStr(QString frequency);
+        void setFrequencyString(QString frequency);
         void decode(QByteArray data);
         void decode_D890UV(QByteArray data);
         QByteArray encode();

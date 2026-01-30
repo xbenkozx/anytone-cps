@@ -17,6 +17,8 @@ TalkgroupEditDialog::TalkgroupEditDialog(MainWindow *parent, int index) :
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &TalkgroupEditDialog::save);
     connect(ui->prevBtn, &QPushButton::clicked, this, &TalkgroupEditDialog::prevBtnClicked);
     connect(ui->nextBtn, &QPushButton::clicked, this, &TalkgroupEditDialog::nextBtnClicked);
+    connect(ui->callTypeCmbx, &QComboBox::currentIndexChanged, this, &TalkgroupEditDialog::callTypeChanged);
+    connect(ui->tgIdTxt, &QLineEdit::editingFinished, this, &TalkgroupEditDialog::dmrIdEditingFinished);
 
     setupUI();
     loadData();
@@ -61,8 +63,25 @@ void TalkgroupEditDialog::prevBtnClicked(){
     ui->nextBtn->setDisabled(false);
 }
 void TalkgroupEditDialog::save(){
+    tg->dmr_id = ui->tgIdTxt->text().toInt();
+    if(tg->dmr_id == 16777215) ui->callTypeCmbx->setCurrentIndex(2);
     tg->name = ui->nameTxt->text();
     tg->call_type = ui->callTypeCmbx->currentIndex();
-    tg->dmr_id = ui->tgIdTxt->text().toInt();
     tg->call_alert = ui->callAlertCmbx->currentIndex();
+}
+void TalkgroupEditDialog::callTypeChanged(){
+    if(ui->callTypeCmbx->currentIndex() == 2){
+        ui->tgIdTxt->setEnabled(false);
+        ui->callAlertCmbx->setEnabled(false);
+        ui->tgIdTxt->setText("16777215");
+    }else{
+        ui->tgIdTxt->setEnabled(true);
+        ui->callAlertCmbx->setEnabled(true);
+        ui->tgIdTxt->clear();
+    }
+}
+void TalkgroupEditDialog::dmrIdEditingFinished(){
+    if(ui->tgIdTxt->text().toInt() > 16777215){
+        ui->tgIdTxt->setText("16777215");
+    }
 }

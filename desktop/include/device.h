@@ -45,6 +45,7 @@
 #include "memory/am_air.h"
 #include "memory/am_zone.h"
 #include "memory/satellite.h"
+#include "memory/talkgroup_whitelist.h"
 #include "device_types.h"
 
 class Device : public QObject 
@@ -99,6 +100,7 @@ public:
     void readArc4EncryptionKeys();
     void readAutoRepeaterFrequencyData();
     void readChannelData();
+    void readDigitalContactWhitelist();
     void readEncryptionKeys();
     void readFmData();
     void readGpsRoamingData();
@@ -112,6 +114,7 @@ public:
     void readScanListData();
     void readSettings();
     void readTalkgroupData();
+    void readTalkgroupWhitelist();
     void readToneSettings();
     void readTone2Settings();
     void readZoneData();
@@ -127,6 +130,7 @@ public:
     void writeArc4Keys();
     void writeAutoRepeaterFrequencyData();
     void writeChannelData();
+    void writeDigitalContactWhitelist();
     void writeEncryptionKeys();
     void writeFMChannelData();
     void writeGpsRoamingData();
@@ -140,6 +144,7 @@ public:
     void writeScanListData();
     void writeSettingsData();
     void writeTalkgroupData();
+    void writeTalkgroupWhitelist();
     void writeToneSettings();
     void writeTone2Settings();
     void writeZoneData();
@@ -147,6 +152,9 @@ public:
 
 
     QByteArray getDigitalContactDataBuffer(int offset);
+    void parseDigitalContact(Anytone::DigitalContact *dc, QByteArray contact_data, int &offset);
+    void parseDigitalContact_D878UVII(Anytone::DigitalContact *dc, QByteArray contact_data, int &offset);
+    void parseDigitalContact_D890UV(Anytone::DigitalContact *dc, QByteArray contact_data, int &offset);
     
     static bool verbose;
     bool is_alive = true;
@@ -170,22 +178,7 @@ public:
         // bin_data = new QByteArray(0x48001D0, static_cast<char>(0xff));
     }
     ~VirtualDevice(){}
-    bool connect(QString filepath, int _n = 0) override {
-        QFile file(filepath);
-        if (!file.open(QIODevice::ReadOnly)) {
-            qDebug() << "ERR: Cannot open file";
-            return false;
-        }
-
-        QTextStream in(&file);
-        QString fileContent;
-        
-        bin_data = new QByteArray((QByteArray)file.readAll());
-
-        file.close();
-
-        return true;
-    }
+    bool connect(QString filepath, int _n = 0) override;
     bool save(QString filepath) {
         QFile file(filepath);
         if (!file.open(QIODevice::WriteOnly)) {
@@ -193,9 +186,9 @@ public:
             return false;
         }
 
-        qint64 written = file.write(*bin_data); 
+        qint64 written = file.write(bin_data); 
 
-        if (written != bin_data->size()) {
+        if (written != bin_data.size()) {
             qDebug() << "ERR: Incomplete write";
             file.close();
             return false;
@@ -217,7 +210,7 @@ public:
 
     QByteArray readMemoryAddress(int address, int length) override;
     void writeMemoryAddress(int address, QByteArray data) override;
-    QByteArray * bin_data;
+    QByteArray bin_data;
 };
 
 class SerialDevice: public Device 
@@ -394,6 +387,8 @@ public:
     }
 
     void run();
+    void runVirtual();
+    void runSerial();
     
     QString comport;
     QString bin_filepath;

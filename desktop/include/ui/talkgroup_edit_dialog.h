@@ -24,6 +24,8 @@ public:
     Anytone::Talkgroup *tg;
 
 private slots:
+    void callTypeChanged();
+    void dmrIdEditingFinished();
     void nextBtnClicked();
     void prevBtnClicked();
     void save();

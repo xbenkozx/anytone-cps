@@ -82,33 +82,66 @@ bool CsvList::loadCsvFile(QString filepath, CsvList::ListType list_type){
 
     data_list.clear();
     headers.clear();
-    
-    QVector<QStringList> data;
 
-    QTextStream tstream(&file);
+    emit update2(0, 0, "Loading CSV File");
+
+    static const QRegularExpression csvComma(
+        R"(,(?=(?:[^"]*"[^"]*")*[^"]*$))"
+    );
+
+    QString data = file.readAll();
+
+    int item_count = data.split('\n').size();
+
+    QTextStream tstream(&data, QIODevice::ReadOnly);
+
+    // --- Read and process headers ---
     QString header_str = tstream.readLine();
-    if(header_str.endsWith(",")) header_str.removeAt(header_str.size()-1);
-    headers = header_str.split(QRegularExpression(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)"));
-    while (!tstream.atEnd())
-    {
-        QStringList line = tstream.readLine().split(QRegularExpression(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)"));
-        data.append(line);
+    if (header_str.endsWith(','))
+        header_str.chop(1);
+
+    QStringList headers = header_str.split(csvComma);
+
+    // Strip quotes from headers once
+    for (QString &h : headers) {
+        if (h.size() >= 2 && h.front() == '"' && h.back() == '"')
+            h = h.mid(1, h.size() - 2);
     }
+
+    // --- Parse rows ---
+    int index = 0;
+    while (!tstream.atEnd()) {
+        if(index % int(item_count/100) == 0) update2(index, item_count, "Loading CSV File");
+        QStringList fields = tstream.readLine().split(csvComma);
+        if (fields.size() < headers.size())
+            continue;
+
+        QHash<QString, QString> row;
+        row.reserve(headers.size());
+
+        for (int i = 0; i < headers.size(); ++i) {
+            QString v = fields.at(i);
+            if (v.size() >= 2 && v.front() == '"' && v.back() == '"')
+                v = v.mid(1, v.size() - 2);
+
+            row.insert(headers.at(i), std::move(v));
+        }
+
+        data_list.append(std::move(row));
+        index++;
+    }
+
     file.close();
 
-    for(QStringList line : data){
-        QMap<QString, QString> l;
-        if(line.size() < headers.size()) continue;
-        for(int i = 0; i < headers.size(); i++){
-            QString h = headers.at(i);
-            QString v = line.at(i);
-            h.remove("\"");
-            v.remove("\"");
-            l.insert(h, v);
-        }
-        data_list.append(l);
-    }
+    parseData(list_type);   
 
+    return true;
+}
+bool CsvList::saveCsvFile(QString filepath, CsvList::ListType list_type){
+    return true;
+}
+
+void CsvList::parseData(CsvList::ListType list_type){
     switch(list_type){
         case CsvList::ListType::Channel:
             parseChannelData();
@@ -182,15 +215,9 @@ bool CsvList::loadCsvFile(QString filepath, CsvList::ListType list_type){
         default:
             break;
     }
-
-    return true;
 }
-bool CsvList::saveCsvFile(QString filepath, CsvList::ListType list_type){
-    return true;
-}
-
 void CsvList::parseAESEncryptionCode(){
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
         Anytone::AesEncryptionCode *key = Anytone::Memory::aes_encryption_keys.at(idx);
 
@@ -198,7 +225,7 @@ void CsvList::parseAESEncryptionCode(){
 }
 void CsvList::parseAlertTone(){
     Anytone::OptionalSettings *os = Anytone::Memory::optional_settings;
-    QMap<QString, QString> data = data_list.at(0);
+    QHash<QString, QString> data = data_list.at(0);
     os->call_permit_first_tone_freq = data["Freq11"].toInt();
     os->call_permit_first_tone_period = int(data["Time11"].toInt() / 10);
     os->call_permit_second_tone_freq = data["Freq12"].toInt();
@@ -255,7 +282,7 @@ void CsvList::parseAlertTone(){
     os->call_all_fifth_tone_period = int(data["Time55"].toInt() / 10);
 }
 void CsvList::parseAnalogAddressBookData(){
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
         Anytone::AnalogAddress *address = Anytone::Memory::analog_addresses.at(idx);
         address->number = data["Number"].toInt();
@@ -264,7 +291,7 @@ void CsvList::parseAnalogAddressBookData(){
 }
 void CsvList::parseAPRS(){
     Anytone::AprsSettings *aprs = Anytone::Memory::aprs_settings;
-    QMap<QString, QString> data = data_list.at(0);
+    QHash<QString, QString> data = data_list.at(0);
 
     aprs->manual_tx_interval = data["Manual TX Interval[s]"].toInt();
     aprs->auto_tx_interval = data["APRS Auto TX Interval[s]"].toInt();
@@ -376,21 +403,21 @@ void CsvList::parseAPRS(){
 
 }
 void CsvList::parseARC4EncryptionCode(){
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
         Anytone::Arc4EncryptionCode *key = Anytone::Memory::arc4_encryption_keys.at(idx);
 
     }
 }
 void CsvList::parseAutoRepeaterOffsetFrequencies(){
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
         Anytone::AutoRepeaterOffsetFrequency *arf = Anytone::Memory::ar_offset_frequencies.at(idx);
         arf->frequency = qRound(data["Offset Frequency"].toDouble() * 100000);
     }
 }
 void CsvList::parseChannelData(){
-    for(QMap<QString, QString> ch_data : data_list){
+    for(QHash<QString, QString> ch_data : data_list){
         int idx = ch_data["No."].toInt() - 1;
         Anytone::Channel *ch = Anytone::Memory::channels.at(idx);
         ch->name = ch_data["Channel Name"];
@@ -462,9 +489,11 @@ void CsvList::parseChannelData(){
     }
 }
 void CsvList::parseDigitalContactData(){
+    qDebug() << data_list.size();
     int i = 0;
-    for(QMap<QString, QString> data : data_list){
-        emit update2(i, data_list.size(), "Digital Contacts");
+    int data_size = data_list.size();
+    for(QHash<QString, QString> data : data_list){
+        if(i % int(data_size/100) == 0) emit update2(i, data_size, "Importing Digital Contacts");
         int idx = data["No."].toInt() - 1;
         Anytone::DigitalContact *dc = Anytone::Memory::digital_contacts.at(idx);
         dc->radio_id = data["Radio ID"].toInt();
@@ -483,14 +512,14 @@ void CsvList::parseDigitalContactData(){
     }
 }
 void CsvList::parseDTMFEncode(){
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
         Anytone::DTMFSettings *dtmf = Anytone::Memory::dtmf_settings;
         
     }
 }
 void CsvList::parseFM(){
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
         Anytone::FM *fm = Anytone::Memory::fm_channels.at(idx);
         fm->frequency = qRound(data["Frequency[MHz]"].toDouble() * 100000);
@@ -499,7 +528,7 @@ void CsvList::parseFM(){
 }
 void CsvList::parseGPSRoaming(){
     int idx = 0;
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         Anytone::GpsRoaming *gps = Anytone::Memory::gps_roaming_list.at(idx);
         gps->enabled = data["OnOff"].toInt();
         gps->zone_idx = data["Zone"].toInt();
@@ -521,29 +550,29 @@ void CsvList::parseGPSRoaming(){
 }
 void CsvList::parseHotKey_HotKey(){
     Anytone::Hotkey *hotkey = Anytone::Memory::hotkey;
-    // QMap<QString, QString> data = list.at(0);
+    // QHash<QString, QString> data = list.at(0);
 }
 void CsvList::parseHotKey_QuickCall(){
     Anytone::Hotkey *hotkey = Anytone::Memory::hotkey;
-    // QMap<QString, QString> data = list.at(0);
+    // QHash<QString, QString> data = list.at(0);
 }
 void CsvList::parseHotKey_State(){
     Anytone::Hotkey *hotkey = Anytone::Memory::hotkey;
-    // QMap<QString, QString> data = list.at(0);
+    // QHash<QString, QString> data = list.at(0);
 }
 void CsvList::parseOptionalSettings(){
     Anytone::OptionalSettings *os = Anytone::Memory::optional_settings;
-    QMap<QString, QString> data = data_list.at(0);
+    QHash<QString, QString> data = data_list.at(0);
 }
 void CsvList::parsePrefabricatedSms(){
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
         Anytone::PrefabricatedSms *sms = Anytone::Memory::prefabricated_sms_list.at(idx);
         sms->text = data["Text"];
     }
 }
 void CsvList::parseRadioIdData(){
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
         if(idx >= Anytone::Memory::radioids.size()) continue;
         Anytone::RadioId *tg = Anytone::Memory::radioids.at(idx);
@@ -553,35 +582,35 @@ void CsvList::parseRadioIdData(){
     }
 }
 void CsvList::parseReceiveGroupCallList(){
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
         Anytone::ReceiveGroup *rcgl = Anytone::Memory::receive_group_call_lists.at(idx);
 
     }
 }
 void CsvList::parseRoamingChannel(){
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
         Anytone::RoamingChannel *ch = Anytone::Memory::roaming_channels.at(idx);
 
     }
 }
 void CsvList::parseRoamingZone(){
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
         Anytone::RoamingZone *zone = Anytone::Memory::roaming_zones.at(idx);
 
     }
 }
 void CsvList::parseScanListData(){
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
         Anytone::ScanList *sl = Anytone::Memory::scanlists.at(idx);
 
     }
 }
 void CsvList::parseTalkgroupData(){
-    for(QMap<QString, QString> ch_data : data_list){
+    for(QHash<QString, QString> ch_data : data_list){
         int idx = ch_data["No."].toInt() - 1;
         Anytone::Talkgroup *tg = Anytone::Memory::talkgroups.at(idx);
 
@@ -598,14 +627,14 @@ void CsvList::parseTalkgroupData(){
 }
 void CsvList::parseTone5Encode(){
     Anytone::Tone5Settings *tone5 = Anytone::Memory::tone5_settings;
-    QMap<QString, QString> data = data_list.at(0);
+    QHash<QString, QString> data = data_list.at(0);
 }
 void CsvList::parseTone2Encode(){
     Anytone::Tone2Settings *tone2 = Anytone::Memory::tone2_settings;
-    QMap<QString, QString> data = data_list.at(0);
+    QHash<QString, QString> data = data_list.at(0);
 }
 void CsvList::parseZoneData(){
-    for(QMap<QString, QString> data : data_list){
+    for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
         Anytone::Zone *zone = Anytone::Memory::zones.at(idx);
         zone->name = data["Zone Name"];
