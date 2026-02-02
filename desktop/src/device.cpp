@@ -27,7 +27,16 @@ static inline QString readFixedStringUtf8(const QByteArray& data, int offset, in
 }
 
 QByteArray VirtualDevice::readMemoryAddress(int address, int length) {
-    if(length % 16 != 0) qDebug() << "ERR: Memory Alignment" << QByteArray::number(address).toHex();
+    if(length % 16 != 0) {
+        qDebug() << "ERR: Memory Alignment" << QByteArray::number(address).toHex();
+        return QByteArray();
+    }
+
+    if(bin_data.size() <= address) {
+        qDebug() << "Error: Incorrect BIN size";
+        return QByteArray();
+    }
+    
     return bin_data.mid(address, length);
 }
 void VirtualDevice::writeMemoryAddress(int address, QByteArray data) {
@@ -1839,6 +1848,7 @@ void Device::writeOtherData(){
     writeArc4Keys();
     writeEncryptionKeys();
     writeToneSettings();
+    writeTone2Settings();
     writeHotKeySettings();
     writeReceiveGroups();
     writeAnalogAddress();
@@ -2334,9 +2344,9 @@ void Device::writeHotKeySettings(){
         return;
     }
     if(verbose) qDebug() << "Writing HotKey Settings";
-    QByteArray state_info_set_data = readMemory(0x10, 0);
-    QByteArray quick_call_data = readMemory(0x10, 0);
-    QByteArray hotkey_data = readMemory(0x360, 0);
+    QByteArray state_info_set_data(0x10, 0);
+    QByteArray quick_call_data(0x10, 0);
+    QByteArray hotkey_data(0x360, 0);
 
     Anytone::Hotkey *hotkey = Anytone::Memory::hotkey;
     auto* set_list_bytes = reinterpret_cast<std::uint8_t*>(state_info_set_data.data());
@@ -2357,19 +2367,26 @@ void Device::writeHotKeySettings(){
         data[3] = key->digi_call_type;
         data.replace(0x4, 0x4, Int::toBytes(key->call_obj, 4));
         data[8] = key->content;
-
-        hotkey_data.replace(0x30, 0x30, data);
+        hotkey_data.replace(0x30*i, 0x30, data);
     }
 
 
-    quick_call_data[0] = hotkey->quick_call_list.at(0)->operation_type;
-    quick_call_data[1] = hotkey->quick_call_list.at(0)->call_id;
-    quick_call_data[2] = hotkey->quick_call_list.at(1)->operation_type;
-    quick_call_data[3] = hotkey->quick_call_list.at(1)->call_id;
-    quick_call_data[4] = hotkey->quick_call_list.at(2)->operation_type;
-    quick_call_data[5] = hotkey->quick_call_list.at(2)->call_id;
-    quick_call_data[6] = hotkey->quick_call_list.at(3)->operation_type;
-    quick_call_data[7] = hotkey->quick_call_list.at(3)->call_id;
+    if(hotkey->quick_call_list.size() > 0){
+        quick_call_data[0] = hotkey->quick_call_list.at(0)->operation_type;
+        quick_call_data[1] = hotkey->quick_call_list.at(0)->call_id;
+    }
+    if(hotkey->quick_call_list.size() > 1){
+        quick_call_data[2] = hotkey->quick_call_list.at(1)->operation_type;
+        quick_call_data[3] = hotkey->quick_call_list.at(1)->call_id;
+    }
+    if(hotkey->quick_call_list.size() > 2){
+        quick_call_data[4] = hotkey->quick_call_list.at(2)->operation_type;
+        quick_call_data[5] = hotkey->quick_call_list.at(2)->call_id;
+    }
+    if(hotkey->quick_call_list.size() > 3){
+        quick_call_data[6] = hotkey->quick_call_list.at(3)->operation_type;
+        quick_call_data[7] = hotkey->quick_call_list.at(3)->call_id;
+    }
 
     write_data[0x25c0b00] = state_info_set_data;
     write_data[0x25c0000] = quick_call_data;
@@ -2718,8 +2735,6 @@ void Device::writeToneSettings(){
 
     write_data[0x24c1000] = data_24c1000;
     write_data[0x2500500] = data_2500500;
-
-    writeTone2Settings();
 }
 void Device::writeTone2Settings(){
     // TODO: Implement for D890UV
@@ -2760,7 +2775,7 @@ void Device::writeTone2Settings(){
         }
     }
 
-    write_data[0x24c1280] = data_24c1290;
+    write_data[0x24c1290] = data_24c1290;
     write_data[0x24c1100] = data_24c1100;
     write_data[0x24c2400] = data_24c2400;
 
@@ -2805,7 +2820,13 @@ void Device::writeZoneData(){
         }else{
             
             Bit::set(&zone_set_list_bytes[current_byte_idx], i%8);
-            write_data[zone_name_addr + (i * map->ZoneDataOffset)] = Format::wideCharString(zone->name).leftJustified(map->ZoneDataLength, '\0');
+            if(Anytone::Memory::radio_model == Anytone::RadioModel::D890UV_FW103){
+                write_data[zone_name_addr + (i * map->ZoneDataOffset)] = Format::wideCharString(zone->name).leftJustified(map->ZoneDataLength, '\0');
+            }else{
+                write_data[zone_name_addr + (i * map->ZoneDataOffset)] = zone->name.toUtf8().leftJustified(map->ZoneDataLength, '\0');
+            }
+
+            
             QByteArray zone_channel_data(0x200, 0xff);
             for(int ch_idx = 0; ch_idx < zone->channels.size(); ch_idx++){
                 Anytone::Channel *ch = zone->channels.at(ch_idx);

@@ -6,7 +6,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOMOC ON)
 
 IF (WIN32)
-set(CMAKE_PREFIX_PATH "C:/Qt/6.10.1/msvc2022_64/lib/cmake")
+set(CMAKE_PREFIX_PATH "C:/Qt/6.10.2/msvc2022_64/lib/cmake")
 ELSE()
 set(CMAKE_PREFIX_PATH "$ENV{QT_GCC_DIR}/lib/cmake")
 ENDIF()

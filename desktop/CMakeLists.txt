@@ -53,14 +53,14 @@ target_link_libraries(anytone-cps PRIVATE
     anytone-lib
 )
 
-find_program(WINDEPLOYQT_BIN windeployqt.exe HINTS "C:/Qt/6.10.1/msvc2022_64/bin")
+find_program(WINDEPLOYQT_BIN windeployqt.exe HINTS "C:/Qt/6.10.2/msvc2022_64/bin")
 
 IF (WIN32)
     if(WINDEPLOYQT_BIN)
         add_custom_command(
             TARGET anytone-cps
             POST_BUILD
-            COMMAND ${WINDEPLOYQT_BIN} --pdb $<TARGET_FILE:anytone-cps>
+            COMMAND ${WINDEPLOYQT_BIN} $<TARGET_FILE:anytone-cps>
             WORKING_DIRECTORY $<TARGET_FILE_DIR:anytone-cps>
             COMMENT "Running windeployqt on anytone-cps executable..."
         )

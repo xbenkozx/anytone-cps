@@ -86,9 +86,11 @@ void Anytone::Tone5Settings::encode(QByteArray &data_24c1000){
     // Just in case we will store the data.
     // 0x24c1000, 0x20
     // 0x24c1031 = 0xd
-    data_24c1000[0x31] = uint8_24c1031;
-    for(int i=0; i < 16; i++){
-        data_24c1000.replace(i*2, 2, Int::toBytes(unknown_freq_hz.at(i), 2));
+    if(unknown_freq_hz.size() == 16){
+        data_24c1000[0x31] = uint8_24c1031;
+        for(int i=0; i < 16; i++){
+            data_24c1000.replace(i*2, 2, Int::toBytes(unknown_freq_hz.at(i), 2));
+        }
     }
 }
 

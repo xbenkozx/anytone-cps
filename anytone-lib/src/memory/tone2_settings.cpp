@@ -50,7 +50,7 @@ void Anytone::Tone2DecodeItem::decode(QByteArray data){
     name.remove(QChar('\0'));
 }
 QByteArray Anytone::Tone2DecodeItem::encode(){
-    if(tone_frequency_1 == 0) return QByteArray(0x20, 0xff);
+    if(tone_frequency_1 == 0) return QByteArray(0x10, 0xff);
     QByteArray data(0x10, 0);
     data.replace(0x0, 2, 
         Int::toBytes(tone_frequency_1, 2)
@@ -60,7 +60,7 @@ QByteArray Anytone::Tone2DecodeItem::encode(){
     );
     data[0x4] = decoding_response;
     data.replace(0x5, 7, 
-        QByteArray::fromHex(name.rightJustified(7, '0').toUtf8())
+        name.toUtf8().rightJustified(7, '\0')
     );
     return data;
 }

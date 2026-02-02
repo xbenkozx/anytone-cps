@@ -1,6 +1,6 @@
 #include "constants.h"
 const QString Constants::CPS_VERISON = "0.1";
-const QString Constants::CPS_BUILD_NUMBER = "8";
+const QString Constants::CPS_BUILD_NUMBER = "9";
 const QStringList Constants::OFF_ON = {"Off", "On"};
 const QStringList Constants::VF_MR = {"MEM", "VFO"};
 const QStringList Constants::AT_OPTIONS = {

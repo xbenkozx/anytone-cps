@@ -350,7 +350,7 @@ void Memory::saveDigitalContacts(QXmlStreamWriter &xml){
     xml.writeStartElement("DigitalContactList");
     xml.writeAttribute("items", QString::number(count));
     for(DigitalContact *item : Memory::digital_contacts){
-        if(index % int(count/100) == 0) Memory::instance().update2(index, count, "Saving Digital Contacts");
+        if(count > 100 && index % int(count/100) == 0) Memory::instance().update2(index, count, "Saving Digital Contacts");
         if(item->radio_id > 0) {
             item->save(xml);
         }

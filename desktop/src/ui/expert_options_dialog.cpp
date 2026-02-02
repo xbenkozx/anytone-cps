@@ -8,7 +8,8 @@
 
 ExpertOptionsDialog::ExpertOptionsDialog(MainWindow *parent) :
     QDialog(parent),
-    ui(std::make_unique<Ui_ExpertOptionsDialog>())
+    ui(std::make_unique<Ui_ExpertOptionsDialog>()),
+    main_window(parent)
 {
     ui->setupUi(this);
     setWindowModality(Qt::WindowModal);
@@ -20,6 +21,11 @@ ExpertOptionsDialog::ExpertOptionsDialog(MainWindow *parent) :
     connect(ui->closeBtn, &QPushButton::clicked, this, &ExpertOptionsDialog::close);
     connect(ui->readBtn, &QPushButton::clicked, this, &ExpertOptionsDialog::readOptions);
     connect(ui->writeBtn, &QPushButton::clicked, this, &ExpertOptionsDialog::writeOptions);
+
+    if(main_window->debug){
+        ui->serialNumberTxt->setDisabled(false);
+        ui->productionDateTxt->setDisabled(false);
+    }
 
     ui->frequencyCmbx->addItems(Constants::AT_OPTIONS);
 }

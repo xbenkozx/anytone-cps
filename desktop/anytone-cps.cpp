@@ -5,12 +5,6 @@
 #include "main_window.h"
 #include <QDebug>
 
-// TODO: Create Satellite UI
-// TODO: Create AM Air UI
-// TODO: Create AM Air Table
-// TODO: Create AM Zone UI
-// TODO: Create AM Zone Table
-
 int main(int argc, char *argv[]){
 
     QApplication app(argc, argv);
@@ -32,7 +26,7 @@ int main(int argc, char *argv[]){
 
     bool debug = parser.isSet(debugOption);
 
-    debug = true; // Remove for production
+    // debug = true; // Remove for production
 
     app.setWindowIcon(QIcon(":/icons/d878_icon_64.ico"));
 

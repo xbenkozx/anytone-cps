@@ -316,7 +316,7 @@ public:
         return data;
     }
     void writeMemoryAddress(int address, QByteArray data) override {
-        if(data.size() != 16) qDebug() << "ERR: Memory Alignment" << QByteArray::number(address).toHex();
+        if(data.size() != 16) qDebug().nospace() << "ERR: Memory Alignment 0x" << Qt::hex << address;
         if(!is_alive) return;
         if(address == 0x2fa0010) return;
 
