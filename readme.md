@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icons/d878_icon.png" />
+  <img src="desktop/icons/d878_icon.png" />
 </p>
 
 # anytone-878uvii-cps
