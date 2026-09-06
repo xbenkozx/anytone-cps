@@ -49,9 +49,6 @@
          <property name="textElideMode">
           <enum>Qt::TextElideMode::ElideNone</enum>
          </property>
-         <property name="updateThreshold">
-          <number>200</number>
-         </property>
          <attribute name="horizontalHeaderStretchLastSection">
           <bool>true</bool>
          </attribute>
