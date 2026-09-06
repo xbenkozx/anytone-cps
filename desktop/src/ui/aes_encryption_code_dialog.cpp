@@ -8,6 +8,7 @@ AesEncryptionCodeDialog::AesEncryptionCodeDialog(MainWindow *parent, int index) 
     ui(std::make_unique<Ui_AesEncryptionCodeEditDialog>())
 {
     ui->setupUi(this);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &AesEncryptionCodeDialog::save);
     setWindowModality(Qt::WindowModal);
 
     this->index = index;

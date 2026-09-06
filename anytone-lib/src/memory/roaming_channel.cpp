@@ -6,7 +6,7 @@ double Anytone::RoamingChannel::getRxFrequencyDouble(){
     return double(rx_frequency) / 100000;
 };
 QString Anytone::RoamingChannel::getRxFrequencyString(){
-    return QString::number(getTxFrequencyDouble(), 'f', 5);
+    return QString::number(getRxFrequencyDouble(), 'f', 5);
 };
 double Anytone::RoamingChannel::getTxFrequencyDouble(){
     return double(tx_frequency) / 100000;

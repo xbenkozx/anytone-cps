@@ -6,8 +6,9 @@
 
 > **This is a fork** of [xbenkozx/anytone-cps](https://github.com/xbenkozx/anytone-cps) with a series of
 > bug fixes for reading/writing the radio, digital contact and talk group handling, and CSV imports.
-> See [Changes in this fork](#changes-in-this-fork) below. All credit for the original project goes to
-> its author.
+> It also aggregates community pull requests that were left unmerged upstream (see
+> [Community fixes](#community-fixes)). See [Changes in this fork](#changes-in-this-fork) below.
+> All credit for the original project goes to its author, and for the community fixes to their authors.
 
 An open-source, cross-platform Customer Programming Software (CPS) for the AnyTone 878UVII series radios, written in c++.
 
@@ -22,9 +23,10 @@ Currently, this project is in Alpha stage and is a work is progress. Make sure y
 
 ## Changes in this fork
 
-All changes below live on the `fix/digital-contacts-write` branch and were verified against a real
-AnyTone AT-D878UVII (FW 4.00 / V101) and with a `VirtualDevice` test harness (write/read roundtrips on
-erased, zeroed and randomized codeplug images).
+All changes below live on this fork's `main` branch and were verified against a real AnyTone
+AT-D878UVII (FW 4.00 / V101) and with a `VirtualDevice` test harness (write/read roundtrips on
+erased, zeroed and randomized codeplug images). The initial bug fix set (up to the UI fixes
+section) is also available separately on the `fix/digital-contacts-write` branch.
 
 ### Talk groups
 - Write the talk group **index table at `0x2600000`** (one little-endian `uint32` per talk group,
@@ -80,13 +82,58 @@ erased, zeroed and randomized codeplug images).
   D878UVII (and never on the D890UV), and receive groups used the radio-ID stride (0x20) instead
   of their own (0x200), overlapping the records.
 
----
+### Channel and zone imports
+- Wire up the **Channels** and **Zones** rows of the Import dialog (buttons were permanently
+  disabled). Channels are always imported before zones so zone members can be linked in the same
+  run; zones link their members to channels by name + RX/TX frequency.
+- Zone CSV fixes: trim header names (the official export ends with `"Zone Hide "` including a
+  trailing space, so the hide flag never parsed), bounds-check row numbers, tolerate member
+  name/frequency lists of different lengths, and make reference linking idempotent (a read
+  followed by an import used to duplicate zone/scan list/roaming members).
+- Zones whose channels did not link are still shown by name (with a 0 channel count) and every
+  unmatched member is logged, instead of rendering as blank rows.
+- Channel CSV: parse the **Color Code** and **Slot** columns of the official export; imported DMR
+  channels used to end up with color code 0 and slot 1 regardless of the file contents.
 
-## Progress
-| | D878UVII | D890UV | D168UV | D878UV | D868UV |
-| - | :-: | :-: | :-: | :-: | :-: |
-| UI | ![95%](https://progress-bar.xyz/95?width=100) | ![95%](https://progress-bar.xyz/95?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) |
-| Serial | ![98%](https://progress-bar.xyz/98?width=100) | ![88%](https://progress-bar.xyz/88?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) | ![0%](https://progress-bar.xyz/0?width=100) |
+### Repeater list import (przemienniki.net)
+- The Channels import field also accepts repeater directory exports from
+  [przemienniki.net](https://przemienniki.net) (comma- or tab-separated, auto-detected by the
+  `Callsign`/`Duplex` columns).
+- The repeater's TX/RX perspective is translated to the radio's (repeater TX = radio RX), and the
+  repeater's input CTCSS becomes the tone the radio encodes; `false` means no tone.
+- FM repeaters become analog channels (12.5K bandwidth, matching the IARU R1 12.5 kHz channel
+  raster); DMR repeaters become **two digital channels per repeater** (`<callsign> TS1`/`TS2`)
+  with color code 1, since the export carries no CC/slot information. Rows with neither FM nor
+  DMR modes are skipped with a log message.
+- Each DMR repeater also gets a **roaming channel** (CC1, Slot1), grouped into `Roaming 1..N`
+  roaming zones (64 channels each, the codeplug limit), so network roaming works out of the box.
+  Also fixed the Roaming Channel view showing the TX frequency in the RX column.
+- Imported channels fill the first free channel slots. **Re-importing an updated list matches
+  channels and roaming channels by name and refreshes them in place** — no duplicates and nothing
+  else in the codeplug is touched, so the safe workflow is: read from radio, import, write (no
+  need to start from an empty codeplug).
+
+### Settings persistence and editor fixes
+- Several settings dialogs never wrote their edits back: **Master ID** and **Hotkey** had a
+  `save()` method that was never called, and the **AES code**, **analog address book**, **GPS
+  roaming** and **AM zone** editors only saved on prev/next navigation, so the entry shown when
+  OK was pressed was lost. All are now saved on OK.
+- The **APRS settings** dialog had no save path at all (~90 fields were displayed but never
+  written back); a full `save()` was added and wired to OK.
+- The **Down** button in the Zone, AM Zone, Scan List and Roaming Zone member editors never moved
+  the top entry down (it kept the `Up` handler's guard); fixed in all four.
+
+### Community fixes
+This fork also carries pull requests that were left unmerged on the upstream project. All credit
+goes to their authors; they are included here (with authorship preserved) so users get them in one
+place:
+- Fix a segfault when editing a channel (uninitialized pointers) — [@Serphentas](https://github.com/Serphentas), upstream PR #1
+- Copying a channel no longer cuts it — [@Serphentas](https://github.com/Serphentas), upstream PR #2
+- Retry logic for the satellite (Keplerian) data download — [@Serphentas](https://github.com/Serphentas), upstream PR #3
+- Working Save / Exit / About menu actions and zone-dialog channel headers — [@Serphentas](https://github.com/Serphentas), upstream PR #4
+- Correct Bluetooth options for the D890UV — [@Serphentas](https://github.com/Serphentas), upstream PR #5
+
+---
 
 ## Supported Devices
 - D878UVII
@@ -100,7 +147,8 @@ The stock CPS for the 878UVII:
 
 ## Planned Updates
 - Repeater Book Import
-- Expansion to other radio models (D878UV, D890UV, D168UV)
+- Get all functionality working and verified (possibly except firmware update — only one radio is
+  available for testing, unless someone donates one :))
 
 # Reporting Bugs & Requesting Features
 
@@ -118,47 +166,31 @@ The stock CPS for the 878UVII:
 
 # Feature Set
 ## Serial Data
-These are not fully tested.
-| Data | D878UVII | D890UV | D168UV |
-| - | :---: | :---: | :---: |
-| Boot Image | R/W | R/W | |
-| BK Image 1 | R/W | R/W | |
-| BK Image 2 | R/W | R/W | |
-| 2Tone Encode/Decode | R/W | | |
-| 5Tone Encode/Decode | R/W | | |
-| AES Encryption Code | R/W | R/W | |
-| AM Air | - | R/W | - |
-| AM Zone | - | R/W | - |
-| Analog Address Book | R/W | R/W | |
-| APRS | R/W | R/W | |
-| ARC4 Encryption Code | R/W | R/W | |
-| Auto Repeater Offset Frequencies | R/W | R/W | |
-| Alarm Settings | R/W | R/W | |
-| Channels | R/W | R/W | |
-| Digital Contacts | R/W | R/W | |
-| Digital Contact Whitelist | - | R/W | - |
-| DTMF Encode/Decode | R/W | | |
-| Encryption Code | R/W | R/W | |
-| Local Information/Expert Options(AT_OPTIONS) | R/W | R/W | |
-| FM Channels | R/W | R/W | |
-| GPS Roaming | R/W | R/W | |
-| HotKey HotKey | R/W | | |
-| HotKey Quick Call | R/W | | |
-| HotKey State | R/W | | |
-| Master ID | R/W | R/W | |
-| Optional Settings | R/W | R/W | |
-| Prefabricated SMS | R/W | R/W | |
-| QDC 1200 | - | | - |
-| QDC Address Book | - | | - |
-| Radio IDs | R/W | R/W | |
-| Receive Groups | R/W | R/W | |
-| Roaming Channels | R/W | R/W | |
-| Roaming Zones | R/W | R/W | |
-| Scan Lists | R/W | R/W | |
-| Talk Alias Settings | R/W | R/W | |
-| TalkGroups | R/W | R/W | |
-| Talkgroup Whitelist | - | R/W | - |
-| Zones | R/W | R/W | |
+`R/W` = read and write implemented; `R` = read only. Only the entries below have been exercised
+against a real radio; others were removed until tested.
+| Data | D878UVII |
+| - | :---: |
+| Analog Address Book | R/W |
+| APRS | R/W |
+| Auto Repeater Offset Frequencies | R/W |
+| Channels | R/W |
+| Digital Contacts | R/W |
+| Local Information/Expert Options(AT_OPTIONS) | R/W |
+| FM Channels | R/W |
+| GPS Roaming | R/W |
+| HotKey HotKey | R/W |
+| HotKey Quick Call | R/W |
+| HotKey State | R/W |
+| Master ID | R/W |
+| Optional Settings | R/W |
+| Prefabricated SMS | R |
+| Radio IDs | R/W |
+| Receive Groups | R/W |
+| Roaming Channels | R/W |
+| Roaming Zones | R/W |
+| Talk Alias Settings | R/W |
+| TalkGroups | R/W |
+| Zones | R/W |
 
 ---
 

@@ -146,7 +146,7 @@ void ScreenRender::paintEvent(QPaintEvent *event)
         case 7: // Blue
             text_color = Qt::blue;
             break;
-        
+
     }
 
     painter.setPen(QPen(Qt::black, 0, Qt::SolidLine));
@@ -235,7 +235,7 @@ void ScreenRender::paintEvent(QPaintEvent *event)
         painter.drawText(12, 196, "C10");
     }
 
-    
+
     bold_font.setPixelSize(25);
     painter.setFont(bold_font);
     painter.setPen(QPen(channela_color, 1, Qt::SolidLine));
@@ -248,7 +248,7 @@ void ScreenRender::paintEvent(QPaintEvent *event)
     painter.drawText(100, 190, "Channel 2");
     painter.setPen(QPen(zoneb_color, 1, Qt::SolidLine));
     painter.drawText(120, 212, "Zone 1");
-    
+
     painter.setPen(QPen(text_color, 1, Qt::SolidLine));
     if(date_type == 0 && show_time){
         painter.drawText(4, 48, "YYYY-MM-DD HH:mm");
@@ -268,7 +268,7 @@ void ScreenRender::paintEvent(QPaintEvent *event)
     path.lineTo (170, 325);
     painter.setPen (Qt :: NoPen);
     painter.fillPath (path, QBrush (text_color));
-    
+
     path.moveTo (170, 330);
     path.lineTo (190, 330);
     path.lineTo (180, 340);
@@ -277,7 +277,7 @@ void ScreenRender::paintEvent(QPaintEvent *event)
     painter.restore();
 
 
-    
+
 }
 
 PowerOnCharLineEdit::PowerOnCharLineEdit(QWidget *parent)
@@ -336,12 +336,12 @@ OptionalSettingsDialog::OptionalSettingsDialog(MainWindow *parent) :
     connect(ui->displayChannelTypeCmbx, &QComboBox::currentIndexChanged, this, &OptionalSettingsDialog::refreshScreenView);
     connect(ui->timeDisplayCmbx, &QComboBox::currentIndexChanged, this, &OptionalSettingsDialog::refreshScreenView);
 
-    
+
     loadData();
     updateStartupChannels();
     updateWorkMode();
     refreshScreenView();
-    
+
 }
 void OptionalSettingsDialog::refreshScreenView(){
     screen_render->channel_name_color_a = ui->channelNameColorACmbx->currentIndex();
@@ -358,7 +358,7 @@ void OptionalSettingsDialog::refreshScreenView(){
     screen_render->repaint();
 }
 OptionalSettingsDialog::~OptionalSettingsDialog(){
-    
+
 }
 void OptionalSettingsDialog::setupUI(){
     ui->keyFunctionImage->setStyleSheet("background-image: url(:/icons/d878_key_diagram.jpg);background-repeat: no-repeat;");
@@ -459,7 +459,7 @@ void OptionalSettingsDialog::setupUI(){
     ui->displayColorCodeCmbx->addItems(Constants::OFF_ON);
     ui->dateDisplayFormatCmbx->addItems(Constants::DATE_DISPLAY_FORMAT);
     ui->volumeBarCmbx->addItems(Constants::OFF_ON);
-    
+
     // Work Mode
     ui->displayModeCmbx->addItems(Constants::DISPLAY_MODE);
     ui->vfMrACmbx->addItems(Constants::VF_MR);
@@ -476,7 +476,7 @@ void OptionalSettingsDialog::setupUI(){
     ui->voxDetectionCmbx->addItems(Constants::VOX_DETECTION);
     if(Anytone::Memory::radio_model == Anytone::RadioModel::D878UVII_FW400){
         ui->btOnOffCmbx->addItems(Constants::OFF_ON);
-    }else if(Anytone::Memory::radio_model == Anytone::RadioModel::D878UVII_FW400){
+    }else if(Anytone::Memory::radio_model == Anytone::RadioModel::D890UV_FW103){
         ui->btOnOffCmbx->addItems(QStringList{"Off", "On", "KISS TNC"});
     }
     ui->btIntMicCmbx->addItems(Constants::OFF_ON);
@@ -606,7 +606,7 @@ void OptionalSettingsDialog::setupUI(){
     ui->autoRoamingStartConditionCmbx->addItems(Constants::AUTO_ROAMING_START_CONDITION);
     for(int i=0; i<8; i++){ ui->autoRoamingFixedTimeCmbx->addItem(QString::number(i+1)); }
     ui->roamingEffectWaitTimeCmbx->addItems(Constants::ROAMING_EFFECT_WAIT_TIME);
-    
+
     for(Anytone::RoamingZone *rz : Anytone::Memory::roaming_zones){
         ui->roamingZoneCmbx->addItem(rz->name, QVariant::fromValue(rz));
     }
@@ -928,7 +928,7 @@ void OptionalSettingsDialog::loadData(){
     ui->autoRepeater2UhfCmbx->setCurrentIndex(Anytone::Memory::optional_settings->auto_repeater_2_uhf != 0xff ? Anytone::Memory::optional_settings->auto_repeater_2_uhf + 1 : 0);
     ui->autoRepeater2VhfCmbx->setCurrentIndex(Anytone::Memory::optional_settings->auto_repeater_2_vhf != 0xff ? Anytone::Memory::optional_settings->auto_repeater_2_vhf + 1 : 0);
 
-    
+
     ui->repeaterCheckCmbx->setCurrentIndex(Anytone::Memory::optional_settings->repeater_check);
     ui->repeaterCheckIntervalsCmbx->setCurrentIndex(Anytone::Memory::optional_settings->repeater_check_interval);
     ui->repeaterCheckReconnectionsCmbx->setCurrentIndex(Anytone::Memory::optional_settings->repeater_check_reconnections);
@@ -938,7 +938,7 @@ void OptionalSettingsDialog::loadData(){
     ui->autoRoamingStartConditionCmbx->setCurrentIndex(Anytone::Memory::optional_settings->auto_roaming_start_condition);
     ui->autoRoamingFixedTimeCmbx->setCurrentIndex(Anytone::Memory::optional_settings->auto_roaming_fixed_time);
     ui->roamingEffectWaitTimeCmbx->setCurrentIndex(Anytone::Memory::optional_settings->roaming_effect_wait_time);
-                                                        
+
     ui->minFreqAutoRepeater1VhfTxt->setText(formatFrequency(QString::number(double(Anytone::Memory::optional_settings->auto_repeater_1_min_freq_vhf)/100000)));
     ui->maxFreqAutoRepeater1VhfTxt->setText(formatFrequency(QString::number(double(Anytone::Memory::optional_settings->auto_repeater_1_max_freq_vhf)/100000)));
     ui->minFreqAutoRepeater1UhfTxt->setText(formatFrequency(QString::number(double(Anytone::Memory::optional_settings->auto_repeater_1_min_freq_uhf)/100000)));
@@ -1179,7 +1179,7 @@ void OptionalSettingsDialog::save(){
 
     Anytone::Memory::optional_settings->poweron_display_1 = QByteArray(0xe, 0);
     Anytone::Memory::optional_settings->poweron_display_2 = QByteArray(0xe, 0);
-    
+
     for(int i = 0; i < display_char_line1_txt_list.size(); i++){
         PowerOnCharLineEdit *poc = display_char_line1_txt_list.at(i);
         Anytone::Memory::optional_settings->poweron_display_1[i] = (poc->text().isEmpty()?'\0':poc->text().at(0).toLatin1());
@@ -1373,7 +1373,7 @@ void OptionalSettingsDialog::save(){
     Anytone::Memory::optional_settings->call_reset_third_tone_period = int(ui->callResetThirdTonePeriodTxt->text().toDouble() / 10);
     Anytone::Memory::optional_settings->call_reset_fourth_tone_period = int(ui->callResetFourthTonePeriodTxt->text().toDouble() / 10);
     Anytone::Memory::optional_settings->call_reset_fifth_tone_period = int(ui->callResetFifthTonePeriodTxt->text().toDouble() / 10);
-    
+
     // Alert Tone 1
     Anytone::Memory::optional_settings->call_end_first_tone_freq = ui->callEndFirstToneFreqTxt->text().toInt();
     Anytone::Memory::optional_settings->call_end_second_tone_freq = ui->callEndSecondToneFreqTxt->text().toInt();

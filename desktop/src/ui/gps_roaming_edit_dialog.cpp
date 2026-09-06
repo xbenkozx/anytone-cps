@@ -11,6 +11,7 @@ GpsRoamingEditDialog::GpsRoamingEditDialog(MainWindow *parent, int index) :
     ui(std::make_unique<Ui_GpsRoamingDialog>())
 {
     ui->setupUi(this);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &GpsRoamingEditDialog::save);
     setWindowModality(Qt::WindowModal);
     this->index = index;
     this->main_window = parent;

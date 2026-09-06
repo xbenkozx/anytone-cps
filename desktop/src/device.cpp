@@ -1198,80 +1198,38 @@ void Device::readMasterId(){
 void Device::readPrefabricatedSms()
 {
     // TODO: Implement for D168UV
-    constexpr int  kSetEntryBytes   = 0x10;
-    constexpr int  kMaxFollow       = 100;
-    constexpr quint8 kEnd           = 0xFF;
-
+    // Presence is decided by the bytemap (1 byte per message, 0x00 = present),
+    // matching qdmr and writePrefabSms; messages are packed contiguously.
     const auto* map = Anytone::Memory::Map();
     if (!map) return;
+    if (map->PrefabSmsBytemap == 0) return;
 
-    // ---- Walk the linked list / chain to gather SMS indices
-    std::vector<int> ids;
-    ids.reserve(32);
+    constexpr int kBytemapBytes = 0x90;
 
-    std::vector<bool> seen(256, false);
+    const QByteArray bytemap = readMemory(map->PrefabSmsBytemap, kBytemapBytes);
+    if (!is_alive) return;
 
-    quint8 current = 0;
-    for (int hops = 0; hops <= kMaxFollow; ++hops) {
-        if (!is_alive) return;
-
-        const quint32 addr = static_cast<quint32>(map->PrefabSmsSet) + (static_cast<quint32>(current) * kSetEntryBytes);
-        const QByteArray entry = readMemory(addr, kSetEntryBytes);
-        if (!is_alive) return;
-
-        if (entry.size() < 4) break; // defensive
-
-        const quint8 next = static_cast<quint8>(entry.at(2));
-        const quint8 id   = static_cast<quint8>(entry.at(3));
-
-        if (id == kEnd) break;
-
-        if (!seen[id]) {
-            ids.push_back(id);
-            seen[id] = true;
-        } else {
-            // cycle detected
-            break;
-        }
-
-        if (next == kEnd) break;
-        current = next;
-    }
-
-    // ---- Read + decode each SMS
     const int base        = map->PrefabSmsData;
     const int entryStride = map->PrefabSmsDataOffset;
-    const int blockSize   = map->PrefabSmsDataBlockSize;     // bytes per block
-    const int blockStride = map->PrefabSmsDataBlockOffset;   // bytes between blocks
+    const int blockStride = map->PrefabSmsDataBlockOffset;
     const int dataLen     = map->PrefabSmsDataLength;
+    const int perBank     = map->PrefabSmsDataBlockSize / map->PrefabSmsDataOffset;
+    const int listSize    = static_cast<int>(Anytone::Memory::prefabricated_sms_list.size());
 
-    const int listSize = static_cast<int>(Anytone::Memory::prefabricated_sms_list.size());
-    const int total    = static_cast<int>(ids.size());
-
-    for (int i = 0; i < total; ++i) {
+    for (int i = 0; i < bytemap.size() && i < listSize; ++i) {
         if (!is_alive) return;
+        if (static_cast<quint8>(bytemap.at(i)) != 0x00) continue; // absent
 
-        emit update2(i, total, "Reading Prefabricated SMS");
+        emit update2(i, listSize, "Reading Prefabricated SMS");
 
-        const int idx = ids[i];
-        if (idx < 0 || idx >= listSize) continue;
-
-        auto* sms = Anytone::Memory::prefabricated_sms_list.at(idx);
-        if (!sms) continue;
-
-        // Compute offset in bytes from start of table for this entry
-        const int byteOffset = idx * entryStride;
-
-        // Map that into block-based addressing
-        const int blockIndex   = byteOffset / blockSize;
-        const int offsetInBlock = byteOffset % blockSize;
-
-        const int addr = base + (blockIndex * blockStride) + offsetInBlock;
+        const int bank = i / perBank;
+        const int slot = i % perBank;
+        const int addr = base + (bank * blockStride) + (slot * entryStride);
 
         const QByteArray smsData = readMemory(addr, dataLen);
         if (!is_alive) return;
 
-        sms->decode(smsData);
+        Anytone::Memory::prefabricated_sms_list.at(i)->decode(smsData);
     }
 }
 void Device::readRadioIdData()
@@ -2417,44 +2375,61 @@ void Device::writeMasterRadioIdData(){
 }
 void Device::writePrefabSms(){
     // TODO: Implement for D168UV
+    //
+    // DISABLED: this writes the qdmr layout (bytemap at PrefabSmsBytemap +
+    // index at PrefabSmsSet + bodies at PrefabSmsData, contiguous ids), which
+    // matches qdmr byte-for-byte and lands on the radio correctly (verified by
+    // dumping the region), yet the radio's own template menu still shows
+    // nothing. Until that last gap is understood (needs a dump of a list
+    // written by the stock CPS), keep this a no-op so an "Other Data" write
+    // never touches the SMS region.
+    return;
 
     const auto* map = Anytone::Memory::Map();
     if (!map) return;
+    if (map->PrefabSmsBytemap == 0) return; // model without a known layout
 
     if(verbose) qDebug() << "Writing Prefab SMS";
-    
-    int link_list_addr = map->PrefabSmsSet;
-    int data_addr = map->PrefabSmsData;
-    int data_stride = map->PrefabSmsDataOffset;
-    int dataBlockLen = map->PrefabSmsDataBlockSize;
-    int dataBlockStride = map->PrefabSmsDataBlockOffset;
-    QByteArray link_list;
-    std::vector<Anytone::PrefabricatedSms*> active_sms = {};
 
-    for(Anytone::PrefabricatedSms *sms : active_sms){
+    std::vector<Anytone::PrefabricatedSms*> active_sms = {};
+    for(Anytone::PrefabricatedSms *sms : Anytone::Memory::prefabricated_sms_list){
         if(sms->text.size() > 0) active_sms.push_back(sms);
     }
 
-    // Create Link List
-    for(int i = 0; i < active_sms.size(); i++){
-        QByteArray link_list_line(0x10, 0);
-
-        link_list_line[0x3] = active_sms[i]->id;
-
-        if(i < active_sms.size() - 1){
-            link_list_line[0x2] = active_sms[i+1]->id;
-        }else{
-            link_list_line[0x2] = 0xff;
-        }
-        link_list.append(link_list_line);
+    // Leave the radio's SMS untouched when there are none in memory, instead of
+    // clearing the bytemap and wiping the radio's templates.
+    if(active_sms.empty()){
+        qDebug() << "No prefabricated SMS to write, leaving radio SMS untouched";
+        return;
     }
-    
-    for(int i = 0; i < active_sms.size(); i++){
-        Anytone::PrefabricatedSms *sms = active_sms.at(i);
-        int block = int(((i * data_stride) - i % dataBlockLen) / dataBlockLen);
-        int addr = data_addr + (block * dataBlockStride) + ((i * data_stride) % dataBlockLen);
-        QByteArray data = sms->encodeData();
-        write_data[addr] = data;
+
+    const int num = static_cast<int>(active_sms.size());
+    constexpr int kBytemapBytes    = 0x90;   // qdmr MessageBytemapElement::size
+    constexpr int kMaxMessageChars = 99;     // qdmr Limit::messageLength
+
+    // Bytemap: first `num` present (0x00), rest absent (0xff)
+    QByteArray bytemap(kBytemapBytes, static_cast<char>(0xff));
+    for(int i = 0; i < num && i < kBytemapBytes; i++) bytemap[i] = 0x00;
+    write_data[map->PrefabSmsBytemap] = bytemap;
+
+    // Index list (qdmr layout): entry i byte[3] = (i < num-1) ? i+1 : num-1
+    QByteArray index;
+    for(int i = 0; i < num; i++){
+        QByteArray e(0x10, 0);
+        e[0x3] = static_cast<char>(i < num - 1 ? i + 1 : num - 1);
+        index.append(e);
+    }
+    write_data[map->PrefabSmsSet] = index;
+
+    // Message bodies, packed contiguously, 8 per bank
+    const int perBank = map->PrefabSmsDataBlockSize / map->PrefabSmsDataOffset;
+    for(int i = 0; i < num; i++){
+        int bank = i / perBank;
+        int slot = i % perBank;
+        int addr = map->PrefabSmsData + (bank * map->PrefabSmsDataBlockOffset) + (slot * map->PrefabSmsDataOffset);
+        QByteArray body = active_sms[i]->text.toUtf8().left(kMaxMessageChars);
+        body = body.leftJustified(map->PrefabSmsDataOffset, '\0', true);
+        write_data[addr] = body;
     }
 }
 void Device::writeRadioIdData(){

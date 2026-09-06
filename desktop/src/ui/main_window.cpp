@@ -142,6 +142,7 @@ void MainWindow::setupUI(){
     connect(ui->actionNew, &QAction::triggered, this, &MainWindow::newBtnClicked);
     connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::openBtnClicked);
     connect(ui->actionSave, &QAction::triggered, this, &MainWindow::saveBtnClicked);
+    ui->actionSave->setShortcut(QKeySequence::Save);
     connect(ui->actionSave_As, &QAction::triggered, this, &MainWindow::saveFileAs);
 
     // Radio Menu
@@ -163,6 +164,7 @@ void MainWindow::setupUI(){
 
     // About Menu
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAboutDialog);
+    connect(ui->actionExit, &QAction::triggered, this, &MainWindow::exitApp);
     
 
     // Tool Bar
@@ -170,6 +172,7 @@ void MainWindow::setupUI(){
     connect(ui->openFileBtn, &QToolButton::clicked, this, &MainWindow::openBtnClicked);
     connect(ui->saveFileBtn, &QToolButton::clicked, this, &MainWindow::saveBtnClicked);
     connect(ui->comPortBtn, &QToolButton::clicked, this, &MainWindow::showComportDialog);
+    connect(ui->aboutBtn, &QToolButton::clicked, this, &MainWindow::showAboutDialog);
     connect(ui->readRadioBtn, &QToolButton::clicked, this, &MainWindow::showReadOptionsDialog);
     connect(ui->writeRadioBtn, &QToolButton::clicked, this, &MainWindow::showWriteOptionsDialog);
     connect(ui->tableView, &QTableView::doubleClicked, this, &MainWindow::onMainTableDblClicked);
@@ -231,6 +234,9 @@ void MainWindow::setupTreeView(){
         mainTreeItem->setExpanded(true);
     }
 }
+void MainWindow::exitApp(){
+    this->close();
+}
 void MainWindow::showAlphaWarningMessage(){
     QMessageBox msg(this);
     msg.setWindowModality(Qt::WindowModal);
@@ -274,6 +280,10 @@ void MainWindow::copySelectedChannels(){
         if(index_list.indexOf(index.row()) == -1) index_list.append(index.row());
     }
 
+    // replace any existing clipboard contents
+    channel_clipboard.clear();
+    channel_clipboard_is_cut = false;
+
     for(int i : index_list){
         channel_clipboard.push_back(Anytone::Memory::channels.at(i));
     }
@@ -294,6 +304,10 @@ void MainWindow::cutSelectedChannels(){
         if(index_list.indexOf(index.row()) == -1) index_list.append(index.row());
     }
 
+    // replace any existing clipboard contents
+    channel_clipboard.clear();
+    channel_clipboard_is_cut = true;
+
     for(int i : index_list){
         channel_clipboard.push_back(Anytone::Memory::channels.at(i));
     }
@@ -311,9 +325,14 @@ void MainWindow::pasteSelectedChannels(){
     for(int i = 0; i < channel_clipboard.size(); i++){
         Anytone::Channel *ch = channel_clipboard.at(i);
         Anytone::Memory::channels.at(selected_row+i)->copy(ch);
-        ch->clear();
+
+        // clear channel when cutting
+        if(channel_clipboard_is_cut) {
+            ch->clear();    
+        }
     }
     channel_clipboard.clear();
+    channel_clipboard_is_cut = false;
     listChannels(false);
 }
 void MainWindow::deleteSelectedChannels(){

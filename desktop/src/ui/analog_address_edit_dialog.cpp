@@ -10,6 +10,7 @@ AnalogAddressEditDialog::AnalogAddressEditDialog(MainWindow *parent, int index) 
     index(index)
 {
     ui->setupUi(this);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &AnalogAddressEditDialog::save);
     setWindowModality(Qt::WindowModal);
 
     ui->numberTxt->setValidator(new QRegularExpressionValidator(QRegularExpression("^[0-9]+$"),  ui->numberTxt));

@@ -116,9 +116,9 @@ namespace Anytone {
         QString temp_receive_group_name;
 
         Talkgroup *contact = nullptr;
-        RadioId *radioid;
-        ScanList *scanlist;
-        ReceiveGroup *receive_group_list;
+        RadioId *radioid = nullptr;
+        ScanList *scanlist = nullptr;
+        ReceiveGroup *receive_group_list = nullptr;
 
 
         

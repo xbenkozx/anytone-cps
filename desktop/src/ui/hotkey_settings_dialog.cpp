@@ -11,6 +11,7 @@ HotKeySettingsDialog::HotKeySettingsDialog(MainWindow *parent) :
     main_window(parent)
 {
     ui->setupUi(this);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &HotKeySettingsDialog::save);
     setWindowModality(Qt::WindowModal);
 
     setupUI();

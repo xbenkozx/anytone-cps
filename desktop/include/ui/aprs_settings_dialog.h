@@ -17,6 +17,7 @@ public:
     ~AprsSettingsDialog();
     void setupUI();
     void loadData();
+    void save();
     static double degMinToDecimal(int deg, double minutes);
     static double toFrequencyDouble(int frequency);
     static QString toFrequencyString(int frequency);

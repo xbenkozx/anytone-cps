@@ -16,7 +16,8 @@ AprsSettingsDialog::AprsSettingsDialog(QWidget *parent) :
 
     setupUI();
     loadData();
-    
+
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &AprsSettingsDialog::save);
 }
 AprsSettingsDialog::~AprsSettingsDialog(){}
 
@@ -262,6 +263,134 @@ void AprsSettingsDialog::loadData(){
     ui->digitalReportCallType8Cmbx->setCurrentIndex(aprs->digital_report_call_type_8);
 
     ui->passAllCmbx->setCurrentIndex(aprs->pass_all);
+}
+
+void AprsSettingsDialog::save(){
+    if(!aprs) return;
+
+    auto freqInt = [](const QString &s){ return qRound(s.toDouble() * 100000); };
+
+    // Common
+    aprs->manual_tx_interval = ui->manualTxIntervalCmbx->currentIndex();
+    aprs->auto_tx_interval = ui->autoTxIntervalCmbx->currentIndex();
+    aprs->roaming_support = ui->roamingSupportCmbx->currentIndex();
+    aprs->fixed_location_beacon = ui->fixedBeaconLocationCmbx->currentIndex();
+    aprs->altitude = ui->aprsAltDataTxt->text().toInt();
+    UserSettings::aprs_alt_type = ui->aprsAltDataCmbx->currentIndex();
+    aprs->dis_time = ui->aprsDisTimeCmbx->currentIndex();
+
+    aprs->fix_1_lat = ui->fix1LatTxt->text().toDouble();
+    aprs->fix_2_lat = ui->fix2LatTxt->text().toDouble();
+    aprs->fix_3_lat = ui->fix3LatTxt->text().toDouble();
+    aprs->fix_4_lat = ui->fix4LatTxt->text().toDouble();
+    aprs->fix_5_lat = ui->fix5LatTxt->text().toDouble();
+    aprs->fix_6_lat = ui->fix6LatTxt->text().toDouble();
+    aprs->fix_7_lat = ui->fix7LatTxt->text().toDouble();
+    aprs->fix_8_lat = ui->fix8LatTxt->text().toDouble();
+
+    aprs->fix_1_ns = ui->fix1NsCmbx->currentIndex();
+    aprs->fix_2_ns = ui->fix2NsCmbx->currentIndex();
+    aprs->fix_3_ns = ui->fix3NsCmbx->currentIndex();
+    aprs->fix_4_ns = ui->fix4NsCmbx->currentIndex();
+    aprs->fix_5_ns = ui->fix5NsCmbx->currentIndex();
+    aprs->fix_6_ns = ui->fix6NsCmbx->currentIndex();
+    aprs->fix_7_ns = ui->fix7NsCmbx->currentIndex();
+    aprs->fix_8_ns = ui->fix8NsCmbx->currentIndex();
+
+    aprs->fix_1_lng = ui->fix1LongTxt->text().toDouble();
+    aprs->fix_2_lng = ui->fix2LongTxt->text().toDouble();
+    aprs->fix_3_lng = ui->fix3LongTxt->text().toDouble();
+    aprs->fix_4_lng = ui->fix4LongTxt->text().toDouble();
+    aprs->fix_5_lng = ui->fix5LongTxt->text().toDouble();
+    aprs->fix_6_lng = ui->fix6LongTxt->text().toDouble();
+    aprs->fix_7_lng = ui->fix7LongTxt->text().toDouble();
+    aprs->fix_8_lng = ui->fix8LongTxt->text().toDouble();
+
+    aprs->fix_1_ew = ui->fix1EwCmbx->currentIndex();
+    aprs->fix_2_ew = ui->fix2EwCmbx->currentIndex();
+    aprs->fix_3_ew = ui->fix3EwCmbx->currentIndex();
+    aprs->fix_4_ew = ui->fix4EwCmbx->currentIndex();
+    aprs->fix_5_ew = ui->fix5EwCmbx->currentIndex();
+    aprs->fix_6_ew = ui->fix6EwCmbx->currentIndex();
+    aprs->fix_7_ew = ui->fix7EwCmbx->currentIndex();
+    aprs->fix_8_ew = ui->fix8EwCmbx->currentIndex();
+
+    // Analog
+    aprs->tx_tone = ui->analogAprsTxToneCmbx->currentIndex();
+    aprs->to_call = ui->toCallTxt->text();
+    aprs->to_call_ssid = ui->toCallSsidCmbx->currentIndex();
+    aprs->your_call = ui->yourCallTxt->text();
+    aprs->your_call_ssid = ui->yourCallSsidCmbx->currentIndex();
+    aprs->aprs_symbol = ui->aprsSymbolTableTxt->text();
+    aprs->map_icon = ui->aprsMapIconTxt->text();
+    aprs->digipeater_path = ui->digipeaterPathTxt->text();
+    aprs->sending_text = ui->sendingTextTxt->text();
+    aprs->tx_delay = ui->txDelayCmbx->currentIndex();
+    aprs->send_subtone = ui->sendSubToneCmbx->currentIndex();
+    aprs->ctcss = ui->ctcssToneCmbx->currentIndex();
+    aprs->dcs = ui->dcsToneCmbx->currentIndex();
+    aprs->prewave_time = ui->prewaveTimeCmbx->currentIndex();
+    aprs->tx_power = ui->txPowerCmbx->currentIndex();
+    aprs->analog_tx_mode = ui->analogAprsTxCmbx->currentIndex();
+
+    aprs->filter_position = ui->filterPositionChbx->isChecked();
+    aprs->filter_mic_e = ui->filterMicEChbx->isChecked();
+    aprs->filter_object = ui->filterObjectChbx->isChecked();
+    aprs->filter_item = ui->filterItemChbx->isChecked();
+    aprs->filter_message = ui->filterMessageChbx->isChecked();
+    aprs->filter_wx_report = ui->filterWxReportChbx->isChecked();
+    aprs->filter_nmea_report = ui->filterNmeaReportChbx->isChecked();
+    aprs->filter_status_report = ui->filterStatusReportChbx->isChecked();
+    aprs->filter_other = ui->filterOtherChbx->isChecked();
+
+    aprs->tx_freq_1 = freqInt(ui->analogTxFreq1Txt->text());
+    aprs->tx_freq_2 = freqInt(ui->analogTxFreq2Txt->text());
+    aprs->tx_freq_3 = freqInt(ui->analogTxFreq3Txt->text());
+    aprs->tx_freq_4 = freqInt(ui->analogTxFreq4Txt->text());
+    aprs->tx_freq_5 = freqInt(ui->analogTxFreq5Txt->text());
+    aprs->tx_freq_6 = freqInt(ui->analogTxFreq6Txt->text());
+    aprs->tx_freq_7 = freqInt(ui->analogTxFreq7Txt->text());
+    aprs->tx_freq_8 = freqInt(ui->analogTxFreq8Txt->text());
+
+    // Digital: index 0 maps back to the 0x0fa2 "none" sentinel loadData uses
+    auto chVal = [](int idx){ return idx == 0 ? 0x0fa2 : idx; };
+    aprs->digital_report_channel_1 = chVal(ui->digitalReportChannel1Cmbx->currentIndex());
+    aprs->digital_report_channel_2 = chVal(ui->digitalReportChannel2Cmbx->currentIndex());
+    aprs->digital_report_channel_3 = chVal(ui->digitalReportChannel3Cmbx->currentIndex());
+    aprs->digital_report_channel_4 = chVal(ui->digitalReportChannel4Cmbx->currentIndex());
+    aprs->digital_report_channel_5 = chVal(ui->digitalReportChannel5Cmbx->currentIndex());
+    aprs->digital_report_channel_6 = chVal(ui->digitalReportChannel6Cmbx->currentIndex());
+    aprs->digital_report_channel_7 = chVal(ui->digitalReportChannel7Cmbx->currentIndex());
+    aprs->digital_report_channel_8 = chVal(ui->digitalReportChannel8Cmbx->currentIndex());
+
+    aprs->digital_report_slot_1 = ui->digitalReportSlot1Cmbx->currentIndex();
+    aprs->digital_report_slot_2 = ui->digitalReportSlot2Cmbx->currentIndex();
+    aprs->digital_report_slot_3 = ui->digitalReportSlot3Cmbx->currentIndex();
+    aprs->digital_report_slot_4 = ui->digitalReportSlot4Cmbx->currentIndex();
+    aprs->digital_report_slot_5 = ui->digitalReportSlot5Cmbx->currentIndex();
+    aprs->digital_report_slot_6 = ui->digitalReportSlot6Cmbx->currentIndex();
+    aprs->digital_report_slot_7 = ui->digitalReportSlot7Cmbx->currentIndex();
+    aprs->digital_report_slot_8 = ui->digitalReportSlot8Cmbx->currentIndex();
+
+    aprs->digital_report_tg_1 = ui->digitalReportTg1Txt->text().toInt();
+    aprs->digital_report_tg_2 = ui->digitalReportTg2Txt->text().toInt();
+    aprs->digital_report_tg_3 = ui->digitalReportTg3Txt->text().toInt();
+    aprs->digital_report_tg_4 = ui->digitalReportTg4Txt->text().toInt();
+    aprs->digital_report_tg_5 = ui->digitalReportTg5Txt->text().toInt();
+    aprs->digital_report_tg_6 = ui->digitalReportTg6Txt->text().toInt();
+    aprs->digital_report_tg_7 = ui->digitalReportTg7Txt->text().toInt();
+    aprs->digital_report_tg_8 = ui->digitalReportTg8Txt->text().toInt();
+
+    aprs->digital_report_call_type_1 = ui->digitalReportCallType1Cmbx->currentIndex();
+    aprs->digital_report_call_type_2 = ui->digitalReportCallType2Cmbx->currentIndex();
+    aprs->digital_report_call_type_3 = ui->digitalReportCallType3Cmbx->currentIndex();
+    aprs->digital_report_call_type_4 = ui->digitalReportCallType4Cmbx->currentIndex();
+    aprs->digital_report_call_type_5 = ui->digitalReportCallType5Cmbx->currentIndex();
+    aprs->digital_report_call_type_6 = ui->digitalReportCallType6Cmbx->currentIndex();
+    aprs->digital_report_call_type_7 = ui->digitalReportCallType7Cmbx->currentIndex();
+    aprs->digital_report_call_type_8 = ui->digitalReportCallType8Cmbx->currentIndex();
+
+    aprs->pass_all = ui->passAllCmbx->currentIndex();
 }
 
 double AprsSettingsDialog::toFrequencyDouble(int frequency){

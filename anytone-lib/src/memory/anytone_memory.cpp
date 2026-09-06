@@ -380,6 +380,10 @@ void Memory::loadData(QXmlStreamReader &xml){
             }else if(xml.name() == u"APRSSettings") {
                 Memory::instance().update1(load_count++, load_max, "Loading Data");
                 aprs_settings->load(xml);
+            }else if(xml.name() == u"MasterID") {
+                Memory::instance().update1(load_count++, load_max, "Loading Data");
+                master_radio_id->load(xml);
+                token = xml.readNext();
             }else if(xml.name() == u"AlarmSettings") {
                 Memory::instance().update1(load_count++, load_max, "Loading Data");
                 alarm_settings->load(xml);
@@ -421,7 +425,8 @@ void Memory::loadData(QXmlStreamReader &xml){
             }else if(xml.name() == u"HotKeySettings") {
                 hotkey->load(xml);
                 Memory::instance().update1(load_count++, load_max, "Loading Data");
-                token = xml.readNext();
+                // hotkey->load already leaves the reader on the next element;
+                // do not advance again or that element (e.g. MasterID) is skipped.
             }else if(xml.name() == u"OptionalSettings") {
                 Memory::instance().update1(load_count++, load_max, "Loading Data");
                 optional_settings->load(xml);
@@ -457,11 +462,13 @@ void Memory::loadData(QXmlStreamReader &xml){
             }else if(xml.name() == u"Tone2Settings") {
                 Memory::instance().update1(load_count++, load_max, "Loading Data");
                 tone2_settings->load(xml);
-                token = xml.readNext();
+                // load leaves the reader on the next element; do not advance
+                // again or that element (Tone5Settings) is skipped.
             }else if(xml.name() == u"Tone5Settings") {
                 Memory::instance().update1(load_count++, load_max, "Loading Data");
                 tone5_settings->load(xml);
-                token = xml.readNext();
+                // load leaves the reader on the next element; do not advance
+                // again or that element (ZoneList) is skipped.
             }else if(xml.name() == u"ZoneList") {
                 Memory::instance().update1(load_count++, load_max, "Loading Data");
                 loadZones(xml);
@@ -768,6 +775,8 @@ void Memory::linkZoneRef(){
     for (Zone* zone : zones) {
         if (!zone) continue;
 
+        zone->channels.clear();
+
         if(zone->temp_member_channel_idxs.size() > 0){
             for(uint16_t idx : zone->temp_member_channel_idxs){
                 if(idx >= Memory::channels.size()) continue;
@@ -778,7 +787,11 @@ void Memory::linkZoneRef(){
         if(zone->temp_member_channels.size() > 0){
             for(QVector<QString> member : zone->temp_member_channels){
                 int ch_idx = channels_list.indexOf(member);
-                if(ch_idx < 0) continue;
+                if(ch_idx < 0){
+                    qDebug() << "WARN: Zone" << zone->name << "- no channel matches"
+                             << member.value(0) << member.value(1) << member.value(2);
+                    continue;
+                }
                 zone->channels.push_back(Memory::channels.at(ch_idx));
             }
         }
@@ -839,6 +852,7 @@ void Memory::linkChannelRef(){
 }
 void Memory::linkScanListRef(){
     for(ScanList *sc : Memory::scanlists){
+        sc->channels.clear();
         for(int idx : sc->channel_member_idxs){
             if(idx < 0 || idx >= Memory::channels.size()) continue;
             sc->channels.push_back(Memory::channels.at(idx));
@@ -847,6 +861,7 @@ void Memory::linkScanListRef(){
 }
 void Memory::linkRoamingZoneRef(){
     for(RoamingZone *z : Memory::roaming_zones){
+        z->channels.clear();
         for(int idx : z->channel_idxs){
             if(idx < 0 || idx >= Memory::roaming_channels.size()) continue;
             z->channels.push_back(Memory::roaming_channels.at(idx));
@@ -862,6 +877,7 @@ void Memory::linkHotKeyRef(){
 }
 void Memory::linkReceiveGroupRef(){
     for(ReceiveGroup *z : Memory::receive_group_call_lists){
+        z->talkgroups.clear();
         for(int idx : z->tg_idxs){
             if(idx < 0 || idx >= Memory::talkgroups.size()) continue;
             z->talkgroups.push_back(Memory::talkgroups.at(idx));
@@ -870,6 +886,8 @@ void Memory::linkReceiveGroupRef(){
 }
 void Memory::linkAmZoneRef(){
     for(AmZone *zone : am_zones){
+        zone->member_channels.clear();
+        zone->scan_channels.clear();
         for(int idx : zone->member_channel_idxs){
             if(idx < 0 || idx >= am_air_list.size()) continue;
             zone->member_channels.append(am_air_list[idx]);

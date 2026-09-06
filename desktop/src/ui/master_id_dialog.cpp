@@ -10,6 +10,7 @@ MasterIdDialog::MasterIdDialog(MainWindow *parent) :
     ui(std::make_unique<Ui_MasterIdDialog>())
 {
     ui->setupUi(this);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &MasterIdDialog::save);
     setWindowModality(Qt::WindowModal);
     this->main_window = parent;
 

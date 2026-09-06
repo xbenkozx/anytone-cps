@@ -72,6 +72,7 @@ public:
     void parseOptionalSettings();
     void parsePrefabricatedSms();
     void parseRadioIdData();
+    void parseRepeaterListData();
     void parseReceiveGroupCallList();
     void parseRoamingChannel();
     void parseRoamingZone();

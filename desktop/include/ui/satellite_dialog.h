@@ -17,7 +17,7 @@ class SatelliteDialog : public QDialog
 public:
     explicit SatelliteDialog(QWidget *parent = nullptr);
     ~SatelliteDialog();
-    void downloadKeplerData();
+    void downloadKeplerData(int attempt = 0);
     void decodeSatelliteData(QString data);
     void writeData();
 

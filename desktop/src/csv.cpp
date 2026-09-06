@@ -19,6 +19,8 @@
 #include "memory/analog_address.h"
 #include "memory/fm.h"
 #include "memory/gps_roaming.h"
+#include "memory/roaming_channel.h"
+#include "memory/roaming_zone.h"
 #include "memory/prefabricated_sms.h"
 
 QMap<CsvList::ListType, QString> CsvList::loadFile(QString filepath){
@@ -102,12 +104,20 @@ bool CsvList::loadCsvFile(QString filepath, CsvList::ListType list_type){
     if (header_str.endsWith(','))
         header_str.chop(1);
 
-    QStringList headers = header_str.split(csvComma);
+    // Tab-separated exports (e.g. przemienniki.net repeater lists)
+    const bool tab_separated = header_str.contains('\t');
+    auto splitLine = [&](const QString &line) -> QStringList {
+        return tab_separated ? line.split('\t') : line.split(csvComma);
+    };
 
-    // Strip quotes from headers once
+    QStringList headers = splitLine(header_str);
+
+    // Strip quotes from headers once; trim stray whitespace
+    // (e.g. the official zone export has a trailing space in "Zone Hide ")
     for (QString &h : headers) {
         if (h.size() >= 2 && h.front() == '"' && h.back() == '"')
             h = h.mid(1, h.size() - 2);
+        h = h.trimmed();
     }
 
     // Header-less contact databases (e.g. DMR user DB exports such as
@@ -133,7 +143,7 @@ bool CsvList::loadCsvFile(QString filepath, CsvList::ListType list_type){
     int skipped = 0;
     auto parseLine = [&](const QString &line){
         if(item_count > 100 && index % int(item_count/100) == 0) update2(index, item_count, "Loading CSV File");
-        QStringList fields = line.split(csvComma);
+        QStringList fields = splitLine(line);
         if (fields.size() < headers.size()) {
             skipped++;
             return;
@@ -174,7 +184,14 @@ bool CsvList::saveCsvFile(QString filepath, CsvList::ListType list_type){
 void CsvList::parseData(CsvList::ListType list_type){
     switch(list_type){
         case CsvList::ListType::Channel:
-            parseChannelData();
+            // Repeater directory export (przemienniki.net): no channel
+            // numbers, identified by its Callsign/Duplex columns.
+            if(!data_list.isEmpty() && data_list.first().contains("Callsign")
+                                    && data_list.first().contains("Duplex")){
+                parseRepeaterListData();
+            }else{
+                parseChannelData();
+            }
             break;
         case CsvList::ListType::DigitalContactList:
             parseDigitalContactData();
@@ -447,8 +464,14 @@ void CsvList::parseAutoRepeaterOffsetFrequencies(){
     }
 }
 void CsvList::parseChannelData(){
+    int row = 0;
     for(QHash<QString, QString> ch_data : data_list){
         int idx = ch_data["No."].toInt() - 1;
+        row++;
+        if(idx < 0 || idx >= Anytone::Memory::channels.size()){
+            qDebug() << "WARN: Invalid channel index in CSV row" << row;
+            continue;
+        }
         Anytone::Channel *ch = Anytone::Memory::channels.at(idx);
         ch->name = ch_data["Channel Name"];
         ch->setFrequencyStr(ch_data["Receive Frequency"], ch_data["Transmit Frequency"]);
@@ -489,7 +512,18 @@ void CsvList::parseChannelData(){
         if(Constants::PTT_ID.indexOf(ch_data["PTT ID"]) != -1) 
             ch->ptt_id = Constants::PTT_ID.indexOf(ch_data["PTT ID"]);
             
-        ch->rx_color_code_idx = ch_data["RX Color Code"].toInt();
+        // Official CPS exports the DMR color code as "Color Code" and the
+        // time slot as "Slot" (1/2)
+        if(ch_data.contains("Color Code")){
+            ch->rx_color_code_idx = ch_data["Color Code"].toInt();
+            ch->tx_color_code_idx = ch_data["Color Code"].toInt();
+        }
+        if(ch_data.contains("RX Color Code"))
+            ch->rx_color_code_idx = ch_data["RX Color Code"].toInt();
+        if(ch_data.contains("Slot")){
+            int slot = ch_data["Slot"].toInt();
+            if(slot == 1 || slot == 2) ch->time_slot = (slot == 2);
+        }
         ch->temp_scan_list_name = ch_data["Scan List"];
         ch->temp_receive_group_name = ch_data["Receive Group List"];
 
@@ -517,6 +551,154 @@ void CsvList::parseChannelData(){
         if(Constants::OFF_ON.indexOf(ch_data["APRS RX"]) != -1) 
             ch->aprs_rx = Constants::OFF_ON.indexOf(ch_data["APRS RX"]);
     }
+}
+void CsvList::parseRepeaterListData(){
+    // przemienniki.net export: Callsign, Modes, TX Frequency, TX CTCSS,
+    // RX Frequency, RX CTCSS, RX 1750, Duplex, Offset, Status, ...
+    // The repeater's TX is the radio's RX and vice versa; the repeater's
+    // RX CTCSS is the tone the radio must ENCODE to open it.
+    int slot = 0;
+    int roaming_slot = 0;
+    int imported = 0;
+    int updated = 0;
+    int skipped = 0;
+    QVector<Anytone::RoamingChannel*> new_roaming_channels;
+
+    // Re-importing an updated repeater list refreshes existing channels in
+    // place (matched by name), so nothing else in memory is touched and no
+    // duplicates are created.
+    QHash<QString, int> existing_channels;
+    for(int i = 0; i < Anytone::Memory::channels.size(); i++){
+        Anytone::Channel *c = Anytone::Memory::channels.at(i);
+        if(c->rx_frequency > 0 && !c->name.isEmpty()) existing_channels[c->name] = i;
+    }
+    QHash<QString, int> existing_roaming;
+    for(int i = 0; i < Anytone::Memory::roaming_channels.size(); i++){
+        Anytone::RoamingChannel *c = Anytone::Memory::roaming_channels.at(i);
+        if(c->rx_frequency > 0 && !c->name.isEmpty()) existing_roaming[c->name] = i;
+    }
+
+    auto ctcssIndex = [](const QString &v) -> int {
+        bool ok = false;
+        double f = v.toDouble(&ok);
+        if(!ok || f <= 0) return -1;
+        return Constants::CTCSS_CODE.indexOf(QString::number(f, 'f', 1));
+    };
+
+    auto channelForName = [&](const QString &name, bool &is_new) -> Anytone::Channel* {
+        int idx = existing_channels.value(name, -1);
+        if(idx >= 0){
+            is_new = false;
+            return Anytone::Memory::channels.at(idx);
+        }
+        is_new = true;
+        while(slot < Anytone::Memory::channels.size()
+              && Anytone::Memory::channels.at(slot)->rx_frequency > 0) slot++;
+        if(slot >= Anytone::Memory::channels.size()){
+            qDebug() << "WARN: No free channel slots left, stopping repeater import";
+            return nullptr;
+        }
+        return Anytone::Memory::channels.at(slot++);
+    };
+
+    for(QHash<QString, QString> data : data_list){
+        const bool is_fm = data["Modes"].contains("fm", Qt::CaseInsensitive);
+        const bool is_dmr = data["Modes"].contains("dmr", Qt::CaseInsensitive);
+
+        if(!is_fm && !is_dmr){
+            qDebug() << "Repeater" << data["Callsign"] << "skipped (unsupported modes:" << data["Modes"] << ")";
+            skipped++;
+            continue;
+        }
+
+        if(is_fm){
+            bool is_new = true;
+            Anytone::Channel *ch = channelForName(data["Callsign"], is_new);
+            if(!ch) break;
+            if(is_new) imported++; else updated++;
+            ch->name = data["Callsign"];
+            ch->setFrequencyStr(data["TX Frequency"], data["RX Frequency"]);
+            ch->channel_type = 0;   // A-Analog
+            ch->band_width = 0;     // 12.5K - Polish band plan channel raster
+            ch->tx_power = 2;       // High
+
+            int encode_tone = ctcssIndex(data["RX CTCSS"]);
+            if(encode_tone != -1){
+                ch->ctcss_dcs_encode = 1;
+                ch->ctcss_encode_tone = encode_tone;
+            }
+            int decode_tone = ctcssIndex(data["TX CTCSS"]);
+            if(decode_tone != -1){
+                ch->ctcss_dcs_decode = 1;
+                ch->ctcss_decode_tone = decode_tone;
+            }
+        }
+
+        if(is_dmr){
+            // The export carries no color code or slot; CC1 is the de facto
+            // standard (Brandmeister). Create one channel per time slot.
+            for(int ts = 1; ts <= 2; ts++){
+                bool is_new = true;
+                Anytone::Channel *ch = channelForName(data["Callsign"] + " TS" + QString::number(ts), is_new);
+                if(!ch) break;
+                if(is_new) imported++; else updated++;
+                ch->name = data["Callsign"] + " TS" + QString::number(ts);
+                ch->setFrequencyStr(data["TX Frequency"], data["RX Frequency"]);
+                ch->channel_type = 1;   // D-Digital
+                ch->band_width = 0;     // 12.5K
+                ch->tx_power = 2;       // High
+                ch->rx_color_code_idx = 1;
+                ch->tx_color_code_idx = 1;
+                ch->time_slot = (ts == 2);
+            }
+
+            // Roaming channel for the same repeater (used by the radio to
+            // hop between repeaters of the network while keeping the TG).
+            int existing_rc = existing_roaming.value(data["Callsign"], -1);
+            Anytone::RoamingChannel *rc = nullptr;
+            if(existing_rc >= 0){
+                rc = Anytone::Memory::roaming_channels.at(existing_rc);
+            }else{
+                while(roaming_slot < Anytone::Memory::roaming_channels.size()
+                      && Anytone::Memory::roaming_channels.at(roaming_slot)->rx_frequency > 0) roaming_slot++;
+                if(roaming_slot < Anytone::Memory::roaming_channels.size()){
+                    rc = Anytone::Memory::roaming_channels.at(roaming_slot++);
+                    new_roaming_channels.append(rc);   // only new ones get zoned
+                }else{
+                    qDebug() << "WARN: No free roaming channel slots for" << data["Callsign"];
+                }
+            }
+            if(rc != nullptr){
+                rc->name = data["Callsign"];
+                rc->rx_frequency = qRound(data["TX Frequency"].toDouble() * 100000);
+                rc->tx_frequency = qRound(data["RX Frequency"].toDouble() * 100000);
+                rc->color_code = 1;
+                rc->slot = 0;   // Slot1
+            }
+        }
+    }
+
+    // Group the new roaming channels into free roaming zones (max 64 each)
+    int zone_idx = 0;
+    int zone_no = 1;
+    while(!new_roaming_channels.isEmpty()){
+        while(zone_idx < Anytone::Memory::roaming_zones.size()
+              && Anytone::Memory::roaming_zones.at(zone_idx)->channels.size() > 0) zone_idx++;
+        if(zone_idx >= Anytone::Memory::roaming_zones.size()){
+            qDebug() << "WARN: No free roaming zones left";
+            break;
+        }
+        Anytone::RoamingZone *rz = Anytone::Memory::roaming_zones.at(zone_idx++);
+        rz->name = QString("Roaming %1").arg(zone_no++);
+        for(int i = 0; i < 64 && !new_roaming_channels.isEmpty(); i++){
+            Anytone::RoamingChannel *rc = new_roaming_channels.takeFirst();
+            rz->channels.append(rc);
+            rz->channel_idxs.append(rc->id);   // linkReferences rebuilds from these
+        }
+    }
+
+    qDebug().nospace() << "Repeater list: " << imported << " channels added, " << updated
+                       << " updated, " << skipped << " repeaters skipped";
 }
 void CsvList::parseDigitalContactData(){
     qDebug() << data_list.size();
@@ -675,8 +857,14 @@ void CsvList::parseTone2Encode(){
     QHash<QString, QString> data = data_list.at(0);
 }
 void CsvList::parseZoneData(){
+    int row = 0;
     for(QHash<QString, QString> data : data_list){
         int idx = data["No."].toInt() - 1;
+        row++;
+        if(idx < 0 || idx >= Anytone::Memory::zones.size()){
+            qDebug() << "WARN: Invalid zone index in CSV row" << row;
+            continue;
+        }
         Anytone::Zone *zone = Anytone::Memory::zones.at(idx);
         zone->name = data["Zone Name"];
         zone->hide = data["Zone Hide"].toInt();
@@ -685,10 +873,19 @@ void CsvList::parseZoneData(){
         QStringList member_rx_freq = data["Zone Channel Member RX Frequency"].split("|");
         QStringList member_tx_freq = data["Zone Channel Member TX Frequency"].split("|");
 
+        if(member_names.size() != member_rx_freq.size() || member_names.size() != member_tx_freq.size()){
+            qDebug() << "WARN: Zone" << zone->name << "member/frequency count mismatch in CSV row" << row;
+        }
+        int member_count = qMin(member_names.size(), qMin(member_rx_freq.size(), member_tx_freq.size()));
+
         zone->temp_a_channel_name = {data["A Channel"], data["A Channel RX Frequency"], data["A Channel TX Frequency"]};
         zone->temp_b_channel_name = {data["B Channel"], data["B Channel RX Frequency"], data["B Channel TX Frequency"]};
 
-        for(int i = 0; i < member_names.size(); i++){
+        zone->temp_member_channels.clear();
+        zone->temp_member_channel_idxs.clear();
+        zone->channels.clear();
+
+        for(int i = 0; i < member_count; i++){
             QString name = member_names.at(i);
             QString rx_freq = member_rx_freq.at(i);
             QString tx_freq = member_tx_freq.at(i);

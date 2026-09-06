@@ -6,6 +6,8 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QFileInfo>
+#include <QTimer>
+#include <QMessageBox>
 #include "memory/anytone_memory.h"
 #include "memory/satellite.h"
 #include "satellite_table_model.h"
@@ -107,16 +109,34 @@ SatelliteDialog::~SatelliteDialog(){
 }
 
 
-void SatelliteDialog::downloadKeplerData(){
+void SatelliteDialog::downloadKeplerData(int attempt){
+    const int maxAttempts = 3;
 
-    
+    ui->progressBar->setVisible(true);
+    ui->progressBar->setRange(0,0); // busy
+    ui->refreshBtn->setEnabled(false);
+    ui->label->setText("Downloading Kepler data (attempt " + QString::number(attempt+1) + " of " + QString::number(maxAttempts) + ")...");
+
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    QNetworkReply *reply = manager->get(QNetworkRequest(QUrl("https://celestrak.org/NORAD/elements/gp.php?GROUP=amateur")));
+    const QUrl requestUrl("https://celestrak.org/NORAD/elements/gp.php?GROUP=amateur");
+    QNetworkReply *reply = manager->get(QNetworkRequest(requestUrl));
 
-    connect(reply, &QNetworkReply::finished, [this, reply]() {
+    // add a per-request timeout so we don't hang indefinitely
+    QTimer *timeoutTimer = new QTimer(reply);
+    timeoutTimer->setSingleShot(true);
+    const int requestTimeoutMs = 10000; // 10s
+    connect(timeoutTimer, &QTimer::timeout, reply, &QNetworkReply::abort);
+    timeoutTimer->start(requestTimeoutMs);
+
+    connect(reply, &QNetworkReply::finished, [this, reply, attempt, maxAttempts, timeoutTimer, requestUrl]() {
+        if(timeoutTimer->isActive()) timeoutTimer->stop();
+        ui->progressBar->setVisible(false);
+        ui->progressBar->setRange(0,100);
+        ui->refreshBtn->setEnabled(false);
+
         if (reply->error() == QNetworkReply::NoError) {
             QByteArray data = reply->readAll();
-            QString content = QString::fromUtf8(data);                
+            QString content = QString::fromUtf8(data);
             QFile kepFile(UserSettings::getUserDirectory() + "kepler.txt");
             if(kepFile.open(QIODevice::WriteOnly)){
                 kepFile.write(content.toUtf8());
@@ -126,13 +146,29 @@ void SatelliteDialog::downloadKeplerData(){
             QFileInfo fileInfo(UserSettings::getUserDirectory() + "kepler.txt");
             if (fileInfo.exists()) {
                 ui->label->setText("Last Updated: " + fileInfo.lastModified().toString("MM/dd/yy HH:mm"));
+                ui->refreshBtn->setEnabled(true);
+            } else {
+                ui->label->setText("Kepler data downloaded");
+                ui->refreshBtn->setEnabled(true);
             }
-        }else{
-            qDebug() << "Error downloading Kepler data:" << reply->errorString();
+        } else {
+            qDebug() << "Error downloading Kepler data (attempt" << attempt+1 << "):" << reply->errorString();
+            if (attempt + 1 < maxAttempts) {
+                int nextAttempt = attempt + 1;
+                int backoffMs = 1500 * nextAttempt; // simple backoff
+                ui->label->setText("Retrying in " + QString::number(backoffMs/1000.0,'f',1) + "s (attempt " + QString::number(nextAttempt+1) + " of " + QString::number(maxAttempts) + ")");
+                qDebug() << "Retrying in" << backoffMs << "ms (attempt" << nextAttempt+1 << "of" << maxAttempts << ")";
+                QTimer::singleShot(backoffMs, this, [this, nextAttempt]() {
+                    this->downloadKeplerData(nextAttempt);
+                });
+            } else {
+                ui->label->setText("Failed to download Kepler data after " + QString::number(maxAttempts) + " attempts.");
+                QMessageBox::warning(this, "Kepler Data", QString("Failed to download Kepler data from %1 after %2 attempts.\nPlease check your network connection or try again later.")
+                                     .arg(requestUrl.toString()).arg(maxAttempts));
+            }
         }
         reply->deleteLater();
     });
-    
 }
 
 void SatelliteDialog::decodeSatelliteData(QString data){

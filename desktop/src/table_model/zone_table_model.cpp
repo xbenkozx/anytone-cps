@@ -62,9 +62,16 @@ QVariant ZoneTableModel::data(const QModelIndex& idx, int role) const {
     if (role != Qt::DisplayRole) return {};
 
     if (empty) {
-        // Keep index column visible, others blank like your previous "continue"
+        // Keep index and name visible so an imported zone whose channels did
+        // not link (e.g. channels not imported yet) is still discoverable.
         if (col == ColIndex) {
             return QString::number(row + 1);
+        }
+        if (col == ColName) {
+            return zone->name;
+        }
+        if (col == ColChannels && !zone->name.isEmpty()) {
+            return 0;
         }
         return {};
     }

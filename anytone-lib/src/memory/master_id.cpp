@@ -79,7 +79,7 @@ void Anytone::MasterId::save(QXmlStreamWriter &xml){
     xml.writeEndElement();
 }
 void Anytone::MasterId::load(QXmlStreamReader &xml){
-    if (xml.name() == "AESCode"){
+    if (xml.name() == "MasterID"){
         QXmlStreamAttributes attributes = xml.attributes();
         if(attributes.hasAttribute("dmr_id"))
             dmr_id = attributes.value("dmr_id").toInt();

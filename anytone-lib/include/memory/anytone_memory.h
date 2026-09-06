@@ -66,6 +66,7 @@ namespace Anytone {
         int MasterIdData;
         int MasterIdDataLength;
         int PrefabSmsSet;
+        int PrefabSmsBytemap;
         int PrefabSmsData;
         int PrefabSmsDataLength;
         int PrefabSmsDataOffset;
@@ -160,6 +161,7 @@ namespace Anytone {
         .MasterIdData = 0x2582000,
         .MasterIdDataLength = 0x20,
         .PrefabSmsSet = 0x1640000,
+        .PrefabSmsBytemap = 0x1640800,
         .PrefabSmsData = 0x2140000,
         .PrefabSmsDataLength = 0xd0,
         .PrefabSmsDataOffset = 0x100,
@@ -254,6 +256,7 @@ namespace Anytone {
         .MasterIdData = 0x3684000,
         .MasterIdDataLength = 0x40,
         .PrefabSmsSet = 0x2980000,
+        .PrefabSmsBytemap = 0x2980800,
         .PrefabSmsData = 0x3180000,
         .PrefabSmsDataLength = 0x1a0,
         .PrefabSmsDataOffset = 0x200,

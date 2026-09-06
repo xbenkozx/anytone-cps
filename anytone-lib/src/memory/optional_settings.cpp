@@ -6,11 +6,12 @@ void Anytone::OptionalSettings::decode_D878UVII(QByteArray data_0000, QByteArray
     poweron_display_2 = data_0600.mid(0x10, 0xe);
     poweron_password = static_cast<uint8_t>(data_0000.at(0x7));
     poweron_password_char = QString(data_0600.mid(0x20, 0x8));
-    default_startup_channel = static_cast<uint8_t>(data_0000.at(0xd7));
-    startup_zone_a = static_cast<uint8_t>(data_0000.at(0xd8));
-    startup_channel_a = static_cast<uint8_t>(data_0000.at(0xda));
-    startup_zone_b = static_cast<uint8_t>(data_0000.at(0xd9));
-    startup_channel_b = static_cast<uint8_t>(data_0000.at(0xdb));
+    // Default (power-on) channel lives at 0xca-0xce (per qdmr), not 0xd7-0xdb
+    default_startup_channel = static_cast<uint8_t>(data_0000.at(0xca));
+    startup_zone_a = static_cast<uint8_t>(data_0000.at(0xcb));
+    startup_zone_b = static_cast<uint8_t>(data_0000.at(0xcc));
+    startup_channel_a = static_cast<uint8_t>(data_0000.at(0xcd));
+    startup_channel_b = static_cast<uint8_t>(data_0000.at(0xce));
     startup_gps_test = static_cast<uint8_t>(data_0000.at(0xeb));
     startup_reset = static_cast<uint8_t>(data_0000.at(0xec));
 
@@ -542,11 +543,12 @@ void Anytone::OptionalSettings::encode_D878UVII(QByteArray &data_2500000, QByteA
     data_2500600.replace(0x10, 8, 
         poweron_password_char.toUtf8().leftJustified(8, '\0', true)
     );
-    data_2500000[0xd7] = default_startup_channel;
-    data_2500000[0xd8] = startup_zone_a;
-    data_2500000[0xda] = startup_channel_a;
-    data_2500000[0xd9] = startup_zone_b;
-    data_2500000[0xdb] = startup_channel_b;
+    // Default (power-on) channel lives at 0xca-0xce (per qdmr), not 0xd7-0xdb
+    data_2500000[0xca] = default_startup_channel;
+    data_2500000[0xcb] = startup_zone_a;
+    data_2500000[0xcc] = startup_zone_b;
+    data_2500000[0xcd] = startup_channel_a;
+    data_2500000[0xce] = startup_channel_b;
     data_2500000[0xeb] = startup_gps_test;
     data_2500000[0xec] = startup_reset;
 

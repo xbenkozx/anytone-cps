@@ -115,6 +115,7 @@ void ZoneEditDialog::updateChannelTables(){
     // ---------- Member channels ----------
     auto *memberModel = new QStandardItemModel(this);
     memberModel->setColumnCount(3);
+    memberModel->setHorizontalHeaderLabels(QStringList() << "Ch #" << "Ch Name" << "Rx");
 
     for (int i = 0; i < static_cast<int>(member_channels.size()); ++i) {
         const auto &ch = member_channels[i];
@@ -133,6 +134,7 @@ void ZoneEditDialog::updateChannelTables(){
     // ---------- Available channels ----------
     auto *channelModel = new QStandardItemModel(this);
     channelModel->setColumnCount(3);
+    channelModel->setHorizontalHeaderLabels(QStringList() << "Ch #" << "Ch Name" << "Rx");
 
     for (int i = 0; i < static_cast<int>(available_channels.size()); ++i) {
         const auto &ch = available_channels[i];
@@ -227,10 +229,9 @@ void ZoneEditDialog::orderDown(){
     if(!ui->memberTableView->selectionModel()->hasSelection()) return;
     auto rows = ui->memberTableView->selectionModel()->selectedRows();
     int idx = rows.first().row();
-    if(idx == zone->channels.size() - 1) return;
-    if (idx <= 0 || idx >= static_cast<int>(member_channels.size()))
+    if (idx < 0 || idx >= static_cast<int>(member_channels.size()) - 1)
         return;
-        
+
     Anytone::Channel* ch = member_channels.at(idx);
     member_channels.erase(member_channels.begin() + idx);
     member_channels.insert(member_channels.begin() + (idx + 1), ch);

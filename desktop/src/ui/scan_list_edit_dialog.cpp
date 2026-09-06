@@ -264,8 +264,7 @@ void ScanListEditDialog::orderDown(){
     if(!ui->availableChannelTableView->selectionModel()->hasSelection()) return;
     auto rows = ui->availableChannelTableView->selectionModel()->selectedRows();
     int idx = rows.first().row();
-    if(idx == scanlist->channels.size() - 1) return;
-    if (idx <= 0 || idx >= static_cast<int>(member_channels.size()))
+    if (idx < 0 || idx >= static_cast<int>(member_channels.size()) - 1)
         return;
         
     Anytone::Channel* ch = member_channels.at(idx);
