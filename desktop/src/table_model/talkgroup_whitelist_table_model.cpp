@@ -74,7 +74,7 @@ QVariant TalkgroupWhitelistTableModel::data(const QModelIndex& idx, int role) co
             return QString::number(tg->dmr_id);
 
         case ColCallType:
-            return Constants::CALL_TYPE.at(tg->call_type);
+            return Constants::safeAt(Constants::CALL_TYPE, tg->call_type);
 
         default:
             return {};

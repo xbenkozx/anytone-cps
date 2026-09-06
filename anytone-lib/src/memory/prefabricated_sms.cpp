@@ -22,11 +22,11 @@ QByteArray Anytone::PrefabricatedSms::encodeData(){
 }
 
 QByteArray Anytone::PrefabricatedSms::encode_D878UVII(){
-    return text.toUtf8().leftJustified(0xd0, '\0');
+    return text.toUtf8().leftJustified(0xd0, '\0', true);
 }
 
 QByteArray Anytone::PrefabricatedSms::encode_D890UV(){
-    return Format::wideCharString(text).leftJustified(0x1a0, '\0');
+    return Format::wideCharString(text).leftJustified(0x1a0, '\0', true);
 }
 
 void Anytone::PrefabricatedSms::save(QXmlStreamWriter &xml){

@@ -18,8 +18,8 @@ RetryConnectionDialog::RetryConnectionDialog(MainWindow *parent) :
 RetryConnectionDialog::~RetryConnectionDialog(){}
 void RetryConnectionDialog::retry(){
     if(is_write){
-        main_window->readFromRadio();
-    }else{
         main_window->writeToRadio();
+    }else{
+        main_window->readFromRadio();
     }
 }

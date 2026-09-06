@@ -7,6 +7,12 @@
 
 class Constants {
 public:
+    // Safe list lookup for values decoded from the radio: garbage indices
+    // are shown as raw numbers instead of crashing on out-of-range at().
+    static QString safeAt(const QStringList &list, int idx){
+        return (idx >= 0 && idx < list.size()) ? list.at(idx) : QString::number(idx);
+    }
+
     static const QString CPS_VERISON;
     static const QString CPS_BUILD_NUMBER;
     static const QString RADIO_MODEL;

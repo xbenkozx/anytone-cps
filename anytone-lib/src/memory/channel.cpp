@@ -435,7 +435,7 @@ QByteArray Anytone::Channel::encode_D878UVII(){
 
     data[34] = aes_encryption_idx;
     data.replace(35, 16, 
-        name.toUtf8().leftJustified(16, '\0')
+        name.toUtf8().leftJustified(16, '\0', true)
     );
     if(auto_scan) Bit::set(&bytes[52], 4);
     if(data_ack_disable) Bit::set(&bytes[52], 3);
@@ -542,7 +542,7 @@ QByteArray Anytone::Channel::encode_D890UV(){
     data[0x41] = r5tone_eot;
     data[0x43] = tx_color_code_idx;
 
-    data.replace(0x44, 0x20, Format::wideCharString(name).leftJustified(0x20, 0x0));
+    data.replace(0x44, 0x20, Format::wideCharString(name).leftJustified(0x20, 0x0, true));
 
     
     return data;

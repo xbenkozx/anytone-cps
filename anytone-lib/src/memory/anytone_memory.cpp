@@ -732,7 +732,7 @@ void Memory::loadDigitalContacts(QXmlStreamReader &xml){
         if(attributes.hasAttribute("items")) count = attributes.value("items").toInt();
         QXmlStreamReader::TokenType token = xml.readNext();
         if(token == QXmlStreamReader::StartElement && xml.name() == u"DigitalContact") {
-            if(index % int(count/100) == 0) Memory::instance().update2(index, count, "Loading Digital Contacts");
+            if(count > 100 && index % int(count/100) == 0) Memory::instance().update2(index, count, "Loading Digital Contacts");
             int idx = xml.attributes().value("id").toInt();
             DigitalContact *item = Memory::digital_contacts.at(idx);
             item->load(xml);
@@ -770,6 +770,7 @@ void Memory::linkZoneRef(){
 
         if(zone->temp_member_channel_idxs.size() > 0){
             for(uint16_t idx : zone->temp_member_channel_idxs){
+                if(idx >= Memory::channels.size()) continue;
                 zone->channels.push_back(Memory::channels.at(idx));
             }
         }
@@ -777,13 +778,14 @@ void Memory::linkZoneRef(){
         if(zone->temp_member_channels.size() > 0){
             for(QVector<QString> member : zone->temp_member_channels){
                 int ch_idx = channels_list.indexOf(member);
+                if(ch_idx < 0) continue;
                 zone->channels.push_back(Memory::channels.at(ch_idx));
             }
         }
 
         if(zone->temp_a_channel_name.size() > 0){
             int a_ch_id = channels_list.indexOf(zone->temp_a_channel_name);
-            if(a_ch_id != -1 && zone->channels.indexOf(Memory::channels.at(a_ch_id)) != 1){
+            if(a_ch_id != -1 && zone->channels.indexOf(Memory::channels.at(a_ch_id)) != -1){
                 zone->a_channel_idx = zone->channels.indexOf(Memory::channels.at(a_ch_id));
             }
         }
@@ -838,6 +840,7 @@ void Memory::linkChannelRef(){
 void Memory::linkScanListRef(){
     for(ScanList *sc : Memory::scanlists){
         for(int idx : sc->channel_member_idxs){
+            if(idx < 0 || idx >= Memory::channels.size()) continue;
             sc->channels.push_back(Memory::channels.at(idx));
         }
     }
@@ -845,13 +848,14 @@ void Memory::linkScanListRef(){
 void Memory::linkRoamingZoneRef(){
     for(RoamingZone *z : Memory::roaming_zones){
         for(int idx : z->channel_idxs){
+            if(idx < 0 || idx >= Memory::roaming_channels.size()) continue;
             z->channels.push_back(Memory::roaming_channels.at(idx));
         }
     }
 }
 void Memory::linkHotKeyRef(){
     for(HotkeyKey *key : hotkey->key_list){
-        if(key->call_type == 2 && key->call_obj != 0xffffffff){
+        if(key->call_type == 2 && key->call_obj < uint32_t(talkgroups.size())){
             key->talkgroup = talkgroups.at(key->call_obj);
         }
     }
@@ -859,6 +863,7 @@ void Memory::linkHotKeyRef(){
 void Memory::linkReceiveGroupRef(){
     for(ReceiveGroup *z : Memory::receive_group_call_lists){
         for(int idx : z->tg_idxs){
+            if(idx < 0 || idx >= Memory::talkgroups.size()) continue;
             z->talkgroups.push_back(Memory::talkgroups.at(idx));
         }
     }
@@ -866,9 +871,11 @@ void Memory::linkReceiveGroupRef(){
 void Memory::linkAmZoneRef(){
     for(AmZone *zone : am_zones){
         for(int idx : zone->member_channel_idxs){
+            if(idx < 0 || idx >= am_air_list.size()) continue;
             zone->member_channels.append(am_air_list[idx]);
         }
         for(int idx : zone->scan_channel_idxs){
+            if(idx < 0 || idx >= am_air_list.size()) continue;
             zone->scan_channels.append(am_air_list[idx]);
         }
 

@@ -88,22 +88,22 @@ QVariant SatelliteTableModel::data(const QModelIndex& idx, int role) const {
             return QStringList{"Off", "CTCSS", "DCS"}.at(sat->ctcss_dcs_decode);
 
         case ColCtcssRx:
-            if(sat->ctcss_dcs_decode == 1) return Constants::CTCSS_CODE.at(sat->ctcss_decode_tone);
+            if(sat->ctcss_dcs_decode == 1) return Constants::safeAt(Constants::CTCSS_CODE, sat->ctcss_decode_tone);
             return {};
 
         case ColDcsRx:
-            if(sat->ctcss_dcs_decode == 2) return Constants::DCS_CODE.at(sat->dcs_decode_tone);
+            if(sat->ctcss_dcs_decode == 2) return Constants::safeAt(Constants::DCS_CODE, sat->dcs_decode_tone);
             return {};
 
         case ColCtcDcsTx:
             return QStringList{"Off", "CTCSS", "DCS"}.at(sat->ctcss_dcs_encode);
         
         case ColCtcssTx:
-            if(sat->ctcss_dcs_encode == 1) return Constants::CTCSS_CODE.at(sat->ctcss_encode_tone);
+            if(sat->ctcss_dcs_encode == 1) return Constants::safeAt(Constants::CTCSS_CODE, sat->ctcss_encode_tone);
             return {};
 
         case ColDcsTx:
-            if(sat->ctcss_dcs_encode == 2) return Constants::DCS_CODE.at(sat->dcs_encode_tone);
+            if(sat->ctcss_dcs_encode == 2) return Constants::safeAt(Constants::DCS_CODE, sat->dcs_encode_tone);
             return {};
 
         default:

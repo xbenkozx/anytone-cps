@@ -74,7 +74,7 @@ QByteArray Anytone::RoamingChannel::encode_D878UVII(){
     data[0x8] = color_code;
     data[0x9] = slot;
     data.replace(0xa, 0x10, 
-        name.toUtf8().leftJustified(0x10, '\0')
+        name.toUtf8().leftJustified(0x10, '\0', true)
     );
     
     return data;
@@ -91,7 +91,7 @@ QByteArray Anytone::RoamingChannel::encode_D890UV(){
     data[0x8] = color_code;
     data[0x9] = slot;
     data.replace(0xa, 0x20, 
-        Format::wideCharString(name).leftJustified(0x20, '\0')
+        Format::wideCharString(name).leftJustified(0x20, '\0', true)
     );
     
     return data;

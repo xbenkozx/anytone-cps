@@ -158,7 +158,7 @@ QVariant HotkeyKeyTableModel::data(const QModelIndex& idx, int role) const {
             return QStringList{"Call", "Menu"}.at(key->mode);
 
         case ColMenu:
-            return Constants::HOTKEY_MENU.at(key->menu);
+            return Constants::safeAt(Constants::HOTKEY_MENU, key->menu);
 
         case ColCallType:
             if(key->call_type == 0xff) return "Off";

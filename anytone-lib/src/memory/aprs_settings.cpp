@@ -300,15 +300,15 @@ void Anytone::AprsSettings::encode_D878UVII(QByteArray &data_2501000, QByteArray
     data_2501000[0x104] = fix_8_ew;
 
     data_2501000.replace(0x16, 6, 
-        to_call.toUtf8().leftJustified(6, '\0')
+        to_call.toUtf8().leftJustified(6, '\0', true)
     );
     data_2501000[0x1c] = to_call_ssid;
     data_2501000.replace(0x1d, 6, 
-        your_call.toUtf8().leftJustified(6, '\0')
+        your_call.toUtf8().leftJustified(6, '\0', true)
     );
     data_2501000[0x23] = your_call_ssid;
 
-    QByteArray digitpeater_path_data = digipeater_path.toUtf8().leftJustified(0x38, '\0');
+    QByteArray digitpeater_path_data = digipeater_path.toUtf8().leftJustified(0x38, '\0', true);
     data_2501000.replace(0x24, 0x15, 
         digitpeater_path_data.mid(0, 0x15)
     );
@@ -351,7 +351,7 @@ void Anytone::AprsSettings::encode_D878UVII(QByteArray &data_2501000, QByteArray
     data_2501000[0x81] = repeater_activation_delay;
     data_2501000[0x82] = dis_time;
     data_2501000.replace(0x200, 0x3c,
-        sending_text.toUtf8().leftJustified(0x3c, '\0')
+        sending_text.toUtf8().leftJustified(0x3c, '\0', true)
     );
 
     uint8_t filters_1 = 0;
@@ -731,15 +731,15 @@ void Anytone::AprsSettings::encode_D890UV(QByteArray &data_3501000, QByteArray &
     data_3501000[0x104] = fix_8_ew;
 
     data_3501000.replace(0x16, 6, 
-        to_call.toUtf8().leftJustified(6, '\0')
+        to_call.toUtf8().leftJustified(6, '\0', true)
     );
     data_3501000[0x1c] = to_call_ssid;
     data_3501000.replace(0x1d, 6, 
-        your_call.toUtf8().leftJustified(6, '\0')
+        your_call.toUtf8().leftJustified(6, '\0', true)
     );
     data_3501000[0x23] = your_call_ssid;
 
-    QByteArray digitpeater_path_data = digipeater_path.toUtf8().leftJustified(0x38, '\0');
+    QByteArray digitpeater_path_data = digipeater_path.toUtf8().leftJustified(0x38, '\0', true);
     data_3501000.replace(0x24, 0x15, 
         digitpeater_path_data.mid(0, 0x15)
     );
@@ -782,7 +782,7 @@ void Anytone::AprsSettings::encode_D890UV(QByteArray &data_3501000, QByteArray &
     data_3501000[0x81] = repeater_activation_delay;
     data_3501000[0x82] = dis_time;
     data_3501000.replace(0x200, 0x60,
-        Format::wideCharString(sending_text).leftJustified(0x60, '\0')
+        Format::wideCharString(sending_text).leftJustified(0x60, '\0', true)
     );
 
     uint8_t filters_1 = 0;

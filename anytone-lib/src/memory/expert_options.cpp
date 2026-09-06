@@ -45,19 +45,19 @@ QByteArray Anytone::ExpertOptions::encode(){
     o_data[0x3] = frequency_mode;
     o_data[0x4] = !chinese;
     o_data[0x5] = !chinese;
-    o_data.replace(0xb, 4, band_settings_password.leftJustified(4, '\0').toUtf8());
-    o_data.replace(0x10, 7, radio_type.leftJustified(7, '\0').toUtf8());
-    o_data.replace(0x28, 4, program_password.leftJustified(4, '\0').toUtf8());
-    o_data.replace(0x2c, 4, area_code.leftJustified(4, '\0').toUtf8());
-    o_data.replace(0x30, 0x10, serial_number.leftJustified(0x10, '\0').toUtf8());
-    o_data.replace(0x40, 0x10, production_date.leftJustified(0x10, '\0').toUtf8());
-    o_data.replace(0x50, 8, manufacture_code.leftJustified(8, '\0').toUtf8());
-    o_data.replace(0x60, 0x10, maintenance_date.leftJustified(0x10, '\0').toUtf8());
-    o_data.replace(0x70, 0x10, dealer_code.leftJustified(0x10, '\0').toUtf8());
-    o_data.replace(0x80, 0x10, stock_date.leftJustified(0x10, '\0').toUtf8());
-    o_data.replace(0x90, 0x10, sell_date.leftJustified(0x10, '\0').toUtf8());
-    o_data.replace(0xa0, 0x10, seller.leftJustified(0x10, '\0').toUtf8());
-    o_data.replace(0xb0, 0x50, maintenance_description.leftJustified(0x50, '\0').toUtf8());
+    o_data.replace(0xb, 4, band_settings_password.leftJustified(4, '\0', true).toUtf8());
+    o_data.replace(0x10, 7, radio_type.leftJustified(7, '\0', true).toUtf8());
+    o_data.replace(0x28, 4, program_password.leftJustified(4, '\0', true).toUtf8());
+    o_data.replace(0x2c, 4, area_code.leftJustified(4, '\0', true).toUtf8());
+    o_data.replace(0x30, 0x10, serial_number.leftJustified(0x10, '\0', true).toUtf8());
+    o_data.replace(0x40, 0x10, production_date.leftJustified(0x10, '\0', true).toUtf8());
+    o_data.replace(0x50, 8, manufacture_code.leftJustified(8, '\0', true).toUtf8());
+    o_data.replace(0x60, 0x10, maintenance_date.leftJustified(0x10, '\0', true).toUtf8());
+    o_data.replace(0x70, 0x10, dealer_code.leftJustified(0x10, '\0', true).toUtf8());
+    o_data.replace(0x80, 0x10, stock_date.leftJustified(0x10, '\0', true).toUtf8());
+    o_data.replace(0x90, 0x10, sell_date.leftJustified(0x10, '\0', true).toUtf8());
+    o_data.replace(0xa0, 0x10, seller.leftJustified(0x10, '\0', true).toUtf8());
+    o_data.replace(0xb0, 0x50, maintenance_description.leftJustified(0x50, '\0', true).toUtf8());
     
     return o_data;
 }

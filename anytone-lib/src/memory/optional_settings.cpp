@@ -533,14 +533,14 @@ void Anytone::OptionalSettings::encode_D878UVII(QByteArray &data_2500000, QByteA
     // Power-on
     data_2500000[0x6] = poweron_interface;
     data_2500600.replace(0, 0xe, 
-        poweron_display_1.leftJustified(0xe, '\0')
+        poweron_display_1.leftJustified(0xe, '\0', true)
     );
     data_2500600.replace(0x10, 0xe, 
-        poweron_display_2.leftJustified(0xe, '\0')
+        poweron_display_2.leftJustified(0xe, '\0', true)
     );
     data_2500000[0x7] = poweron_password;
     data_2500600.replace(0x10, 8, 
-        poweron_password_char.toUtf8().leftJustified(8, '\0')
+        poweron_password_char.toUtf8().leftJustified(8, '\0', true)
     );
     data_2500000[0xd7] = default_startup_channel;
     data_2500000[0xd8] = startup_zone_a;
@@ -754,7 +754,7 @@ void Anytone::OptionalSettings::encode_D878UVII(QByteArray &data_2500000, QByteA
     data_2500000[0xbd] = distance_unit;
     data_2500000[0x53] = gps_template_information;
     data_2501280.replace(0, 0x20, 
-        gps_information_char.toUtf8().leftJustified(0x20, '\0')
+        gps_information_char.toUtf8().leftJustified(0x20, '\0', true)
     );
     data_2501400[0x35] = gps_mode;
     data_2501400[0x44] = gps_roaming;
@@ -810,7 +810,7 @@ void Anytone::OptionalSettings::encode_D890UV(QByteArray &data_3500000, QByteArr
     data_3500900.replace(0x0, 0xe, poweron_display_1);
     data_3500900.replace(0x10, 0xe, poweron_display_2);
     data_3500000[0x7] = poweron_password;
-    data_3500900.replace(0x20, 0x8, poweron_password_char.toUtf8().leftJustified(0x8, 0));
+    data_3500900.replace(0x20, 0x8, poweron_password_char.toUtf8().leftJustified(0x8, 0, true));
     data_3500000[0xd7] = default_startup_channel;
     data_3500000[0xd8] = startup_zone_a;
     data_3500000[0xda] = startup_channel_a;
@@ -918,7 +918,7 @@ void Anytone::OptionalSettings::encode_D890UV(QByteArray &data_3500000, QByteArr
     data_3500000[0xb5] = ranging_interval;
     data_3500000[0xbd] = distance_unit;
     data_3500000[0x53] = gps_template_information;
-    data_3501280.replace(0x0, 0x30, Format::wideCharString(gps_information_char).leftJustified(0x30, 0));
+    data_3501280.replace(0x0, 0x30, Format::wideCharString(gps_information_char).leftJustified(0x30, 0, true));
     data_3500000[0x105] = gps_mode;
     data_3500000[0x114] = gps_roaming;
 

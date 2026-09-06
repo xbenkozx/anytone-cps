@@ -79,9 +79,9 @@ QVariant RoamingChannelTableModel::data(const QModelIndex& idx, int role) const 
         case ColTxFreq:
             return ch->getTxFrequencyString();
         case ColColorCode:
-            return Constants::ROAMING_CHANNEL_COLOR_CODE.at(ch->color_code);
+            return Constants::safeAt(Constants::ROAMING_CHANNEL_COLOR_CODE, ch->color_code);
         case ColSlot:
-            return Constants::ROAMING_CHANNEL_SLOT.at(ch->color_code);
+            return Constants::safeAt(Constants::ROAMING_CHANNEL_SLOT, ch->slot);
         case ColName:
             return ch->name;
 

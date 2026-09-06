@@ -79,7 +79,7 @@ QVariant FmTableModel::data(const QModelIndex& idx, int role) const {
             return fm->getFrequencyString();
 
         case ColScan:
-            return Constants::FM_SCAN.at(fm->scan_add);
+            return Constants::safeAt(Constants::FM_SCAN, fm->scan_add);
 
         case ColName:
             return fm->name;

@@ -136,27 +136,27 @@ QVariant ChannelTableModel::data(const QModelIndex& idx, int role) const {
             return channel->getTxFrequencyString();
 
         case ColType:
-            return Constants::CHANNEL_TYPE.at(channel->channel_type);
+            return Constants::safeAt(Constants::CHANNEL_TYPE, channel->channel_type);
 
         case ColPower:
-            return Constants::TX_POWER.at(channel->tx_power);
+            return Constants::safeAt(Constants::TX_POWER, channel->tx_power);
 
         case ColBW:
-            return Constants::BAND_WIDTH.at(channel->band_width);
+            return Constants::safeAt(Constants::BAND_WIDTH, channel->band_width);
 
         case ColDecode: {
             if (channel->ctcss_dcs_decode == 1)
-                return Constants::CTCSS_CODE.at(channel->ctcss_decode_tone);
+                return Constants::safeAt(Constants::CTCSS_CODE, channel->ctcss_decode_tone);
             if (channel->ctcss_dcs_decode == 2)
-                return Constants::DCS_CODE.at(channel->dcs_decode_tone);
+                return Constants::safeAt(Constants::DCS_CODE, channel->dcs_decode_tone);
             return QStringLiteral("Off");
         }
 
         case ColEncode: {
             if (channel->ctcss_dcs_encode == 1)
-                return Constants::CTCSS_CODE.at(channel->ctcss_encode_tone);
+                return Constants::safeAt(Constants::CTCSS_CODE, channel->ctcss_encode_tone);
             if (channel->ctcss_dcs_encode == 2)
-                return Constants::DCS_CODE.at(channel->dcs_encode_tone);
+                return Constants::safeAt(Constants::DCS_CODE, channel->dcs_encode_tone);
             return QStringLiteral("Off");
         }
 

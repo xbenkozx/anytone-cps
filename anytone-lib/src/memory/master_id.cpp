@@ -54,7 +54,7 @@ QByteArray Anytone::MasterId::encode_D878UVII(){
     );
     data[4] = used;
     data.replace(5, 0x1b, 
-        name.toUtf8().leftJustified(0x1b, '\0')
+        name.toUtf8().leftJustified(0x1b, '\0', true)
     );
     return data;
 }
@@ -66,7 +66,7 @@ QByteArray Anytone::MasterId::encode_D890UV(){
     );
     data[0x26] = used;
     data.replace(4, 0x20, 
-        Format::wideCharString(name).leftJustified(0x20, '\0')
+        Format::wideCharString(name).leftJustified(0x20, '\0', true)
     );
     return data;
 }

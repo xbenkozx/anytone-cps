@@ -11,7 +11,7 @@ QByteArray Anytone::AprsReceiveFilter::encode(){
     QByteArray data(0x8, 0);
     data[0] = enabled;
     data[7] = ssid;
-    data.replace(1, 6, callsign.leftJustified(6, '\0').toUtf8());
+    data.replace(1, 6, callsign.leftJustified(6, '\0', true).toUtf8());
     return data;
 }
 

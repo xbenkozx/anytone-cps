@@ -96,6 +96,9 @@ namespace Anytone {
         int TalkgroupDataOffset;
         int TalkgroupDataLength;
         int TalkgroupOrder;
+        int TalkgroupIndex;
+        int TalkgroupBankSize;
+        int TalkgroupBankStride;
         int ZoneSet;
         int ZonesName;
         int ZoneChannels;
@@ -187,6 +190,9 @@ namespace Anytone {
         .TalkgroupDataOffset = 0x64,
         .TalkgroupDataLength = 0x40,
         .TalkgroupOrder = 0x4800000,
+        .TalkgroupIndex = 0x2600000,
+        .TalkgroupBankSize = 1000,
+        .TalkgroupBankStride = 0x40000,
         .ZoneSet = 0x24c1300,
         .ZonesName = 0x2540000,
         .ZoneChannels = 0x1000000,
@@ -278,6 +284,9 @@ namespace Anytone {
         .TalkgroupDataOffset = 0xc8,
         .TalkgroupDataLength = 0x80,
         .TalkgroupOrder = 0x3f00000,
+        .TalkgroupIndex = 0,      // Unknown for D890UV
+        .TalkgroupBankSize = 1000,
+        .TalkgroupBankStride = 0x80000,
         .ZoneSet = 0x3482c00,
         .ZonesName = 0x3600000,
         .ZoneChannels = 0x2000000,

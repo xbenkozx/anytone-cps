@@ -180,7 +180,7 @@ QVariant Tone5TableModel::data(const QModelIndex& idx, int role) const {
             return item->encode_id;
 
         case ColStandard:
-            return Constants::DECODING_STANDARD.at(item->standard);
+            return Constants::safeAt(Constants::DECODING_STANDARD, item->standard);
 
         case ColToneTime:
             return QString::number(item->tone_time+30);

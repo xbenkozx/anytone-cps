@@ -94,7 +94,7 @@ QByteArray ScanList::encode_D878UVII(){
     data[0xe] = revert_channel;
     
     data.replace(0xf, 0x10, 
-        name.toUtf8().leftJustified(16, '\0')
+        name.toUtf8().leftJustified(16, '\0', true)
     );
 
     for(int i=0; i < channels.size(); i++){
@@ -106,7 +106,7 @@ QByteArray ScanList::encode_D878UVII(){
     
     data.append(channel_data);
 
-    return data.leftJustified(0x90, 0);
+    return data.leftJustified(0x90, 0, true);
 }
 QByteArray ScanList::encode_D890UV(){
     QByteArray data(0x30, 0);
@@ -134,7 +134,7 @@ QByteArray ScanList::encode_D890UV(){
     );
 
     data.replace(0xe, 0x20, 
-        Format::wideCharString(name).leftJustified(0x20, '\0')
+        Format::wideCharString(name).leftJustified(0x20, '\0', true)
     );
 
     for(int i=0; i < channels.size(); i++){
@@ -144,7 +144,7 @@ QByteArray ScanList::encode_D890UV(){
         );
     }
     data.append(channel_data);
-    data = data.leftJustified(0xd0, 0);
+    data = data.leftJustified(0xd0, 0, true);
 
     data[0x94] = revert_channel;
 

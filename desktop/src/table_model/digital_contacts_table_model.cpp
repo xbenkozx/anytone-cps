@@ -88,7 +88,7 @@ QVariant DigitalContactsTableModel::data(const QModelIndex& idx, int role) const
                 // qDebug() << dc->id << " " << dc->call_alert;
                 return {};
             }
-            return Constants::CALL_ALERT.at(dc->call_alert);
+            return Constants::safeAt(Constants::CALL_ALERT, dc->call_alert);
 
         case ColName:
             return dc->name;
@@ -99,7 +99,7 @@ QVariant DigitalContactsTableModel::data(const QModelIndex& idx, int role) const
                 // qDebug() << dc->id << " " << dc->call_alert;
                 return {};
             }
-            return Constants::CALL_TYPE.at(dc->call_type);
+            return Constants::safeAt(Constants::CALL_TYPE, dc->call_type);
 
         case ColCallsign:
             return dc->callsign;

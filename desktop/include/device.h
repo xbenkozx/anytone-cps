@@ -74,6 +74,14 @@ public:
     void writeMemory(int address, QByteArray data){
         int idx = 0;
 
+        // Never emit a short frame: the radio expects exactly 16 data bytes
+        // per write command; a shorter payload desyncs the whole session.
+        if(data.size() % 0x10 != 0){
+            qDebug().nospace() << "WARN: Padding unaligned write of 0x" << Qt::hex << data.size()
+                               << " bytes at 0x" << address;
+            data.append(QByteArray(0x10 - (data.size() % 0x10), '\0'));
+        }
+
         for(int addr = address; addr < address + data.size(); addr += 0x10){
             writeMemoryAddress(addr, data.mid(idx * 0x10, 0x10));
             idx++;
@@ -220,6 +228,10 @@ public:
     SerialDevice(){}
     ~SerialDevice(){}
     bool connect(QString portname, int baud = 921600) override {
+        if(port != nullptr){
+            if(port->isOpen()) port->close();
+            delete port;
+        }
         port = new QSerialPort();
         port->setPortName(portname);
         port->setBaudRate(baud);
@@ -241,8 +253,12 @@ public:
         port->write(QByteArray("PROGRAM"));
 
         QByteArray resp = readPort();
-        if(resp != QByteArray("QX\x06") && resp != QByteArray("\x00")){
-            qDebug() << "ERR: Unexpected response from device (" << resp << ")";
+        if(resp.size() == 0){
+            qDebug() << "ERR: No response to PROGRAM command";
+            return false;
+        }
+        if(resp != QByteArray("QX\x06") && resp != QByteArray("\x00", 1)){
+            qDebug() << "ERR: Unexpected response from device (" << resp.toHex(' ') << ")";
             return false;
         }
 
@@ -289,6 +305,8 @@ public:
 
             QByteArray resp = readPort();
             if(resp.size() < 24){
+                qDebug().nospace() << "WARN: Short/no response reading 0x" << Qt::hex << address
+                                   << " (" << Qt::dec << resp.size() << " bytes), aborting session";
                 is_alive = false;
                 return QByteArray();
             }
@@ -341,8 +359,9 @@ public:
         port->write(writecmd);
         QByteArray resp = readPort();
 
-        if(resp.size() == 0 || (resp.size() > 0 && resp.at(0) != 0x6)){
-            qDebug() << "WARN: Last byte of response not 0x06.";
+        if(resp.size() == 0 || resp.at(0) != 0x6){
+            qDebug().nospace() << "WARN: Write not acknowledged at 0x" << Qt::hex << address
+                               << " resp=" << (resp.size() > 0 ? resp.toHex() : QByteArray("<timeout>"));
         }
 
         // if(static_cast<uint8_t>(resp.at(22)) != checksum){
@@ -363,7 +382,7 @@ public:
         std::vector<QString> data = {radio_model, radio_version};
         return data;
     }
-    QSerialPort *port;
+    QSerialPort *port = nullptr;
 };
 
 class SerialWorker : public QObject, public QRunnable {

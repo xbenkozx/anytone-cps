@@ -53,7 +53,7 @@ QByteArray Anytone::RoamingZone::encode(){
 QByteArray Anytone::RoamingZone::encode_D878UVII(){
     QByteArray data(0x50, 0xff);
     data.replace(0x40, 0x10, 
-        name.toUtf8().leftJustified(0x10, '\0')
+        name.toUtf8().leftJustified(0x10, '\0', true)
     );
     for(int i=0; i < channels.size(); i++){
         RoamingChannel *rc = channels.at(i);
@@ -65,7 +65,7 @@ QByteArray Anytone::RoamingZone::encode_D878UVII(){
 QByteArray Anytone::RoamingZone::encode_D890UV(){
     QByteArray data(0x50, 0xff);
     data.replace(0x40, 0x20, 
-        Format::wideCharString(name).leftJustified(0x20, '\0')
+        Format::wideCharString(name).leftJustified(0x20, '\0', true)
     );
     for(int i=0; i < channels.size(); i++){
         RoamingChannel *rc = channels.at(i);

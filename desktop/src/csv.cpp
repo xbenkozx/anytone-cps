@@ -97,6 +97,8 @@ bool CsvList::loadCsvFile(QString filepath, CsvList::ListType list_type){
 
     // --- Read and process headers ---
     QString header_str = tstream.readLine();
+    if (header_str.startsWith(QChar(0xFEFF)))
+        header_str.remove(0, 1);
     if (header_str.endsWith(','))
         header_str.chop(1);
 
@@ -108,13 +110,34 @@ bool CsvList::loadCsvFile(QString filepath, CsvList::ListType list_type){
             h = h.mid(1, h.size() - 2);
     }
 
+    // Header-less contact databases (e.g. DMR user DB exports such as
+    // contacts_Europe_*.csv) start directly with data: first field numeric.
+    // Synthesize column names by position and treat the line as data.
+    QString first_data_line;
+    bool first_field_numeric = false;
+    if (!headers.isEmpty()) headers.first().toInt(&first_field_numeric);
+    if (list_type == ListType::DigitalContactList && first_field_numeric) {
+        first_data_line = header_str;
+        if (headers.size() == 9) {
+            // No, DMR ID, ?, Callsign, Name, City, ?, Region, Country
+            headers = QStringList{"No.", "Radio ID", "Unused1", "Callsign",
+                                  "Name", "City", "Unused2", "State", "Country"};
+        } else {
+            headers = QStringList{"No.", "Radio ID", "Callsign", "Name", "City",
+                                  "State", "Country", "Remarks", "Call Type", "Call Alert"};
+        }
+    }
+
     // --- Parse rows ---
     int index = 0;
-    while (!tstream.atEnd()) {
-        if(index % int(item_count/100) == 0) update2(index, item_count, "Loading CSV File");
-        QStringList fields = tstream.readLine().split(csvComma);
-        if (fields.size() < headers.size())
-            continue;
+    int skipped = 0;
+    auto parseLine = [&](const QString &line){
+        if(item_count > 100 && index % int(item_count/100) == 0) update2(index, item_count, "Loading CSV File");
+        QStringList fields = line.split(csvComma);
+        if (fields.size() < headers.size()) {
+            skipped++;
+            return;
+        }
 
         QHash<QString, QString> row;
         row.reserve(headers.size());
@@ -129,7 +152,14 @@ bool CsvList::loadCsvFile(QString filepath, CsvList::ListType list_type){
 
         data_list.append(std::move(row));
         index++;
-    }
+    };
+
+    if (!first_data_line.isEmpty()) parseLine(first_data_line);
+    while (!tstream.atEnd()) parseLine(tstream.readLine());
+
+    qDebug().nospace() << "CSV: " << data_list.size() << " rows parsed, " << skipped
+                       << " skipped (header has " << headers.size() << " columns: "
+                       << headers.join("|") << ")";
 
     file.close();
 
@@ -493,8 +523,13 @@ void CsvList::parseDigitalContactData(){
     int i = 0;
     int data_size = data_list.size();
     for(QHash<QString, QString> data : data_list){
-        if(i % int(data_size/100) == 0) emit update2(i, data_size, "Importing Digital Contacts");
+        if(data_size > 100 && i % int(data_size/100) == 0) emit update2(i, data_size, "Importing Digital Contacts");
         int idx = data["No."].toInt() - 1;
+        if(idx < 0 || idx >= Anytone::Memory::digital_contacts.size()){
+            qDebug() << "WARN: Invalid digital contact index in CSV row" << (i + 1);
+            i++;
+            continue;
+        }
         Anytone::DigitalContact *dc = Anytone::Memory::digital_contacts.at(idx);
         dc->radio_id = data["Radio ID"].toInt();
         dc->callsign = data["Callsign"];
@@ -610,8 +645,14 @@ void CsvList::parseScanListData(){
     }
 }
 void CsvList::parseTalkgroupData(){
+    int row = 0;
     for(QHash<QString, QString> ch_data : data_list){
         int idx = ch_data["No."].toInt() - 1;
+        row++;
+        if(idx < 0 || idx >= Anytone::Memory::talkgroups.size()){
+            qDebug() << "WARN: Invalid talkgroup index in CSV row" << row;
+            continue;
+        }
         Anytone::Talkgroup *tg = Anytone::Memory::talkgroups.at(idx);
 
         tg->dmr_id = ch_data["Radio ID"].toInt();

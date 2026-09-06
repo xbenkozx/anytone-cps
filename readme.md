@@ -3,6 +3,12 @@
 </p>
 
 # anytone-cps
+
+> **This is a fork** of [xbenkozx/anytone-cps](https://github.com/xbenkozx/anytone-cps) with a series of
+> bug fixes for reading/writing the radio, digital contact and talk group handling, and CSV imports.
+> See [Changes in this fork](#changes-in-this-fork) below. All credit for the original project goes to
+> its author.
+
 An open-source, cross-platform Customer Programming Software (CPS) for the AnyTone 878UVII series radios, written in c++.
 
 This project aims to provide a modern, scriptable, and community-maintained alternative to the stock AnyTone CPS, while keeping the workflow familiar for existing users.
@@ -11,6 +17,68 @@ Currently, this project is in Alpha stage and is a work is progress. Make sure y
 
 > **Note**  
 > This project is not affiliated with, endorsed by, or supported by AnyTone / Qixiang. All trademarks are the property of their respective owners.
+
+---
+
+## Changes in this fork
+
+All changes below live on the `fix/digital-contacts-write` branch and were verified against a real
+AnyTone AT-D878UVII (FW 4.00 / V101) and with a `VirtualDevice` test harness (write/read roundtrips on
+erased, zeroed and randomized codeplug images).
+
+### Talk groups
+- Write the talk group **index table at `0x2600000`** (one little-endian `uint32` per talk group,
+  `0xff`-terminated). The radio firmware builds its talk group list from this table; without it only
+  a single talk group was visible after a write.
+- Place talk group records at their list-index slots within 1000-entry banks (stride `0x40000`),
+  matching the official codeplug layout, instead of packing used records consecutively.
+- Wire up the **Talk Groups CSV import** in the Import dialog (the button existed but was disabled
+  and unconnected).
+
+### Digital contacts
+- Fix a division-by-zero crash in `writeDigitalContacts` progress reporting that killed the
+  application when writing between 1 and ~500 contacts.
+- Skip the contact write when no contact has a Radio ID instead of writing a zero count to the
+  radio (which wiped the contact database already stored in it).
+- Validate the contact count read from the radio; erased or garbage metadata used to crash the
+  application with SIGSEGV during a read.
+- CSV import fixes: strip the UTF-8 BOM from the header line, support **header-less contact
+  database exports** (e.g. `contacts_Europe_*.csv` DMR user databases, 9-column layout), guard
+  against invalid row indices, and log how many rows were parsed/skipped.
+
+### Serial protocol robustness
+- `writeMemory` pads any block that is not a multiple of 16 bytes; a single unaligned block used to
+  desync the whole session (frame declares 16 data bytes, fewer follow), after which the radio
+  stopped acknowledging, all retries failed and the radio stayed stuck on the *PC WRITE* screen
+  while discarding everything buffered (data only commits on `END`).
+- All encoders now truncate names/strings to their fixed layout fields (`leftJustified(...,
+  true)`); previously long or non-ASCII strings could overflow their slots.
+- Fix a `QSerialPort` leak in the connection retry loop that kept the device locked, making every
+  reconnection attempt fail.
+- The `PROGRAM` handshake treated a timeout as success (comparison against an empty
+  `QByteArray("\x00")`); a genuine 1-byte `0x00` reply was rejected instead.
+- Short/no responses during reads abort the session with a logged address instead of silently
+  producing an empty codeplug.
+- After a failed session a best-effort `END` is sent so the radio exits the *PC READ*/*PC WRITE*
+  screen.
+
+### Reading resilience (erased/garbage codeplugs)
+- Bounds-check every index decoded from the radio before using it: 5-tone/DTMF self-ID nibbles,
+  2-tone set bitmaps (also fixed encode items never being read due to a copy-paste bug), analog
+  address book ids, hotkey state bitmaps, and all reference linkers (zones, scan lists, roaming
+  zones, receive groups, AM zones, hotkeys).
+- Decoders bail out on truncated input instead of reading past the end.
+
+### UI fixes
+- The **Retry** dialog after a failed transfer had its actions swapped: retrying a failed write
+  started a *read*, which also reinitializes program memory and silently discarded freshly
+  imported data.
+- Table views no longer crash on out-of-range enum values decoded from the radio
+  (`Constants::safeAt`); the Roaming Channel *Slot* column showed the color code instead of the
+  slot.
+- Correct write ordering fixes: APRS settings were written to D890UV-only addresses on the
+  D878UVII (and never on the D890UV), and receive groups used the radio-ID stride (0x20) instead
+  of their own (0x200), overlapping the records.
 
 ---
 

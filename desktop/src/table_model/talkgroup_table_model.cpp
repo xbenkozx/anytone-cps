@@ -77,13 +77,13 @@ QVariant TalkgroupTableModel::data(const QModelIndex& idx, int role) const {
             return tg->dmr_id;
 
         case ColCallAlert:
-            return Constants::CALL_ALERT.at(tg->call_alert);
+            return Constants::safeAt(Constants::CALL_ALERT, tg->call_alert);
 
         case ColName:
             return tg->name;
 
         case ColCallType:
-            return Constants::CALL_TYPE.at(tg->call_type);
+            return Constants::safeAt(Constants::CALL_TYPE, tg->call_type);
 
         default:
             return {};

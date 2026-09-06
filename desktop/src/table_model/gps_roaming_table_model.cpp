@@ -72,7 +72,7 @@ QVariant GpsRoamingTableModel::data(const QModelIndex& idx, int role) const {
             return QString::number(row + 1);
 
         case ColEnabled:
-            return Constants::OFF_ON.at(gps->enabled);
+            return Constants::safeAt(Constants::OFF_ON, gps->enabled);
         case ColZone:
             if(gps->zone_idx == 0xff){
                 return "Off";

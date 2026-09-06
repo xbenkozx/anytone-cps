@@ -10,8 +10,11 @@ void Anytone::Tone5Settings::decode(QByteArray data_24c1000){
         unknown_freq_hz.push_back(hz);
     }
 
-    for(uint8_t i = 0; i < static_cast<uint8_t>(data_24c1000.at(0x23)); i++){
-        self_id += hex_char.at(static_cast<uint8_t>(data_24c1000.at(0x25 + i)));
+    int self_id_len = static_cast<uint8_t>(data_24c1000.at(0x23));
+    for(int i = 0; i < self_id_len && 0x25 + i < data_24c1000.size(); i++){
+        int c = static_cast<uint8_t>(data_24c1000.at(0x25 + i));
+        if(c >= hex_char.size()) break;
+        self_id += hex_char.at(c);
     }
 
     decode_standard = static_cast<uint8_t>(data_24c1000.at(0x22));
@@ -34,11 +37,17 @@ void Anytone::Tone5Settings::decode(QByteArray data_24c1000){
     ptt_eot_standard = static_cast<uint8_t>(data_24c1000.at(0x61));
     ptt_eot_decode_time = static_cast<uint8_t>(data_24c1000.at(0x63));
 
-    for(uint8_t i = 0; i < static_cast<uint8_t>(data_24c1000.at(0x42)); i++){
-        ptt_bot_encode_id += hex_char.at(static_cast<uint8_t>(data_24c1000.at(0x44 + i)));
+    int bot_id_len = static_cast<uint8_t>(data_24c1000.at(0x42));
+    for(int i = 0; i < bot_id_len && 0x44 + i < data_24c1000.size(); i++){
+        int c = static_cast<uint8_t>(data_24c1000.at(0x44 + i));
+        if(c >= hex_char.size()) break;
+        ptt_bot_encode_id += hex_char.at(c);
     }
-    for(uint8_t i = 0; i < static_cast<uint8_t>(data_24c1000.at(0x62)); i++){
-        ptt_eot_encode_id += hex_char.at(static_cast<uint8_t>(data_24c1000.at(0x64 + i)));
+    int eot_id_len = static_cast<uint8_t>(data_24c1000.at(0x62));
+    for(int i = 0; i < eot_id_len && 0x64 + i < data_24c1000.size(); i++){
+        int c = static_cast<uint8_t>(data_24c1000.at(0x64 + i));
+        if(c >= hex_char.size()) break;
+        ptt_eot_encode_id += hex_char.at(c);
     }
 }
 void Anytone::Tone5Settings::encode(QByteArray &data_24c1000){

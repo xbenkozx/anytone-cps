@@ -85,30 +85,30 @@ QVariant ScanListTableModel::data(const QModelIndex& idx, int role) const {
 
         case ColPriority1:
             if(sl->priority_channel_1 == 0xffff){
-                return Constants::SCAN_LIST_PRIORITY_CHANNEL_SELECT.at(0);
+                return Constants::safeAt(Constants::SCAN_LIST_PRIORITY_CHANNEL_SELECT, 0);
             }else if(sl->priority_channel_1 == 0){
-                return Constants::SCAN_LIST_PRIORITY_CHANNEL_SELECT.at(1);
+                return Constants::safeAt(Constants::SCAN_LIST_PRIORITY_CHANNEL_SELECT, 1);
             }else{
                 sl->channels.at(sl->priority_channel_1-1)->name;
             }
 
         case ColPriority2:
             if(sl->priority_channel_2 == 0xffff){
-                return Constants::SCAN_LIST_PRIORITY_CHANNEL_SELECT.at(0);
+                return Constants::safeAt(Constants::SCAN_LIST_PRIORITY_CHANNEL_SELECT, 0);
             }else if(sl->priority_channel_2 == 0){
-                return Constants::SCAN_LIST_PRIORITY_CHANNEL_SELECT.at(1);
+                return Constants::safeAt(Constants::SCAN_LIST_PRIORITY_CHANNEL_SELECT, 1);
             }else{
                 sl->channels.at(sl->priority_channel_2-1)->name;
             }
 
         case ColLbTimeA:
-            return Constants::SCAN_LIST_LOOK_BACK_TIME.at(sl->lookback_time_a);
+            return Constants::safeAt(Constants::SCAN_LIST_LOOK_BACK_TIME, sl->lookback_time_a);
         case ColLbTimeB:
-            return Constants::SCAN_LIST_LOOK_BACK_TIME.at(sl->lookback_time_b);
+            return Constants::safeAt(Constants::SCAN_LIST_LOOK_BACK_TIME, sl->lookback_time_b);
         case ColDropout:
-            return Constants::SCAN_LIST_DROPOUT_DELAY_DWELL_TIME.at(sl->dropout_delay_time);
+            return Constants::safeAt(Constants::SCAN_LIST_DROPOUT_DELAY_DWELL_TIME, sl->dropout_delay_time);
         case ColDwell:
-            return Constants::SCAN_LIST_DROPOUT_DELAY_DWELL_TIME.at(sl->dwell_time);
+            return Constants::safeAt(Constants::SCAN_LIST_DROPOUT_DELAY_DWELL_TIME, sl->dwell_time);
 
         default:
             return {};

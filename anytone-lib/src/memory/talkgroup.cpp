@@ -62,7 +62,7 @@ QByteArray Talkgroup::encode_D878UVII(){
 
     data[0] = call_type;
     data.replace(1, 0x10, 
-        name.toUtf8().leftJustified(16, '\0')
+        name.toUtf8().leftJustified(16, '\0', true)
     );
     data[0x22] = call_alert;
     data.replace(0x23, 4, 
@@ -76,7 +76,7 @@ QByteArray Talkgroup::encode_D890UV(){
 
     data[0] = call_type;
     data.replace(0x6, 0x20, 
-        Format::wideCharString(name).leftJustified(0x20, '\0')
+        Format::wideCharString(name).leftJustified(0x20, '\0', true)
     );
     if(call_alert) Bit::set(&bytes[0x01], 2);
     data.replace(0x2, 4, 

@@ -25,7 +25,7 @@ QByteArray AmAir::encode_D890UV(){
     data.replace(0x0, 4, 
         QByteArray::fromHex(QString::number(frequency).rightJustified(8, '0').toUtf8())
     );
-    data.replace(0x4, 0x20, Format::wideCharString(name).leftJustified(0x20, 0x0));
+    data.replace(0x4, 0x20, Format::wideCharString(name).leftJustified(0x20, 0x0, true));
 
     return data;
 }

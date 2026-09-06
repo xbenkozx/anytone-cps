@@ -23,9 +23,9 @@ QByteArray Anytone::ReceiveGroup::encode(){
     }
     
     if(Anytone::Memory::radio_model == Anytone::RadioModel::D878UVII_FW400){
-        data.append(name.toUtf8().leftJustified(0x20, 0));
+        data.append(name.toUtf8().leftJustified(0x20, 0, true));
     }else if(Anytone::Memory::radio_model == Anytone::RadioModel::D890UV_FW103){
-        data.append(Format::wideCharString(name).leftJustified(0x20, 0));
+        data.append(Format::wideCharString(name).leftJustified(0x20, 0, true));
     }
     
 

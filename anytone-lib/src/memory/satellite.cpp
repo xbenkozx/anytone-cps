@@ -75,8 +75,8 @@ void Anytone::Satellite::decodeKeplerData(QString data){
 QByteArray Anytone::Satellite::encode(){
     QByteArray data(0x200, 0);
 
-    data.replace(0, 8, name.leftJustified(8, ' ').toUtf8().mid(0,8));
-    data.replace(0x8, 16, epoch.leftJustified(16, ' ').toUtf8());
+    data.replace(0, 8, name.leftJustified(8, ' ', true).toUtf8().mid(0,8));
+    data.replace(0x8, 16, epoch.leftJustified(16, ' ', true).toUtf8());
     data.replace(0x16, 11, mean_motion_derivative.rightJustified(11, ' ').toUtf8());
     data.replace(0x21, 8, inclination.rightJustified(8, ' ').toUtf8());
     data.replace(0x29, 9, raan.rightJustified(9, ' ').toUtf8());

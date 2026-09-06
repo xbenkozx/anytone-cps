@@ -52,7 +52,7 @@ QByteArray Anytone::RadioId::encode_D878UVII(){
         QByteArray::fromHex(QString::number(dmr_id).rightJustified(8, '0').toUtf8())
     );
     data.replace(5, 26, 
-        name.toUtf8().leftJustified(26, '\0')
+        name.toUtf8().leftJustified(26, '\0', true)
     );
 
     return data;
@@ -64,7 +64,7 @@ QByteArray Anytone::RadioId::encode_D890UV(){
         QByteArray::fromHex(QString::number(dmr_id).rightJustified(8, '0').toUtf8())
     );
     data.replace(4, 52, 
-        Format::wideCharString(name).leftJustified(52, '\0')
+        Format::wideCharString(name).leftJustified(52, '\0', true)
     );
 
     return data;

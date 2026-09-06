@@ -23,6 +23,10 @@ ImportExportDialog::ImportExportDialog(QWidget *parent) :
         this->ui->digitalContactListTxt->setText(openCsv());
     });
 
+    connect(ui->talkgroupsBtn, &QPushButton::clicked, this, [this](){
+        this->ui->talkgroupsTxt->setText(openCsv());
+    });
+
     loading_dialog = new LoadingDialog(this);
     
 }
@@ -103,6 +107,7 @@ void ImportExportDialog::importList(){
     list.clear();
 
     if(!ui->digitalContactListTxt->text().isEmpty()) list[CsvList::ListType::DigitalContactList] = ui->digitalContactListTxt->text();
+    if(!ui->talkgroupsTxt->text().isEmpty()) list[CsvList::ListType::TalkGroups] = ui->talkgroupsTxt->text();
 
     csv_worker = new CsvList(list);
 

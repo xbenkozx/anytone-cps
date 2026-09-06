@@ -1,6 +1,7 @@
 #include "tone2_settings.h"
 
 void Anytone::Tone2EncodeItem::decode(QByteArray data){
+    if(data.size() < 0x10) return;
     tone_frequency_1 = Int::fromBytes(data.mid(0, 2));
     tone_frequency_2 = Int::fromBytes(data.mid(2, 2));
     name = QString(data.mid(0x8, 0x7));
@@ -43,6 +44,7 @@ void Anytone::Tone2EncodeItem::load(QXmlStreamReader &xml){
 
 
 void Anytone::Tone2DecodeItem::decode(QByteArray data){
+    if(data.size() < 0x10) return;
     tone_frequency_1 = Int::fromBytes(data.mid(0, 2));
     tone_frequency_2 = Int::fromBytes(data.mid(2, 2));
     decoding_response = static_cast<uint8_t>(data.at(0x4));
@@ -102,6 +104,7 @@ Anytone::Tone2Settings::Tone2Settings(){
     }
 }
 void Anytone::Tone2Settings::decode(QByteArray data_24c1290){
+    if(data_24c1290.size() < 0x10) return;
     encode_tone_1_duration = static_cast<uint8_t>(data_24c1290.at(0x9));
     encode_tone_2_duration = static_cast<uint8_t>(data_24c1290.at(0xa));
     encode_long_tone_duration = static_cast<uint8_t>(data_24c1290.at(0xb));
