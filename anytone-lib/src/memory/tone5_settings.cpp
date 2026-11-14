@@ -220,6 +220,12 @@ void Anytone::Tone5Settings::load(QXmlStreamReader &xml){
     if (xml.name() == "Tone5Settings"){
         QXmlStreamAttributes attributes = xml.attributes();
 
+        if(attributes.hasAttribute("self_id"))
+            self_id = attributes.value("self_id").toString();
+        if(attributes.hasAttribute("ptt_bot_encode_id"))
+            ptt_bot_encode_id = attributes.value("ptt_bot_encode_id").toString();
+        if(attributes.hasAttribute("ptt_eot_encode_id"))
+            ptt_eot_encode_id = attributes.value("ptt_eot_encode_id").toString();
         if(attributes.hasAttribute("decode_standard"))
             decode_standard = attributes.value("decode_standard").toInt();
         if(attributes.hasAttribute("decoding_response"))

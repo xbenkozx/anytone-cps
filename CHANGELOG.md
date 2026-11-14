@@ -15,6 +15,21 @@ detailed description of the earlier fork changes is in [readme.md](readme.md).
 - `tools/fix_atd.py`, an example script that edits an `.atd` codeplug.
 
 ### Fixed
+- **Settings lost when reopening an `.atd` file.** `save()` wrote them, but `load()` looked for
+  other attribute names or types, so the values silently came back as defaults:
+  - APRS `to_call` and `sending_text` (the loader searched for `"to_call "` / `"sending_text "`
+    with a trailing space, XML parsers drop it);
+  - APRS fixed position 2-8 N/S and E/W flags (names with a stray `;` in the loader);
+  - APRS fixed position latitude/longitude (written as decimal, read with `toInt()`, so always 0;
+    now written with 8 decimals);
+  - all 32 APRS receive filters (the filter index was taken from the wrong XML element, so every
+    filter was loaded into filter 0);
+  - optional settings `long_key_time` (guarded by an attribute name that is never written) and
+    `am_fm_function`;
+  - 5Tone `self_id`, `ptt_bot_encode_id`, `ptt_eot_encode_id`.
+  Files saved by earlier versions already contain these values, so they load correctly now.
+  New `xml-roundtrip-test` (random radio image -> memory -> `.atd` -> memory -> radio image)
+  found them; on the D878UVII the bytes lost through the file went from 416 to 32.
 - **Radio hung on the talk group list** (see [Incident 2026-11-14](#incident-2026-11-14-radio-hangs-in-the-talk-group-list)):
   the talk group index table at `0x2600000` ended with a terminator that started mid-block, so the
   radio counted 704 entries for 698 talk groups and froze on the invalid ones. The entries are now

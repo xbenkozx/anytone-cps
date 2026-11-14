@@ -33,3 +33,12 @@ qt_add_executable(contacts-tool contacts_tool.cpp
 set_target_properties(contacts-tool PROPERTIES CXX_STANDARD 20 AUTOMOC ON)
 target_include_directories(contacts-tool PRIVATE ${CMAKE_SOURCE_DIR}/desktop/include)
 target_link_libraries(contacts-tool PRIVATE Qt6::Core Qt6::SerialPort anytone-lib)
+
+# Every setting must survive saving to .atd and loading again:
+qt_add_executable(xml-roundtrip-test xml_roundtrip_test.cpp
+    ${CMAKE_SOURCE_DIR}/desktop/src/device.cpp
+    ${CMAKE_SOURCE_DIR}/desktop/include/device.h
+)
+set_target_properties(xml-roundtrip-test PROPERTIES CXX_STANDARD 20 AUTOMOC ON)
+target_include_directories(xml-roundtrip-test PRIVATE ${CMAKE_SOURCE_DIR}/desktop/include)
+target_link_libraries(xml-roundtrip-test PRIVATE Qt6::Core Qt6::SerialPort anytone-lib)
