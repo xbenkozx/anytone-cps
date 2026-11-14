@@ -136,6 +136,11 @@ Branch `feature/list-sort-reorder`.
   already in memory (groups missing from the file kept data read from the radio).
 - The menu tree and the table sit in a splitter, so the width of the menu can be dragged.
 - The unimplemented *Friends List* menu entry is hidden.
+- **Talk group list hang fix:** the index table at `0x2600000` is now terminated the way the
+  radio expects (padded to whole 16 byte blocks, then an aligned all-`0xff` block). Before, the
+  radio counted invalid entries after the last talk group (704 for 698) and froze when the list
+  was scrolled to them. Details in [CHANGELOG.md](CHANGELOG.md#incident-2026-11-14-radio-hangs-in-the-talk-group-list).
+  If the radio is already stuck on that screen, remove the battery; then write "Other Data" again.
 - **Digital contact read fix:** records longer than one 0x80 byte buffer (long UTF-8 names) were
   parsed with cut-off fields; the reader now keeps a 2 KB margin after the current record and no
   longer spins if a read returns nothing. Writing the 116 540-contact database and reading it
