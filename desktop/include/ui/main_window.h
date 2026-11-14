@@ -257,7 +257,6 @@ private:
                     "AES Encryption Code",
                     "ARC4 Encryption Code",
                     "Digital Contact List",
-                    "Friends List",
                     "Talk Alias Settings"
                 }
             },
@@ -305,7 +304,6 @@ private:
                     "AES Encryption Code",
                     "ARC4 Encryption Code",
                     "Digital Contact List",
-                    "Friends List",
                     "AIR Alias Settings", //Talk Alias Settings
                     "Repeater Whitelist" //Talk Group White List, Digital Contact Whitelist
                 }
