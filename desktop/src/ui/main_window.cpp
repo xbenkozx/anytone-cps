@@ -13,6 +13,11 @@
 #include <QSpacerItem>
 #include <QLayout>
 #include <QTimer>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QHeaderView>
+#include <QItemSelectionModel>
+#include <QAbstractProxyModel>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
@@ -198,6 +203,8 @@ void MainWindow::setupUI(){
     connect(channel_redo_shortcut, &QShortcut::activated, this, &MainWindow::redoChannels);
     connect(channel_delete_shortcut, &QShortcut::activated, this, &MainWindow::deleteSelectedChannels);
     connect(channel_edit_shortcut, &QShortcut::activated, this, &MainWindow::editChannel);;
+
+    setupReorderBar();
 }
 void MainWindow::setupTreeView(){
     QVector<QPair<QString, QStringList>> tree_settings = {};
@@ -277,7 +284,7 @@ void MainWindow::copySelectedChannels(){
     QVector<int> index_list;
 
     for(QModelIndex index : selected_indexes){
-        if(index_list.indexOf(index.row()) == -1) index_list.append(index.row());
+        if(index_list.indexOf(sourceRow(index)) == -1) index_list.append(sourceRow(index));
     }
 
     // replace any existing clipboard contents
@@ -301,7 +308,7 @@ void MainWindow::cutSelectedChannels(){
             QBrush(Qt::lightGray),
             Qt::ForegroundRole
         );
-        if(index_list.indexOf(index.row()) == -1) index_list.append(index.row());
+        if(index_list.indexOf(sourceRow(index)) == -1) index_list.append(sourceRow(index));
     }
 
     // replace any existing clipboard contents
@@ -320,7 +327,7 @@ void MainWindow::pasteSelectedChannels(){
     
     updateMemoryChannelHistory();
     
-    int selected_row = selected_indexes[0].row();
+    int selected_row = sourceRow(selected_indexes[0]);
 
     for(int i = 0; i < channel_clipboard.size(); i++){
         Anytone::Channel *ch = channel_clipboard.at(i);
@@ -345,7 +352,7 @@ void MainWindow::deleteSelectedChannels(){
 
     for(QModelIndex index : selected_indexes){
         ui->tableView->model()->setData(index, QColor("silver"), Qt::ForegroundRole);
-        if(index_list.indexOf(index.row()) == -1) index_list.append(index.row());
+        if(index_list.indexOf(sourceRow(index)) == -1) index_list.append(sourceRow(index));
     }
 
     for(int i : index_list){
@@ -389,7 +396,7 @@ void MainWindow::editChannel(){
     QModelIndexList selected_indexes = ui->tableView->selectionModel()->selectedIndexes();
     if(selected_indexes.size() == 0) return;
 
-    int index = selected_indexes.at(0).row();
+    int index = sourceRow(selected_indexes.at(0));
     showChannelEditDialog(index);
 }
 
@@ -430,10 +437,9 @@ void MainWindow::setRadioModel_D890UV(){
 void MainWindow::listChannels(bool goto_top){
     delete table_model;
     table_model = new ChannelTableModel(this);
-    ui->tableView->setModel(table_model);
+    setReorderableModel(Anytone::ListOrder::Kind::Channel, !goto_top);
 
     ui->tableView->verticalHeader()->setVisible(false);
-    ui->tableView->setSortingEnabled(false);
 
     ui->tableView->setColumnWidth(0, 50);
     ui->tableView->setColumnWidth(1, 100);
@@ -453,10 +459,9 @@ void MainWindow::listChannels(bool goto_top){
 void MainWindow::listZones(bool goto_top){
     delete table_model;
     table_model = new ZoneTableModel(this);
-    ui->tableView->setModel(table_model);
+    setReorderableModel(Anytone::ListOrder::Kind::Zone, !goto_top);
 
     ui->tableView->verticalHeader()->setVisible(false);
-    ui->tableView->setSortingEnabled(false);
 
     ui->tableView->setColumnWidth(0, 50);
     ui->tableView->setColumnWidth(1, 200);
@@ -469,10 +474,9 @@ void MainWindow::listZones(bool goto_top){
 void MainWindow::listTalkgroups(bool goto_top){
     delete table_model;
     table_model = new TalkgroupTableModel(this);
-    ui->tableView->setModel(table_model);
+    setReorderableModel(Anytone::ListOrder::Kind::Talkgroup, !goto_top);
 
     ui->tableView->verticalHeader()->setVisible(false);
-    ui->tableView->setSortingEnabled(false);
 
     ui->tableView->setColumnWidth(0, 50);
     ui->tableView->setColumnWidth(1, 100);
@@ -533,10 +537,9 @@ void MainWindow::listRoamingZones(bool goto_top){
 void MainWindow::listRoamingChannels(bool goto_top){
     delete table_model;
     table_model = new RoamingChannelTableModel(this);
-    ui->tableView->setModel(table_model);
+    setReorderableModel(Anytone::ListOrder::Kind::RoamingChannel, !goto_top);
 
     ui->tableView->verticalHeader()->setVisible(false);
-    ui->tableView->setSortingEnabled(false);
 
     ui->tableView->setColumnWidth(0, 50);
     ui->tableView->setColumnWidth(1, 100);
@@ -691,10 +694,9 @@ void MainWindow::listEncryptionKeys(bool goto_top){
 void MainWindow::listAnalogAddresses(bool goto_top){
     delete table_model;
     table_model = new AnalogAddressTableModel(this);
-    ui->tableView->setModel(table_model);
+    setReorderableModel(Anytone::ListOrder::Kind::AnalogAddress, !goto_top);
 
     ui->tableView->verticalHeader()->setVisible(false);
-    ui->tableView->setSortingEnabled(false);
 
     ui->tableView->setColumnWidth(0, 70);
     ui->tableView->setColumnWidth(1, 100);
@@ -1057,6 +1059,7 @@ void MainWindow::onTreeItemClicked(QTreeWidgetItem* item, int column){
     if(item->isDisabled()) return;
     if(item->text(0).contains("---")){
         listDigitalContact(item->data(0, Qt::UserRole).toInt());
+        updateReorderBar();
         return;
     }
     showList(item->text(0));
@@ -1184,9 +1187,10 @@ void MainWindow::showList(QString list_name){
     }else{
         qDebug() << view;
     }
+    updateReorderBar();
 }
 void MainWindow::onMainTableDblClicked(QModelIndex index){
-    int row_index = index.row();
+    int row_index = sourceRow(index);
 
     if(selected_table_view == "AES Encryption Code"){
         showAesEncryptionDialog(row_index);
@@ -1416,4 +1420,185 @@ void SaveFileWorker::run(){
             emit finished(Result::OpenFileOk);
         }
      } else { emit finished(Result::NoDialog); }
+}
+
+
+// ---------------------------------------------------------------------------
+// Sort / reorder of the slot lists
+// ---------------------------------------------------------------------------
+void MainWindow::setupReorderBar(){
+    QWidget *host = ui->tableView->parentWidget();
+    auto *host_layout = qobject_cast<QHBoxLayout*>(host->layout());
+    if(!host_layout) return;
+
+    QWidget *container = new QWidget(host);
+    container->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    auto *column = new QVBoxLayout(container);
+    column->setContentsMargins(0, 0, 0, 0);
+
+    reorder_bar = new QWidget(container);
+    auto *row = new QHBoxLayout(reorder_bar);
+    row->setContentsMargins(0, 0, 0, 0);
+
+    auto make_button = [&](const QString &text, const QString &tip){
+        auto *btn = new QToolButton(reorder_bar);
+        btn->setText(text);
+        btn->setToolTip(tip);
+        row->addWidget(btn);
+        return btn;
+    };
+    move_top_btn = make_button("Move to Top", "Move the selected entries to the top (Alt+Shift+Up)");
+    move_up_btn = make_button("Move Up", "Move the selected entries up (Alt+Up)");
+    move_down_btn = make_button("Move Down", "Move the selected entries down (Alt+Down)");
+    move_bottom_btn = make_button("Move to Bottom", "Move the selected entries behind the last used entry (Alt+Shift+Down)");
+    apply_sort_btn = make_button("Apply Sort Order",
+        "Renumber the entries in the order shown. All references (zones, scan lists, channels, ...) are updated.");
+    clear_sort_btn = make_button("Clear Sort", "Go back to the memory order");
+    reorder_hint = new QLabel(reorder_bar);
+    row->addWidget(reorder_hint, 1);
+
+    using Move = Anytone::ListOrder::Move;
+    connect(move_top_btn, &QToolButton::clicked, this, [this]{ moveSelectedEntries(Move::Top); });
+    connect(move_up_btn, &QToolButton::clicked, this, [this]{ moveSelectedEntries(Move::Up); });
+    connect(move_down_btn, &QToolButton::clicked, this, [this]{ moveSelectedEntries(Move::Down); });
+    connect(move_bottom_btn, &QToolButton::clicked, this, [this]{ moveSelectedEntries(Move::Bottom); });
+    connect(apply_sort_btn, &QToolButton::clicked, this, &MainWindow::applySortOrder);
+    connect(clear_sort_btn, &QToolButton::clicked, this, &MainWindow::clearSortOrder);
+    connect(ui->tableView->horizontalHeader(), &QHeaderView::sortIndicatorChanged, this, [this]{ updateReorderBar(); });
+
+    auto add_shortcut = [&](const QKeySequence &keys, Move move){
+        auto *sc = new QShortcut(keys, ui->tableView);
+        connect(sc, &QShortcut::activated, this, [this, move]{ moveSelectedEntries(move); });
+    };
+    add_shortcut(QKeySequence(Qt::ALT | Qt::Key_Up), Move::Up);
+    add_shortcut(QKeySequence(Qt::ALT | Qt::Key_Down), Move::Down);
+    add_shortcut(QKeySequence(Qt::ALT | Qt::SHIFT | Qt::Key_Up), Move::Top);
+    add_shortcut(QKeySequence(Qt::ALT | Qt::SHIFT | Qt::Key_Down), Move::Bottom);
+
+    int pos = host_layout->indexOf(ui->tableView);
+    host_layout->removeWidget(ui->tableView);
+    column->addWidget(reorder_bar);
+    column->addWidget(ui->tableView);
+    host_layout->insertWidget(pos, container, 1);
+
+    reorder_bar->setVisible(false);
+}
+void MainWindow::setReorderableModel(Anytone::ListOrder::Kind kind, bool keep_sort){
+    QHeaderView *header = ui->tableView->horizontalHeader();
+    const int old_column = header->sortIndicatorSection();
+    const Qt::SortOrder old_order = header->sortIndicatorOrder();
+    const bool same_list = !sort_proxy.isNull() && sort_proxy->kind() == kind;
+
+    // parented to the model: deleted together with it when the list is rebuilt
+    sort_proxy = new ListSortProxyModel(kind, table_model);
+    sort_proxy->setSourceModel(table_model);
+    ui->tableView->setModel(sort_proxy);
+    ui->tableView->setSortingEnabled(true);
+    header->setSortIndicatorShown(true);
+    if(keep_sort && same_list && old_column >= 0 && old_column < sort_proxy->columnCount()){
+        ui->tableView->sortByColumn(old_column, old_order);
+    }else{
+        ui->tableView->sortByColumn(-1, Qt::AscendingOrder);
+    }
+    updateReorderBar();
+}
+void MainWindow::updateReorderBar(){
+    if(!reorder_bar) return;
+    const bool active = !sort_proxy.isNull() && ui->tableView->model() == sort_proxy;
+    reorder_bar->setVisible(active);
+    if(!active) return;
+
+    const bool sorted = sort_proxy->isSorted();
+    for(QToolButton *btn : {move_top_btn, move_up_btn, move_down_btn, move_bottom_btn}) btn->setEnabled(!sorted);
+    apply_sort_btn->setEnabled(sorted);
+    clear_sort_btn->setEnabled(sorted);
+    if(sorted){
+        reorder_hint->setText("Sorted view - display only, memory order and numbers are unchanged. "
+                              "Use \"Apply Sort Order\" to renumber the entries.");
+    }else{
+        reorder_hint->setText("Click a column header to sort the view. Select entries and use the buttons "
+                              "(Alt+Up / Alt+Down) to move them; numbers and all references are updated.");
+    }
+}
+int MainWindow::sourceRow(const QModelIndex &index) const {
+    if(const auto *proxy = qobject_cast<const QAbstractProxyModel*>(index.model())){
+        return proxy->mapToSource(index).row();
+    }
+    return index.row();
+}
+void MainWindow::refreshReorderableList(){
+    if(sort_proxy.isNull()) return;
+    switch(sort_proxy->kind()){
+        case Anytone::ListOrder::Kind::Channel: listChannels(false); break;
+        case Anytone::ListOrder::Kind::Zone: listZones(false); break;
+        case Anytone::ListOrder::Kind::Talkgroup: listTalkgroups(false); break;
+        case Anytone::ListOrder::Kind::RoamingChannel: listRoamingChannels(false); break;
+        case Anytone::ListOrder::Kind::AnalogAddress: listAnalogAddresses(false); break;
+    }
+}
+void MainWindow::moveSelectedEntries(Anytone::ListOrder::Move move){
+    if(sort_proxy.isNull() || ui->tableView->model() != sort_proxy || sort_proxy->isSorted()) return;
+    const Anytone::ListOrder::Kind kind = sort_proxy->kind();
+
+    QVector<int> picked;
+    for(const QModelIndex &index : ui->tableView->selectionModel()->selectedRows()){
+        picked.append(sourceRow(index));
+    }
+    if(picked.isEmpty()) return;
+
+    const QVector<int> order = Anytone::ListOrder::orderForMove(kind, picked, move);
+    if(order.isEmpty()) return;
+    if(!Anytone::ListOrder::apply(kind, order)){
+        QMessageBox::warning(this, tr("Move"), tr("The entries could not be moved."));
+        return;
+    }
+
+    // order[new slot] = old slot: find where the selected entries ended up
+    QVector<int> new_slots;
+    for(int slot = 0; slot < order.size(); slot++){
+        if(picked.contains(order.at(slot))) new_slots.append(slot);
+    }
+
+    refreshReorderableList();
+
+    QItemSelectionModel *selection = ui->tableView->selectionModel();
+    for(int slot : new_slots){
+        selection->select(sort_proxy->index(slot, 0),
+                          QItemSelectionModel::Select | QItemSelectionModel::Rows);
+    }
+    if(!new_slots.isEmpty()){
+        const QModelIndex first = sort_proxy->index(new_slots.first(), 0);
+        selection->setCurrentIndex(first, QItemSelectionModel::NoUpdate);
+        ui->tableView->scrollTo(first);
+    }
+}
+void MainWindow::applySortOrder(){
+    if(sort_proxy.isNull() || !sort_proxy->isSorted()) return;
+    const Anytone::ListOrder::Kind kind = sort_proxy->kind();
+
+    const QVector<int> order = Anytone::ListOrder::orderForView(kind, sort_proxy->viewSlots());
+    if(order.isEmpty()){
+        QMessageBox::warning(this, tr("Apply Sort Order"), tr("The order could not be applied."));
+        return;
+    }
+
+    QMessageBox::StandardButton answer = QMessageBox::question(this, tr("Apply Sort Order"),
+        tr("Renumber the entries in the order currently shown?\n\n"
+           "Empty slots move to the end of the list. All references to the moved entries "
+           "(zones, scan lists, channels, hot keys, settings, ...) are updated.\n"
+           "This cannot be undone, but another sort or the move buttons can change the order again."),
+        QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+    if(answer != QMessageBox::Yes) return;
+
+    if(!Anytone::ListOrder::apply(kind, order)){
+        QMessageBox::warning(this, tr("Apply Sort Order"), tr("The order could not be applied."));
+        return;
+    }
+    ui->tableView->sortByColumn(-1, Qt::AscendingOrder);
+    refreshReorderableList();
+}
+void MainWindow::clearSortOrder(){
+    if(sort_proxy.isNull()) return;
+    ui->tableView->sortByColumn(-1, Qt::AscendingOrder);
+    updateReorderBar();
 }
