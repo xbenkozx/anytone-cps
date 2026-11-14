@@ -1,3 +1,4 @@
+#include <QSplitter>
 #include <QSaveFile>
 #include <QFileDialog>
 #include "main_window.h"
@@ -1479,7 +1480,24 @@ void MainWindow::setupReorderBar(){
     host_layout->removeWidget(ui->tableView);
     column->addWidget(reorder_bar);
     column->addWidget(ui->tableView);
-    host_layout->insertWidget(pos, container, 1);
+
+    // Tree and table in a splitter: the menu width can be dragged and the
+    // button bar never forces a minimum width on the table side.
+    container->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Expanding);
+    reorder_bar->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
+    ui->tableView->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Expanding);
+    ui->mainTreeWidget->setMinimumWidth(120);
+    ui->mainTreeWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+    host_layout->removeWidget(ui->mainTreeWidget);
+    auto *splitter = new QSplitter(Qt::Horizontal, host);
+    splitter->setChildrenCollapsible(false);
+    splitter->addWidget(ui->mainTreeWidget);
+    splitter->addWidget(container);
+    splitter->setStretchFactor(0, 0);
+    splitter->setStretchFactor(1, 1);
+    splitter->setSizes({280, 1000});
+    host_layout->insertWidget(0, splitter, 1);
+    (void)pos;
 
     reorder_bar->setVisible(false);
 }
