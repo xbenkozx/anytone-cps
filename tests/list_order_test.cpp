@@ -608,6 +608,32 @@ int main(int argc, char **argv){
         qInfo().noquote() << file << ": channels" << usedSlots(Kind::Channel).size() << "zones" << usedSlots(Kind::Zone).size()
                           << "talkgroups" << usedSlots(Kind::Talkgroup).size() << "roaming ch" << usedSlots(Kind::RoamingChannel).size()
                           << "addresses" << usedSlots(Kind::AnalogAddress).size();
+        // re-opening a file must replace receive group lists already in memory
+        if(file != "synthetic"){
+            auto rx_state = []{
+                QStringList s;
+                for(auto *g : Memory::receive_group_call_lists){
+                    QStringList names;
+                    for(auto *tg : g->talkgroups) names << tg->name;
+                    s << g->name + ":" + names.join(",");
+                }
+                return s;
+            };
+            const QStringList from_file = rx_state();
+            const QByteArray atd_now = saveAtd();
+            // dirty the lists the way a radio read does, then load the file again
+            for(auto *g : Memory::receive_group_call_lists){
+                if(g->id == 0) continue;
+                g->name = "RADIO"; g->tg_idxs = {1, 2, 3};
+            }
+            Memory::receive_group_call_lists.at(0)->tg_idxs.append(5);
+            {   // like MainWindow::openFile: loadData on the live memory, no init()
+                QXmlStreamReader xml(atd_now);
+                Memory::loadData(xml);
+                Memory::linkReferences();
+            }
+            CHECK(rx_state() == from_file, "re-open replaces receive group lists");
+        }
         unsigned seed = 1;
         for(Kind kind : kinds){
             for(const QString &op : ops){

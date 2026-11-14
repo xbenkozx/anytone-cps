@@ -648,10 +648,18 @@ void Memory::loadRadioIds(QXmlStreamReader &xml){
     }
 }
 void Memory::loadReceiveGroupCallList(QXmlStreamReader &xml){
+    // Opening a file replaces the lists: groups missing from the file (empty
+    // groups are not saved) must not keep data read from the radio earlier.
+    for(ReceiveGroup *group : Memory::receive_group_call_lists){
+        group->name.clear();
+        group->tg_idxs.clear();
+        group->talkgroups.clear();
+    }
     while (!xml.atEnd() && !xml.hasError()) {
         QXmlStreamReader::TokenType token = xml.readNext();
         if(token == QXmlStreamReader::StartElement && xml.name() == u"ReceiveGroup") {
             int idx = xml.attributes().value("id").toInt();
+            if(idx < 0 || idx >= Memory::receive_group_call_lists.size()) continue;
             ReceiveGroup *item = Memory::receive_group_call_lists.at(idx);
             item->load(xml);
         }else if(token == QXmlStreamReader::StartElement && xml.name() != u"ReceiveGroup") {
