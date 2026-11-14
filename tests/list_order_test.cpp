@@ -20,6 +20,7 @@
 // Build: cmake -B build -DANYTONE_BUILD_TESTS=ON && cmake --build build --target list-order-test
 
 #include <QCoreApplication>
+#include <QtEndian>
 #include <QBuffer>
 #include <QFile>
 #include <QXmlStreamReader>
@@ -608,6 +609,29 @@ int main(int argc, char **argv){
         qInfo().noquote() << file << ": channels" << usedSlots(Kind::Channel).size() << "zones" << usedSlots(Kind::Zone).size()
                           << "talkgroups" << usedSlots(Kind::Talkgroup).size() << "roaming ch" << usedSlots(Kind::RoamingChannel).size()
                           << "addresses" << usedSlots(Kind::AnalogAddress).size();
+        // The talk group index table at 0x2600000: the radio reads it in aligned 16 byte
+        // blocks until it meets an all-0xff block, so every word before that block must be a
+        // valid talk group index (an 0xffffffff or zero word there hangs the radio's list).
+        if(file != "synthetic"){
+            MemDevice md;
+            md.writeOtherData();
+            const int tg_total = Memory::talkgroups.size();
+            int used_tg = 0;
+            for(Talkgroup *tg : Memory::talkgroups) if(tg->dmr_id > 0) used_tg++;
+            const int base = Memory::Map()->TalkgroupIndex;
+            int words = 0, bad = 0;
+            for(int blk = 0; blk < 0x400; blk++){
+                const QByteArray b = md.image.mid(base + blk * 0x10, 0x10);
+                if(b == QByteArray(0x10, char(0xff))) break;
+                for(int w = 0; w < 4; w++){
+                    const uint32_t v = qFromLittleEndian<uint32_t>(b.constData() + w * 4);
+                    if(v >= uint32_t(tg_total) || !(Memory::talkgroups.at(v)->dmr_id > 0)) bad++;
+                    words++;
+                }
+            }
+            CHECK(bad == 0, QString("talk group index table has %1 invalid words inside the counted area").arg(bad));
+            CHECK(words >= used_tg && words <= used_tg + 3, QString("talk group index count %1 for %2 talk groups").arg(words).arg(used_tg));
+        }
         // re-opening a file must replace receive group lists already in memory
         if(file != "synthetic"){
             auto rx_state = []{
