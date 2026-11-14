@@ -34,7 +34,7 @@ detailed description of the earlier fork changes is in [readme.md](readme.md).
   (449 697 blocks, 0 differences); reading it back through the application code on an
   in-memory image gives identical content.
 - The GUI parts (sort / move buttons, receive group dialog, splitter) have no automated tests;
-  the application starts and runs headless, and the author reported the CPS working in use.
+  they were checked by hand by the author, and the application starts and runs headless.
 
 ## 2026-11-13
 
