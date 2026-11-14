@@ -1491,6 +1491,7 @@ void MainWindow::setupReorderBar(){
     host_layout->removeWidget(ui->mainTreeWidget);
     auto *splitter = new QSplitter(Qt::Horizontal, host);
     splitter->setChildrenCollapsible(false);
+    splitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     splitter->addWidget(ui->mainTreeWidget);
     splitter->addWidget(container);
     splitter->setStretchFactor(0, 0);
