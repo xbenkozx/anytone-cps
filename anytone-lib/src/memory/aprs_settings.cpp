@@ -873,11 +873,11 @@ void Anytone::AprsSettings::save(QXmlStreamWriter &xml){
     xml.writeAttribute("manual_tx_interval", QString::number(manual_tx_interval));
     xml.writeAttribute("auto_tx_interval", QString::number(auto_tx_interval));
     xml.writeAttribute("tx_tone", QString::number(tx_tone));
-    xml.writeAttribute("fix_1_lat", QString::number(fix_1_lat));
+    xml.writeAttribute("fix_1_lat", QString::number(fix_1_lat, 'f', 8));
     xml.writeAttribute("fix_1_ns", QString::number(fix_1_ns));
-    xml.writeAttribute("fix_1_lng", QString::number(fix_1_lng));
+    xml.writeAttribute("fix_1_lng", QString::number(fix_1_lng, 'f', 8));
     xml.writeAttribute("fix_1_ew", QString::number(fix_1_ew));
-    xml.writeAttribute("to_call ", to_call);
+    xml.writeAttribute("to_call", to_call);
     xml.writeAttribute("to_call_ssid", QString::number(to_call_ssid));
     xml.writeAttribute("your_call", your_call);
     xml.writeAttribute("your_call_ssid", QString::number(your_call_ssid));
@@ -891,7 +891,7 @@ void Anytone::AprsSettings::save(QXmlStreamWriter &xml){
     xml.writeAttribute("dis_time", QString::number(dis_time));
     xml.writeAttribute("altitude", QString::number(altitude));
     xml.writeAttribute("pass_all", QString::number(pass_all));
-    xml.writeAttribute("sending_text ", sending_text);
+    xml.writeAttribute("sending_text", sending_text);
     xml.writeAttribute("fixed_location_beacon", QString::number(fixed_location_beacon));
     xml.writeAttribute("analog_tx_mode", QString::number(analog_tx_mode));
     xml.writeAttribute("filter_position", QString::number(filter_position));
@@ -935,20 +935,20 @@ void Anytone::AprsSettings::save(QXmlStreamWriter &xml){
     xml.writeAttribute("digital_report_slot_6", QString::number(digital_report_slot_6));
     xml.writeAttribute("digital_report_slot_7", QString::number(digital_report_slot_7));
     xml.writeAttribute("digital_report_slot_8", QString::number(digital_report_slot_8));
-    xml.writeAttribute("fix_2_lat", QString::number(fix_2_lat));
-    xml.writeAttribute("fix_2_lng", QString::number(fix_2_lng));
-    xml.writeAttribute("fix_3_lat", QString::number(fix_3_lat));
-    xml.writeAttribute("fix_3_lng", QString::number(fix_3_lng));
-    xml.writeAttribute("fix_4_lat", QString::number(fix_4_lat));
-    xml.writeAttribute("fix_4_lng", QString::number(fix_4_lng));
-    xml.writeAttribute("fix_5_lat", QString::number(fix_5_lat));
-    xml.writeAttribute("fix_5_lng", QString::number(fix_5_lng));
-    xml.writeAttribute("fix_6_lat", QString::number(fix_6_lat));
-    xml.writeAttribute("fix_6_lng", QString::number(fix_6_lng));
-    xml.writeAttribute("fix_7_lat", QString::number(fix_7_lat));
-    xml.writeAttribute("fix_7_lng", QString::number(fix_7_lng));
-    xml.writeAttribute("fix_8_lat", QString::number(fix_8_lat));
-    xml.writeAttribute("fix_8_lng", QString::number(fix_8_lng));
+    xml.writeAttribute("fix_2_lat", QString::number(fix_2_lat, 'f', 8));
+    xml.writeAttribute("fix_2_lng", QString::number(fix_2_lng, 'f', 8));
+    xml.writeAttribute("fix_3_lat", QString::number(fix_3_lat, 'f', 8));
+    xml.writeAttribute("fix_3_lng", QString::number(fix_3_lng, 'f', 8));
+    xml.writeAttribute("fix_4_lat", QString::number(fix_4_lat, 'f', 8));
+    xml.writeAttribute("fix_4_lng", QString::number(fix_4_lng, 'f', 8));
+    xml.writeAttribute("fix_5_lat", QString::number(fix_5_lat, 'f', 8));
+    xml.writeAttribute("fix_5_lng", QString::number(fix_5_lng, 'f', 8));
+    xml.writeAttribute("fix_6_lat", QString::number(fix_6_lat, 'f', 8));
+    xml.writeAttribute("fix_6_lng", QString::number(fix_6_lng, 'f', 8));
+    xml.writeAttribute("fix_7_lat", QString::number(fix_7_lat, 'f', 8));
+    xml.writeAttribute("fix_7_lng", QString::number(fix_7_lng, 'f', 8));
+    xml.writeAttribute("fix_8_lat", QString::number(fix_8_lat, 'f', 8));
+    xml.writeAttribute("fix_8_lng", QString::number(fix_8_lng, 'f', 8));
     xml.writeAttribute("fix_2_ns", QString::number(fix_2_ns));
     xml.writeAttribute("fix_2_ew", QString::number(fix_2_ew));
     xml.writeAttribute("fix_3_ns", QString::number(fix_3_ns));
@@ -1000,15 +1000,15 @@ void Anytone::AprsSettings::load(QXmlStreamReader &xml){
         if(attributes.hasAttribute("tx_tone"))
             tx_tone = attributes.value("tx_tone").toInt();
         if(attributes.hasAttribute("fix_1_lat"))
-            fix_1_lat = attributes.value("fix_1_lat").toInt();
+            fix_1_lat = attributes.value("fix_1_lat").toDouble();
         if(attributes.hasAttribute("fix_1_ns"))
             fix_1_ns = attributes.value("fix_1_ns").toInt();
         if(attributes.hasAttribute("fix_1_lng"))
-            fix_1_lng = attributes.value("fix_1_lng").toInt();
+            fix_1_lng = attributes.value("fix_1_lng").toDouble();
         if(attributes.hasAttribute("fix_1_ew"))
             fix_1_ew = attributes.value("fix_1_ew").toInt();
-        if(attributes.hasAttribute("to_call "))
-            to_call = attributes.value("to_call ").toString();
+        if(attributes.hasAttribute("to_call"))
+            to_call = attributes.value("to_call").toString();
         if(attributes.hasAttribute("to_call_ssid"))
             to_call_ssid = attributes.value("to_call_ssid").toInt();
         if(attributes.hasAttribute("your_call"))
@@ -1035,8 +1035,8 @@ void Anytone::AprsSettings::load(QXmlStreamReader &xml){
             altitude = attributes.value("altitude").toInt();
         if(attributes.hasAttribute("pass_all"))
             pass_all = attributes.value("pass_all").toInt();
-        if(attributes.hasAttribute("sending_text "))
-            sending_text = attributes.value("sending_text ").toString();
+        if(attributes.hasAttribute("sending_text"))
+            sending_text = attributes.value("sending_text").toString();
         if(attributes.hasAttribute("fixed_location_beacon"))
             fixed_location_beacon = attributes.value("fixed_location_beacon").toInt();
         if(attributes.hasAttribute("analog_tx_mode"))
@@ -1124,60 +1124,60 @@ void Anytone::AprsSettings::load(QXmlStreamReader &xml){
         if(attributes.hasAttribute("digital_report_slot_8"))
             digital_report_slot_8 = attributes.value("digital_report_slot_8").toInt();
         if(attributes.hasAttribute("fix_2_lat"))
-            fix_2_lat = attributes.value("fix_2_lat").toInt();
+            fix_2_lat = attributes.value("fix_2_lat").toDouble();
         if(attributes.hasAttribute("fix_2_lng"))
-            fix_2_lng = attributes.value("fix_2_lng").toInt();
+            fix_2_lng = attributes.value("fix_2_lng").toDouble();
         if(attributes.hasAttribute("fix_3_lat"))
-            fix_3_lat = attributes.value("fix_3_lat").toInt();
+            fix_3_lat = attributes.value("fix_3_lat").toDouble();
         if(attributes.hasAttribute("fix_3_lng"))
-            fix_3_lng = attributes.value("fix_3_lng").toInt();
+            fix_3_lng = attributes.value("fix_3_lng").toDouble();
         if(attributes.hasAttribute("fix_4_lat"))
-            fix_4_lat = attributes.value("fix_4_lat").toInt();
+            fix_4_lat = attributes.value("fix_4_lat").toDouble();
         if(attributes.hasAttribute("fix_4_lng"))
-            fix_4_lng = attributes.value("fix_4_lng").toInt();
+            fix_4_lng = attributes.value("fix_4_lng").toDouble();
         if(attributes.hasAttribute("fix_5_lat"))
-            fix_5_lat = attributes.value("fix_5_lat").toInt();
+            fix_5_lat = attributes.value("fix_5_lat").toDouble();
         if(attributes.hasAttribute("fix_5_lng"))
-            fix_5_lng = attributes.value("fix_5_lng").toInt();
+            fix_5_lng = attributes.value("fix_5_lng").toDouble();
         if(attributes.hasAttribute("fix_6_lat"))
-            fix_6_lat = attributes.value("fix_6_lat").toInt();
+            fix_6_lat = attributes.value("fix_6_lat").toDouble();
         if(attributes.hasAttribute("fix_6_lng"))
-            fix_6_lng = attributes.value("fix_6_lng").toInt();
+            fix_6_lng = attributes.value("fix_6_lng").toDouble();
         if(attributes.hasAttribute("fix_7_lat"))
-            fix_7_lat = attributes.value("fix_7_lat").toInt();
+            fix_7_lat = attributes.value("fix_7_lat").toDouble();
         if(attributes.hasAttribute("fix_7_lng"))
-            fix_7_lng = attributes.value("fix_7_lng").toInt();
+            fix_7_lng = attributes.value("fix_7_lng").toDouble();
         if(attributes.hasAttribute("fix_8_lat"))
-            fix_8_lat = attributes.value("fix_8_lat").toInt();
+            fix_8_lat = attributes.value("fix_8_lat").toDouble();
         if(attributes.hasAttribute("fix_8_lng"))
-            fix_8_lng = attributes.value("fix_8_lng").toInt();
+            fix_8_lng = attributes.value("fix_8_lng").toDouble();
         if(attributes.hasAttribute("fix_2_ns"))
             fix_2_ns = attributes.value("fix_2_ns").toInt();
-        if(attributes.hasAttribute("fix_2_ew;"))
+        if(attributes.hasAttribute("fix_2_ew"))
             fix_2_ew = attributes.value("fix_2_ew").toInt();
-        if(attributes.hasAttribute("fix_3_ns;"))
+        if(attributes.hasAttribute("fix_3_ns"))
             fix_3_ns = attributes.value("fix_3_ns").toInt();
-        if(attributes.hasAttribute("fix_3_ew;"))
+        if(attributes.hasAttribute("fix_3_ew"))
             fix_3_ew = attributes.value("fix_3_ew").toInt();
-        if(attributes.hasAttribute("fix_4_ns;"))
+        if(attributes.hasAttribute("fix_4_ns"))
             fix_4_ns = attributes.value("fix_4_ns").toInt();
-        if(attributes.hasAttribute("fix_4_ew;"))
+        if(attributes.hasAttribute("fix_4_ew"))
             fix_4_ew = attributes.value("fix_4_ew").toInt();
-        if(attributes.hasAttribute("fix_5_ns;"))
+        if(attributes.hasAttribute("fix_5_ns"))
             fix_5_ns = attributes.value("fix_5_ns").toInt();
-        if(attributes.hasAttribute("fix_5_ew;"))
+        if(attributes.hasAttribute("fix_5_ew"))
             fix_5_ew = attributes.value("fix_5_ew").toInt();
-        if(attributes.hasAttribute("fix_6_ns;"))
+        if(attributes.hasAttribute("fix_6_ns"))
             fix_6_ns = attributes.value("fix_6_ns").toInt();
-        if(attributes.hasAttribute("fix_6_ew;"))
+        if(attributes.hasAttribute("fix_6_ew"))
             fix_6_ew = attributes.value("fix_6_ew").toInt();
-        if(attributes.hasAttribute("fix_7_ns;"))
+        if(attributes.hasAttribute("fix_7_ns"))
             fix_7_ns = attributes.value("fix_7_ns").toInt();
-        if(attributes.hasAttribute("fix_7_ew;"))
+        if(attributes.hasAttribute("fix_7_ew"))
             fix_7_ew = attributes.value("fix_7_ew").toInt();
-        if(attributes.hasAttribute("fix_8_ns;"))
+        if(attributes.hasAttribute("fix_8_ns"))
             fix_8_ns = attributes.value("fix_8_ns").toInt();
-        if(attributes.hasAttribute("fix_8_ew;"))
+        if(attributes.hasAttribute("fix_8_ew"))
             fix_8_ew = attributes.value("fix_8_ew").toInt();
         if(attributes.hasAttribute("tx_freq_2"))
             tx_freq_2 = attributes.value("tx_freq_2").toInt();
@@ -1200,7 +1200,8 @@ void Anytone::AprsSettings::load(QXmlStreamReader &xml){
             if(token == QXmlStreamReader::StartElement && xml.name() == "APRSFilterList"){
 
             }else if(token == QXmlStreamReader::StartElement && xml.name() == "APRSFilter"){
-                int idx = attributes.value("id").toInt();
+                int idx = xml.attributes().value("id").toInt();
+                if(idx < 0 || idx >= receive_filters.size()){ token = xml.readNext(); continue; }
                 AprsReceiveFilter *filter = receive_filters.at(idx);
                 filter->load(xml);
             }else if(token == QXmlStreamReader::StartElement){

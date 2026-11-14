@@ -1618,8 +1618,10 @@ void Anytone::OptionalSettings::load(QXmlStreamReader &xml){
                     p1_long_key_D890UV = attributes.value("p1_long_key_D890UV").toInt();
                 if(attributes.hasAttribute("p2_long_key_D890UV"))
                     p2_long_key_D890UV = attributes.value("p2_long_key_D890UV").toInt();
-                if(attributes.hasAttribute("long_key_time_D890UV"))
+                if(attributes.hasAttribute("long_key_time"))
                     long_key_time = attributes.value("long_key_time").toInt();
+                if(attributes.hasAttribute("am_fm_function"))
+                    am_fm_function = attributes.value("am_fm_function").toInt();
                 if(attributes.hasAttribute("knob_lock"))
                     knob_lock = attributes.value("knob_lock").toInt();
                 if(attributes.hasAttribute("keyboard_lock"))

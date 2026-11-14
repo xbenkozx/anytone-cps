@@ -153,6 +153,10 @@ Headless checks (not part of the default build, `-DANYTONE_BUILD_TESTS=ON`):
 - `list-order-test <codeplug.atd>|synthetic` sorts/moves every list and checks that the object
   graph is unchanged in memory, after the write encoder + read decoder, and after saving and
   loading `.atd`.
+- `xml-roundtrip-test [seeds]` fills an in-memory radio image with random data, reads it,
+  saves it to `.atd` XML, loads it again and compares what would be written to the radio. Every
+  difference is a setting that the file loses (it found the APRS ToCall / Sending Text and
+  receive filter losses). `xml-roundtrip-test file.atd` prints the APRS texts a file loads.
 - `contacts-tool dry|write|verify` writes the contact database from a codeplug file to an
   in-memory image or to the radio (contact regions only) and verifies it byte by byte.
 - `serial-peek <port> <hex-address>...` reads 16-byte blocks from the radio (PROGRAM, read and
