@@ -3,7 +3,7 @@
 Changes of the `mabalew/anytone-cps` fork. Entries describe what was verified and how; the
 detailed description of the earlier fork changes is in [readme.md](readme.md).
 
-## Unreleased (branch `feature/list-sort-reorder`)
+## Unreleased
 
 ### Added
 - Sort by any column and move entries to top / up / down / bottom in the Channel, Zone, Roaming
@@ -15,6 +15,11 @@ detailed description of the earlier fork changes is in [readme.md](readme.md).
 - `tools/fix_atd.py`, an example script that edits an `.atd` codeplug.
 
 ### Fixed
+- **Radio hung on the talk group list** (see [Incident 2026-11-14](#incident-2026-11-14-radio-hangs-in-the-talk-group-list)):
+  the talk group index table at `0x2600000` ended with a terminator that started mid-block, so the
+  radio counted 704 entries for 698 talk groups and froze on the invalid ones. The entries are now
+  padded to a whole 16 byte block with valid indexes and followed by an aligned all-`0xff` block.
+  `list-order-test` checks the table and fails without the fix.
 - Digital contact read cut off fields of records longer than one 0x80 byte buffer (long UTF-8
   names). The reader keeps a 2 KB margin and does not loop forever when a read returns nothing.
 - Opening a file merged receive group lists into memory instead of replacing them.
@@ -48,3 +53,38 @@ detailed description of the earlier fork changes is in [readme.md](readme.md).
 
 Talk group, digital contact, serial protocol, import, settings persistence and community fixes
 are described in [readme.md](readme.md#changes-in-this-fork).
+
+## Incident 2026-11-14: radio hangs in the talk group list
+
+**Symptom.** After writing a codeplug with 698 talk groups to an AT-D878UVII (V101) the radio's
+talk group list showed `n/704`. Pressing Up on the first entry to jump to the end froze the
+radio; scrolling down one by one froze it at 699/704. The freeze survived the power switch
+(the screen stayed on the list); only removing the battery helped. The last two visible entries
+were the same talk group.
+
+**Cause.** A read-only dump of the radio showed that the index table at `0x2600000` itself was
+right (698 entries, indexes 0-697, no duplicates), and so were the bitmap, the order table at
+`0x4800000` and the records. The end of the table was not. The writer appended 16 bytes of
+`0xff` after the entries, but 698 entries are 2792 bytes, so the terminator started 8 bytes into
+a 16 byte block, and `writeMemory` padded the tail with 8 zero bytes. The radio reads the table in
+aligned 16 byte blocks until it meets an all-`0xff` block and counts every word before it: 2816
+bytes / 4 = 704. Entries 699-702 were `0xffffffff` and 703-704 were zero, and the list froze on
+the invalid indexes. The defect was introduced together with the index table in July 2026. By the same
+arithmetic a codeplug with 686 talk groups would have made the radio count 692 entries; that
+was not observed and no hang was reported at the time.
+
+**Fix.** The entries are padded to a whole 16 byte block with valid indexes (the last one
+repeated, so up to three repeated entries may appear at the end of the list), then the table is
+ended with an aligned all-`0xff` block. Confirmed on the radio: after a normal write of "Other
+Data" the list is correct and no longer freezes.
+
+**Recovery for affected radios.** Write the codeplug again with the fixed version and only
+"Other Data" selected. The digital contact database does not have to be rewritten.
+
+**How it was found.** The radio could not be read while frozen (it did not enumerate on USB);
+after a battery pull the table, the bitmap, the order table and the last records were read with
+`serial-peek` and the counts compared with the file.
+
+**Not changed, to be investigated.** The talk group bitmap is padded with zero bytes up to
+`0x4f0` bytes, which marks slots 10008-10111 as in use (104 phantom entries). It did not cause
+this freeze and was left as it is.
