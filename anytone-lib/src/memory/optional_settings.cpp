@@ -639,17 +639,11 @@ void Anytone::OptionalSettings::encode_D878UVII(QByteArray &data_2500000, QByteA
     
 
     // Other
-    if(priority_zone_a == 0){
-        priority_zone_a = 0xff;
-    }else{
-        priority_zone_a -= 1;
-    }
-
-    if(priority_zone_b == 0){
-        priority_zone_b = 0xff;
-    }else{
-        priority_zone_b -= 1;
-    }
+    // Work on copies: the in-memory value is "zone id + 1" (0 = off) and
+    // encoding must not change it, otherwise a second encode (or saving the
+    // codeplug after a write) would shift the selected zone by one.
+    uint8_t priority_zone_a_raw = (priority_zone_a == 0) ? 0xff : priority_zone_a - 1;
+    uint8_t priority_zone_b_raw = (priority_zone_b == 0) ? 0xff : priority_zone_b - 1;
 
     data_2500000[0xd5] = address_book_sent_with_code;
     data_2500000[0x04] = tot;
@@ -660,8 +654,8 @@ void Anytone::OptionalSettings::encode_D878UVII(QByteArray &data_2500000, QByteA
     data_2500000[0x2e] = tbst;
     data_2500000[0x50] = analog_call_hold_time;
     data_2500000[0x6e] = call_channel_maintained;
-    data_2500000[0x6f] = priority_zone_a;
-    data_2500000[0x70] = priority_zone_b;
+    data_2500000[0x6f] = priority_zone_a_raw;
+    data_2500000[0x70] = priority_zone_b_raw;
     data_2500000[0xe9] = mute_timing;
     data_2501400[0x3a] = encryption_type;
     data_2501400[0x3b] = tot_predict;

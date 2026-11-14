@@ -28,7 +28,7 @@ namespace Anytone {
         uint8_t analog_tx_duration = 0;
         uint8_t analog_rx_duration = 0;
         uint8_t analog_eni_send = 0;
-        uint8_t analog_emergency_channel = 0;
+        uint16_t analog_emergency_channel = 0;
         uint8_t analog_emergency_cycle = 0;
         uint8_t work_mode_voice_switch = 0;
         uint8_t work_mode_area_switch = 0;
@@ -38,7 +38,7 @@ namespace Anytone {
         uint8_t digital_tx_duration = 0;
         uint8_t digital_rx_duration = 0;
         uint8_t digital_eni_send = 0;
-        uint8_t digital_emergency_channel = 0;
+        uint16_t digital_emergency_channel = 0;
         uint8_t digital_emergency_cycle = 0;
         uint8_t work_alone_response_time = 0;
         uint8_t work_alone_warning_time = 0;

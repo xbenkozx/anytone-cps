@@ -19,7 +19,7 @@ void Anytone::AlarmSettings::decode_D878UVII(QByteArray data_0000, QByteArray da
     digital_tx_duration = static_cast<uint8_t>(data_1400.at(0xc));
     digital_rx_duration = static_cast<uint8_t>(data_1400.at(0xd));
     digital_eni_send =  static_cast<uint8_t>(data_1400.at(0x10));
-    digital_emergency_channel = static_cast<uint8_t>(data_1400.at(0xe));
+    digital_emergency_channel = Int::fromBytes(data_1400.mid(0xe, 2));
     digital_emergency_cycle =  static_cast<uint8_t>(data_1400.at(0x11));
     digital_call_type = static_cast<uint8_t>(data_1440.at(0x0));
     receive_alarm =  static_cast<uint8_t>(data_1400.at(0x15));
@@ -46,7 +46,7 @@ void Anytone::AlarmSettings::decode_D890UV(QByteArray data_3483000, QByteArray d
     digital_tx_duration = static_cast<uint8_t>(data_3483000.at(0xc));
     digital_rx_duration = static_cast<uint8_t>(data_3483000.at(0xd));
     digital_eni_send =  static_cast<uint8_t>(data_3483000.at(0x10));
-    digital_emergency_channel = static_cast<uint8_t>(data_3483000.at(0xe));
+    digital_emergency_channel = Int::fromBytes(data_3483000.mid(0xe, 2));
     digital_emergency_cycle =  static_cast<uint8_t>(data_3483000.at(0x11));
     digital_call_type = static_cast<uint8_t>(data_3482e00.at(0x0));
     receive_alarm =  static_cast<uint8_t>(data_3483000.at(0x15));
