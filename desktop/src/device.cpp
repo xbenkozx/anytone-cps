@@ -2682,7 +2682,16 @@ void Device::writeTalkgroupData(){
 
     tg_set_list_data = tg_set_list_data.leftJustified(0x4f0, '\0');
 
-    // Terminate and pad the index table
+    // The radio reads the index table in aligned 16 byte blocks until it meets an
+    // all-0xff block and counts every word before it. A terminator that starts in
+    // the middle of a block (plus the zero padding of writeMemory) therefore made
+    // the radio list 0xffffffff / zero words as talk groups and hang on them.
+    // Pad the entries to a whole block with valid indexes (the last one repeated),
+    // then end the table with an aligned all-0xff block.
+    if(tg_index_data.size() > 0){
+        const QByteArray last = tg_index_data.right(4);
+        while(tg_index_data.size() % 0x10 != 0) tg_index_data.append(last);
+    }
     tg_index_data.append(QByteArray(0x10, 0xff));
 
     // Talkgroup order data
