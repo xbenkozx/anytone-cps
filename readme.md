@@ -23,7 +23,7 @@ Currently, this project is in Alpha stage and is a work is progress. Make sure y
 
 ## Changes in this fork
 
-All changes below live on this fork's `main` branch and were verified against a real AnyTone
+Changes below live on this fork's `main` branch (except where a branch is named) and were verified against a real AnyTone
 AT-D878UVII (FW 4.00 / V101) and with a `VirtualDevice` test harness (write/read roundtrips on
 erased, zeroed and randomized codeplug images). The initial bug fix set (up to the UI fixes
 section) is also available separately on the `fix/digital-contacts-write` branch.
@@ -122,6 +122,42 @@ section) is also available separately on the `fix/digital-contacts-write` branch
   written back); a full `save()` was added and wired to OK.
 - The **Down** button in the Zone, AM Zone, Scan List and Roaming Zone member editors never moved
   the top entry down (it kept the `Up` handler's guard); fixed in all four.
+
+### List sorting, reordering and receive groups
+Branch `feature/list-sort-reorder`.
+- **Sort and move** for the Channel, Zone, Roaming Channel, Contact/Talk Group and Analog Address
+  Book lists: click a column header to sort, use *Move to Top / Up / Down / Bottom*
+  (Alt+Up, Alt+Down, Alt+Shift+Up/Down) and *Apply Sort Order* to renumber the entries in the
+  order shown. Every reference (zones, scan lists, receive groups, roaming zones, channel
+  contacts) is remapped, so the codeplug stays equivalent. VFO A/B channels keep their slots.
+- **Receive Group Call List** can now be edited: double-click a row to rename the group and
+  add, remove or reorder its talk groups (up to 64).
+- Opening a file now *replaces* the receive group lists instead of merging them into what is
+  already in memory (groups missing from the file kept data read from the radio).
+- The menu tree and the table sit in a splitter, so the width of the menu can be dragged.
+- The unimplemented *Friends List* menu entry is hidden.
+- **Digital contact read fix:** records longer than one 0x80 byte buffer (long UTF-8 names) were
+  parsed with cut-off fields; the reader now keeps a 2 KB margin after the current record and no
+  longer spins if a read returns nothing. Writing the 116 540-contact database and reading it
+  back gives identical content.
+- Small fixes found on the way: the digital emergency channel is two bytes wide, encoding the
+  optional settings no longer changes the in-memory priority zone, and `readTalkgroupData`
+  addresses records by bank like the writer.
+
+Headless checks (not part of the default build, `-DANYTONE_BUILD_TESTS=ON`):
+- `list-order-test <codeplug.atd>|synthetic` sorts/moves every list and checks that the object
+  graph is unchanged in memory, after the write encoder + read decoder, and after saving and
+  loading `.atd`.
+- `contacts-tool dry|write|verify` writes the contact database from a codeplug file to an
+  in-memory image or to the radio (contact regions only) and verifies it byte by byte.
+- `serial-peek <port> <hex-address>...` reads 16-byte blocks from the radio (PROGRAM, read and
+  END only, nothing is written).
+- `tools/fix_atd.py` post-processes an `.atd` codeplug (Parrot contact, TS2 club groups, the SP5
+  receive group list); it is an example of editing codeplug XML, not part of the application.
+
+> Never write single 16-byte blocks to the radio to change one setting: the D878UVII erases the
+> surrounding flash block (observed at `0x2500000-0x2503fff`) when the session ends. Always write
+> complete regions, as the CPS does.
 
 ### Community fixes
 This fork also carries pull requests that were left unmerged on the upstream project. All credit
