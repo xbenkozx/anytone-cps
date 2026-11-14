@@ -222,8 +222,12 @@ void Device::readDigitalContacts(){
             emit update2(i, contact_count, "Reading Contacts");
         }
 
-        if(contact_data.size() - offset < k_DcBufSize){
-            contact_data.append(getDigitalContactDataBuffer(contact_data.size()));
+        // A record has 6 variable length strings and can be far longer than one
+        // buffer (UTF-8 names), so keep a safe margin of data after the offset.
+        while(contact_data.size() - offset < 0x800){
+            const QByteArray chunk = getDigitalContactDataBuffer(contact_data.size());
+            if(chunk.isEmpty() || !is_alive) break;   // read failed: never spin forever
+            contact_data.append(chunk);
         }
         Anytone::DigitalContact *dc = Anytone::Memory::digital_contacts.at(i);
 

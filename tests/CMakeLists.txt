@@ -24,3 +24,12 @@ qt_add_executable(serial-peek serial_peek.cpp
 set_target_properties(serial-peek PROPERTIES CXX_STANDARD 20 AUTOMOC ON)
 target_include_directories(serial-peek PRIVATE ${CMAKE_SOURCE_DIR}/desktop/include)
 target_link_libraries(serial-peek PRIVATE Qt6::Core Qt6::SerialPort anytone-lib)
+
+# Contact database restore / check (dry = in-memory, write|verify = radio):
+qt_add_executable(contacts-tool contacts_tool.cpp
+    ${CMAKE_SOURCE_DIR}/desktop/src/device.cpp
+    ${CMAKE_SOURCE_DIR}/desktop/include/device.h
+)
+set_target_properties(contacts-tool PROPERTIES CXX_STANDARD 20 AUTOMOC ON)
+target_include_directories(contacts-tool PRIVATE ${CMAKE_SOURCE_DIR}/desktop/include)
+target_link_libraries(contacts-tool PRIVATE Qt6::Core Qt6::SerialPort anytone-lib)
