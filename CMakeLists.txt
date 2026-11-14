@@ -14,5 +14,10 @@ ENDIF()
 add_subdirectory(anytone-lib)
 add_subdirectory(desktop)
 
+option(ANYTONE_BUILD_TESTS "Build the headless tests in tests/" OFF)
+if(ANYTONE_BUILD_TESTS)
+  add_subdirectory(tests)
+endif()
+
 # DEBUG cmake -B build; cmake --build build;
 # RELEASE cmake -B build; cmake --build build --config Release;

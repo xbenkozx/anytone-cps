@@ -16,6 +16,10 @@
 #include <QModelIndex>
 #include <QShortcut>
 #include <QTreeWidgetItem>
+#include <QPointer>
+#include <QLabel>
+#include <QToolButton>
+#include "list_sort_proxy_model.h"
 #include "device.h"
 #include "comport_dialog.h"
 #include "loading_dialog.h"
@@ -82,6 +86,11 @@ public:
     void editChannel();
     void updateMemoryChannelHistory();
 
+    // Sort / reorder of channel, zone, roaming channel, talk group and analog address lists
+    void moveSelectedEntries(Anytone::ListOrder::Move move);
+    void applySortOrder();
+    void clearSortOrder();
+
     // Dialogs
     void showComportDialog();
     void showReadOptionsDialog();
@@ -108,6 +117,7 @@ public:
     void showRadioIdEditDialog(int index);
     void showRoamingChannelEditDialog(int index);
     void showRoamingZoneEditDialog(int index);
+    void showReceiveGroupEditDialog(int index);
     void showScanListEditDialog(int index);
     void showTalkAliasSettingsDialog();
     void showTalkgroupEditDialog(int index);
@@ -177,6 +187,22 @@ private slots:
 
 private:
     void updateWindowTitle();
+    void setupReorderBar();
+    void setReorderableModel(Anytone::ListOrder::Kind kind, bool keep_sort);
+    void updateReorderBar();
+    void refreshReorderableList();
+    int sourceRow(const QModelIndex &index) const;
+
+    // The proxy is a child of table_model and is deleted together with it
+    QPointer<ListSortProxyModel> sort_proxy;
+    QWidget *reorder_bar = nullptr;
+    QLabel *reorder_hint = nullptr;
+    QToolButton *move_top_btn = nullptr;
+    QToolButton *move_up_btn = nullptr;
+    QToolButton *move_down_btn = nullptr;
+    QToolButton *move_bottom_btn = nullptr;
+    QToolButton *apply_sort_btn = nullptr;
+    QToolButton *clear_sort_btn = nullptr;
     QString selected_table_view = "";
     std::unique_ptr<Ui_MainWindow> ui;
 
@@ -232,7 +258,6 @@ private:
                     "AES Encryption Code",
                     "ARC4 Encryption Code",
                     "Digital Contact List",
-                    "Friends List",
                     "Talk Alias Settings"
                 }
             },
@@ -280,7 +305,6 @@ private:
                     "AES Encryption Code",
                     "ARC4 Encryption Code",
                     "Digital Contact List",
-                    "Friends List",
                     "AIR Alias Settings", //Talk Alias Settings
                     "Repeater Whitelist" //Talk Group White List, Digital Contact Whitelist
                 }

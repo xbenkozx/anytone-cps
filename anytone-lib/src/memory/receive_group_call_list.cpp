@@ -51,6 +51,7 @@ void Anytone::ReceiveGroup::load(QXmlStreamReader &xml){
             name = attributes.value("name").toString();
         if(attributes.hasAttribute("tg_list")){
             QString tg_idx_str = attributes.value("tg_list").toString();
+            tg_idxs.clear();
             for(QString idx : tg_idx_str.split("|")){
                 tg_idxs.append(static_cast<uint16_t>(idx.toInt()));
             }
