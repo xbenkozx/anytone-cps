@@ -117,6 +117,7 @@ public:
     void showRadioIdEditDialog(int index);
     void showRoamingChannelEditDialog(int index);
     void showRoamingZoneEditDialog(int index);
+    void showReceiveGroupEditDialog(int index);
     void showScanListEditDialog(int index);
     void showTalkAliasSettingsDialog();
     void showTalkgroupEditDialog(int index);

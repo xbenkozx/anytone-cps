@@ -59,6 +59,7 @@
 #include "prefabricated_sms_edit_dialog.h"
 #include "roaming_channel_edit_dialog.h"
 #include "roaming_zone_edit_dialog.h"
+#include "receive_group_edit_dialog.h"
 #include "scan_list_edit_dialog.h"
 #include "zone_edit_dialog.h"
 #include "image_dialog.h"
@@ -864,6 +865,11 @@ void MainWindow::showRoamingZoneEditDialog(int index){
     RoamingZoneEditDialog dialog(this, index);
     dialog.exec();
 }
+void MainWindow::showReceiveGroupEditDialog(int index){
+    ReceiveGroupEditDialog dialog(this, index);
+    dialog.exec();
+    if(selected_table_view == "Receive Group Call List") listReceiveGroupCall(false);
+}
 void MainWindow::showScanListEditDialog(int index){
     ScanListEditDialog dialog(this, index);
     dialog.exec();
@@ -1213,6 +1219,8 @@ void MainWindow::onMainTableDblClicked(QModelIndex index){
         showRoamingChannelEditDialog(row_index);
     }else if(selected_table_view == "Roaming Zone"){
         showRoamingZoneEditDialog(row_index);
+    }else if(selected_table_view == "Receive Group Call List"){
+        showReceiveGroupEditDialog(row_index);
     }else if(selected_table_view == "Scan List"){
         showScanListEditDialog(row_index);
     }else if(selected_table_view == "Contact/Talk Group"){
