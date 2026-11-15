@@ -1,5 +1,6 @@
 
 #include "import_export_dialog.h"
+#include "user_settings.h"
 #include "ui_import_export_dialog.h"
 #include <QFileDialog>
 #include <QMessageBox>
@@ -59,19 +60,16 @@ QString ImportExportDialog::openCsv(){
     QString fname = QFileDialog::getOpenFileName(
         this,
         tr("Open File"),
-        default_path,
+        UserSettings::dialogDir(),
         tr("CSV File (*.csv)")
     );
+    UserSettings::rememberFile(fname);
 
     return fname;
     
 }
 void ImportExportDialog::importAllBtnClicked(){
-    #ifdef _WIN32
-    QString default_path = "C:/Users/" + QString(getenv("USERNAME")) + "/Documents";
-    #else
-    QString default_path = "/home/" + QString(getenv("USER")) +  "/Documents";
-    #endif
+    QString default_path = UserSettings::dialogDir();
 
     QString fname = QFileDialog::getOpenFileName(
         this,
@@ -79,6 +77,7 @@ void ImportExportDialog::importAllBtnClicked(){
         default_path,
         tr("LST File (*.LST)")
     );
+    UserSettings::rememberFile(fname);
 
     QMap<CsvList::ListType, QString> list = CsvList::loadFile(fname);
     csv_worker = new CsvList(list);
