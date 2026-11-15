@@ -19,6 +19,9 @@ set_target_properties(anytone-lib PROPERTIES
   AUTORCC ON
 )
 
+# Version shown by the application, taken from the VERSION file (see the top level CMakeLists.txt)
+target_compile_definitions(anytone-lib PRIVATE ANYTONE_CPS_VERSION="${ANYTONE_CPS_VERSION}")
+
 target_include_directories(anytone-lib
   PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
