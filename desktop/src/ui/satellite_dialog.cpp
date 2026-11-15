@@ -8,6 +8,9 @@
 #include <QFileInfo>
 #include <QTimer>
 #include <QMessageBox>
+#include <QLabel>
+#include <QVBoxLayout>
+#include "device_types.h"
 #include "memory/anytone_memory.h"
 #include "memory/satellite.h"
 #include "satellite_table_model.h"
@@ -26,6 +29,18 @@ SatelliteDialog::SatelliteDialog(QWidget *parent) :
 
     connect(ui->refreshBtn, &QPushButton::clicked, this, &SatelliteDialog::downloadKeplerData);
     connect(ui->writeBtn, &QPushButton::clicked, this, &SatelliteDialog::writeData);
+
+    // The D878UVII firmware has no satellite data area: nothing would be written. Say so
+    // instead of showing a normal looking write that does nothing.
+    if(Anytone::Memory::radio_model == Anytone::RadioModel::D878UVII_FW400){
+        ui->writeBtn->setEnabled(false);
+        ui->writeBtn->setToolTip(tr("The AT-D878UVII does not accept satellite data."));
+        auto *note = new QLabel(tr("The AT-D878UVII does not accept satellite data, so writing it to "
+                                   "the radio is disabled. The list can still be downloaded."), this);
+        note->setWordWrap(true);
+        note->setStyleSheet("font-weight: bold;");
+        ui->verticalLayout->insertWidget(0, note);
+    }
 
     table_model = new SatelliteTableModel(this);
     ui->tableView->setModel(table_model);
@@ -190,6 +205,11 @@ void SatelliteDialog::decodeSatelliteData(QString data){
 }
 
 void SatelliteDialog::writeData(){
+    if(Anytone::Memory::radio_model == Anytone::RadioModel::D878UVII_FW400){
+        QMessageBox::information(this, tr("Satellite data"),
+            tr("The AT-D878UVII does not accept satellite data. Nothing was written."));
+        return;
+    }
     if(UserSettings::comport.size() == 0){
         qDebug() << "Error: Comport not set";
         return;
@@ -230,4 +250,8 @@ void SatelliteDialog::updateMainBar(const int &val, const int &max, const QStrin
 
 void SatelliteDialog::writeToRadioFinished(const int &result){
     ui->progressBar->setVisible(false);
+    if(result == DeviceStatus::STATUS_DEVICE_MISMATCH){
+        QMessageBox::warning(this, tr("Satellite data"),
+            tr("The connected radio does not accept satellite data. Nothing was written."));
+    }
 }

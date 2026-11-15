@@ -1266,11 +1266,8 @@ void MainWindow::saveFile(bool save_as){
     QString filepath = UserSettings::last_save_file;
     if(save_as) filepath = "";
 
-    #ifdef _WIN32
-    QString default_path = "C:/Users/" + QString(getenv("USERNAME")) + "/Documents";
-    #else
-    QString default_path = "/home/" + QString(getenv("USER")) +  "/Documents";
-    #endif
+    QString default_path = UserSettings::codeplugDir();
+    if(!UserSettings::last_save_file.isEmpty()) default_path += "/" + QFileInfo(UserSettings::last_save_file).fileName();
 
 
     if(filepath.isEmpty()){
@@ -1283,6 +1280,7 @@ void MainWindow::saveFile(bool save_as){
 
         if (fname.isEmpty())
             return;
+        UserSettings::rememberFile(fname);
 
         if (!fname.endsWith(".atd", Qt::CaseInsensitive)) {
             fname += ".atd";
@@ -1317,11 +1315,7 @@ void MainWindow::saveFile(bool save_as){
 void MainWindow::openFile(QString filepath, bool user_init){
     if(filepath.isEmpty()){
 
-        #ifdef _WIN32
-        QString default_path = "C:/Users/" + QString(getenv("USERNAME")) + "/Documents";
-        #else
-        QString default_path = "/home/" + QString(getenv("USER")) +  "/Documents";
-        #endif
+        QString default_path = UserSettings::codeplugDir();
 
         QString fname = QFileDialog::getOpenFileName(
             this,
@@ -1332,6 +1326,7 @@ void MainWindow::openFile(QString filepath, bool user_init){
 
         if (fname.isEmpty())
             return;
+        UserSettings::rememberFile(fname);
 
         if (!fname.endsWith(".atd", Qt::CaseInsensitive)) {
             fname += ".atd";

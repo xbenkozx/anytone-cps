@@ -38,13 +38,14 @@ void ImageDialog::openImage(){
     QString fname = QFileDialog::getOpenFileName(
         this,
         tr("Open Image"),
-        QDir::currentPath(),
+        UserSettings::dialogDir(),
         tr("Image Files (*.jpg *.jpeg *.bmp)")
     );
 
     if (fname.isEmpty()) {
         return;
     }
+    UserSettings::rememberFile(fname);
 
     QImage image;
 
@@ -101,13 +102,14 @@ void ImageDialog::saveBin(){
     QString fname = QFileDialog::getSaveFileName(
         this,
         tr("Save Bin"),
-        QDir::currentPath(),
+        UserSettings::dialogDir(),
         tr("Bin Files (*.bin)")
     );
 
     if (fname.isEmpty()) {
         return;
     }
+    UserSettings::rememberFile(fname);
 
     QFile file(fname);
     if (!file.open(QIODevice::WriteOnly)) {
@@ -129,13 +131,14 @@ void ImageDialog::openBin(){
     QString fname = QFileDialog::getOpenFileName(
         this,
         tr("Open Bin"),
-        QDir::currentPath(),
+        UserSettings::dialogDir(),
         tr("Bin Files (*.bin)")
     );
 
     if (fname.isEmpty()) {
         return;
     }
+    UserSettings::rememberFile(fname);
 
     QFile file(fname);
     if (!file.open(QIODevice::ReadOnly)) {

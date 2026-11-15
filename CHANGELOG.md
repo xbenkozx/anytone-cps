@@ -14,7 +14,16 @@ detailed description of the earlier fork changes is in [readme.md](readme.md).
   `serial-peek` (read-only radio probe). Build with `-DANYTONE_BUILD_TESTS=ON`.
 - `tools/fix_atd.py`, an example script that edits an `.atd` codeplug.
 
+### Added
+- File dialogs remember the last folder (stored in `settings.ini`, key `user/last_dir`). The
+  Open / Save codeplug dialogs start in the folder of the last codeplug; CSV / LST import and
+  export, image and `.bin` dialogs start in the last folder used. Save As also proposes the name
+  of the current codeplug.
+
 ### Fixed
+- **Tool -> Satellite on the AT-D878UVII** looked like a successful write but wrote nothing: the
+  satellite data area (`0x4A80000`) is only written for the D890UV. The write button is now
+  disabled with a note on the D878UVII, and a request for it reports an error instead of success.
 - **Settings lost when reopening an `.atd` file.** `save()` wrote them, but `load()` looked for
   other attribute names or types, so the values silently came back as defaults:
   - APRS `to_call` and `sending_text` (the loader searched for `"to_call "` / `"sending_text "`

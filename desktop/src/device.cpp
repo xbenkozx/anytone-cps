@@ -88,6 +88,11 @@ void Device::writeRadioData(){
         if((read_write_options & DeviceRWType::BOOT_IMAGE) !=  DeviceRWType::NONE) writeBootImage();
         if((read_write_options & DeviceRWType::BK1_IMAGE) !=  DeviceRWType::NONE) writeBk1Image();
         if((read_write_options & DeviceRWType::BK2_IMAGE) !=  DeviceRWType::NONE) writeBk2Image();
+        if((read_write_options & DeviceRWType::SATELLITE_DATA) != DeviceRWType::NONE){
+            // there is no satellite data area on the D878UVII: report it instead of pretending
+            qDebug() << "Satellite data is not supported on the D878UVII, nothing written";
+            emit finished(DeviceStatus::STATUS_DEVICE_MISMATCH);
+        }
     }else if(local_info[0] == QString("ID890UV") && local_info[1] == QString("V100")){
         Anytone::Memory::radio_model = Anytone::RadioModel::D890UV_FW103;
         if((read_write_options & DeviceRWType::RADIO_DATA) != DeviceRWType::NONE) writeOtherData();

@@ -71,13 +71,14 @@ void ComportDialog::openFile(){
     QString fname = QFileDialog::getOpenFileName(
         this,
         tr("Open Virtual Memory"),
-        QDir::currentPath(),
+        UserSettings::dialogDir(),
         tr("Bin Files (*.bin)")
     );
 
     if (fname.isEmpty()) {
         return;
     }
+    UserSettings::rememberFile(fname);
 
     virtual_file_name = fname;
     ui->label_2->setText(virtual_file_name);

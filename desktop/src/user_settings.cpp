@@ -1,5 +1,6 @@
 #include <QString>
 #include <QDir>
+#include <QFileInfo>
 #include "user_settings.h"
 #include "memory/anytone_memory.h"
 #include "memory/channel.h"
@@ -10,6 +11,7 @@ QString UserSettings::theme = "";
 DeviceRWType UserSettings::read_write_options = DeviceRWType::RADIO_DATA;
 int UserSettings::aprs_alt_type = 0;
 QString UserSettings::last_save_file = "";
+QString UserSettings::last_dir = "";
 Anytone::RadioModel UserSettings::radio_model = Anytone::RadioModel::None;
 
 QString UserSettings::getUserDirectory(){
@@ -28,6 +30,33 @@ QString UserSettings::getUserDirectory(){
     return dir;
 }
 
+QString UserSettings::dialogDir(){
+    if(!last_dir.isEmpty() && QDir(last_dir).exists()) return last_dir;
+    if(!last_save_file.isEmpty()){
+        const QString dir = QFileInfo(last_save_file).absolutePath();
+        if(QDir(dir).exists()) return dir;
+    }
+    #ifdef _WIN32
+    return "C:/Users/" + QString(getenv("USERNAME")) + "/Documents";
+    #else
+    return "/home/" + QString(getenv("USER")) + "/Documents";
+    #endif
+}
+QString UserSettings::codeplugDir(){
+    if(!last_save_file.isEmpty()){
+        const QString dir = QFileInfo(last_save_file).absolutePath();
+        if(QDir(dir).exists()) return dir;
+    }
+    return dialogDir();
+}
+void UserSettings::rememberFile(const QString &filepath){
+    if(filepath.isEmpty()) return;
+    const QString dir = QFileInfo(filepath).absolutePath();
+    if(dir.isEmpty() || dir == last_dir) return;
+    last_dir = dir;
+    save();
+}
+
 void UserSettings::load(){
     QSettings settings(getUserDirectory() + "/settings.ini", QSettings::IniFormat);
     UserSettings::comport = settings.value("serial/comport", "VIRTUAL").toString();
@@ -35,6 +64,7 @@ void UserSettings::load(){
     UserSettings::theme = settings.value("user/theme", "").toString();
     UserSettings::read_write_options = static_cast<DeviceRWType>(settings.value("user/rwoption", 1).toInt());
     UserSettings::last_save_file = settings.value("user/save_file", "").toString();
+    UserSettings::last_dir = settings.value("user/last_dir", "").toString();
     UserSettings::radio_model = static_cast<Anytone::RadioModel>(settings.value("user/radio_model", 0).toInt());
 }
 void UserSettings::save(){
@@ -44,6 +74,7 @@ void UserSettings::save(){
     settings.setValue("user/theme", UserSettings::theme);
     settings.setValue("user/rwoption", static_cast<uint8_t>(UserSettings::read_write_options));
     settings.setValue("user/save_file", UserSettings::last_save_file);
+    settings.setValue("user/last_dir", UserSettings::last_dir);
     settings.setValue("user/radio_model", static_cast<uint8_t>(UserSettings::radio_model));
 }
 
