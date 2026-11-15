@@ -4,5 +4,6 @@
     <file>icons/d878_icon.png</file>
     <file>icons/d878_icon_64.ico</file>
     <file>icons/d878_key_diagram.jpg</file>
+    <file alias="CHANGELOG.md">../CHANGELOG.md</file>
   </qresource>
 </RCC>

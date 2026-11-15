@@ -1,6 +1,8 @@
 #include "constants.h"
-const QString Constants::CPS_VERISON = "0.1";
-const QString Constants::CPS_BUILD_NUMBER = "9";
+#ifndef ANYTONE_CPS_VERSION
+#error "ANYTONE_CPS_VERSION is defined by CMake from the VERSION file"
+#endif
+const QString Constants::CPS_VERISON = QStringLiteral(ANYTONE_CPS_VERSION);
 const QStringList Constants::OFF_ON = {"Off", "On"};
 const QStringList Constants::VF_MR = {"MEM", "VFO"};
 const QStringList Constants::AT_OPTIONS = {

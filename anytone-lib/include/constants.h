@@ -14,7 +14,6 @@ public:
     }
 
     static const QString CPS_VERISON;
-    static const QString CPS_BUILD_NUMBER;
     static const QString RADIO_MODEL;
     static const QString FW_CPS_VERSION;
     static const QString FW_CPS_VERSION_MODIFIER;

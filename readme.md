@@ -180,6 +180,12 @@ place:
 
 ---
 
+## Version number
+The version is written in one place, the file `VERSION` (`MAJOR.MINOR.PATCH`). CMake reads it, the
+application shows it in the About window next to the changelog, and the build stops if the first
+release heading of [CHANGELOG.md](CHANGELOG.md) carries a different number. A new feature visible to
+the user raises the minor number, every fix raises the patch number.
+
 ## Supported Devices
 - D878UVII
 
