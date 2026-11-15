@@ -3,8 +3,6 @@
 #include "ui_about_dialog.h"
 #include "constants.h"
 #include <QFile>
-#include <QUrl>
-#include <QDesktopServices>
 #include <QTextBrowser>
 #include <QTextDocument>
 #include <QRegularExpression>
@@ -53,10 +51,6 @@ AboutDialog::AboutDialog(QWidget *parent):
     }else{
         ui->changelogView->setPlainText("The changelog is not available in this build.");
     }
-    // only real web links are opened; links to other files or to a place in the file are ignored
-    connect(ui->changelogView, &QTextBrowser::anchorClicked, this, [](const QUrl &url){
-        if(url.scheme() == "http" || url.scheme() == "https") QDesktopServices::openUrl(url);
-    });
 }
 AboutDialog::~AboutDialog(){
     
